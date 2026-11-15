@@ -49,12 +49,11 @@ export function createPetActionDefinitions({ petCatalog } = {}) {
             || !petCatalog.has(payload.petId)) {
           return "pets/active-pet-selected expects a registered petId.";
         }
-        const collection = selectPetCollection(arguments[1], petCatalog);
-        return collection.pets[payload.petId].unlocked
-          ? true : "A locked pet cannot become the active companion.";
+        return true;
       },
       reduce(state, payload) {
         const collection = selectPetCollection(state, petCatalog);
+        if (!collection.pets[payload.petId].unlocked) throw new Error("A locked pet cannot become the active companion.");
         if (collection.activePetId === payload.petId) return state;
         return {
           ...state,
@@ -67,21 +66,20 @@ export function createPetActionDefinitions({ petCatalog } = {}) {
     }),
 
     "pets/appearance-updated": Object.freeze({
-      validate(payload, state) {
+      validate(payload) {
         if (!isPlainObject(payload) || Object.keys(payload).length !== 2
             || !hasOnlyKeys(payload, ["petId", "paletteId"])
             || typeof payload.petId !== "string" || !petCatalog.has(payload.petId)
             || typeof payload.paletteId !== "string") {
           return "pets/appearance-updated expects a registered petId and paletteId.";
         }
-        const collection = selectPetCollection(state, petCatalog);
-        if (!collection.pets[payload.petId].unlocked) return "A locked pet's appearance cannot be changed.";
         return petCatalog.get(payload.petId).appearancePalettes.some((palette) => palette.id === payload.paletteId)
           ? true : "The selected appearance palette is not registered for this pet.";
       },
       reduce(state, payload) {
         const collection = selectPetCollection(state, petCatalog);
         const current = collection.pets[payload.petId];
+        if (!current.unlocked) throw new Error("A locked pet's appearance cannot be changed.");
         if (current.appearance.paletteId === payload.paletteId) return state;
         return {
           ...state,
