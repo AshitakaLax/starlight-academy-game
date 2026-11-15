@@ -137,3 +137,64 @@ export interface SideQuestDefinition {
   readonly activities: readonly Readonly<Record<string, unknown>>[];
   readonly rewardIds: readonly string[];
 }
+
+
+export type DifficultyTierId = "foundation" | "core" | "stretch";
+
+export interface SkillDefinition {
+  readonly id: string;
+  readonly subject: "mathematics" | "language-arts" | "science";
+  readonly title: string;
+  readonly objective: string;
+  readonly supportedTiers: readonly DifficultyTierId[];
+}
+
+export type ActivityAnswerRules =
+  | { readonly type: "numeric"; readonly tolerance?: number }
+  | { readonly type: "exact" | "choice"; readonly caseSensitive?: boolean }
+  | { readonly type: "sequence"; readonly itemType?: "numeric" | "exact"; readonly tolerance?: number; readonly caseSensitive?: boolean };
+
+export interface ActivityDefinition {
+  readonly id: string;
+  readonly title: string;
+  readonly skillIds: readonly string[];
+  readonly objectives: readonly string[];
+  readonly supportedTiers: readonly DifficultyTierId[];
+  readonly answerRules: ActivityAnswerRules;
+  readonly generatorId: string;
+  readonly generatorConstraints: Readonly<Record<DifficultyTierId, Readonly<Record<string, unknown>>>>;
+}
+
+export interface LearningEvidence {
+  readonly sequence: number;
+  readonly skillId: string;
+  readonly activityId: string;
+  readonly tier: DifficultyTierId;
+  readonly correct: boolean;
+  readonly hintLevel: 0 | 1 | 2 | 3;
+  readonly attempts: number;
+}
+
+export interface SkillMasteryProgress {
+  readonly totalResponses: number;
+  readonly totalAttempts: number;
+  readonly correctResponses: number;
+  readonly unassistedCorrect: number;
+  readonly hintedResponses: number;
+  readonly masteryStatus: "not-started" | "in-progress" | "demonstrated";
+  readonly recentEvidence: readonly LearningEvidence[];
+}
+
+export interface GeneratedQuestion {
+  readonly id: string;
+  readonly activityId: string;
+  readonly tier: DifficultyTierId;
+  readonly skillIds: readonly string[];
+  readonly objectives: readonly string[];
+  readonly seed: string;
+  readonly prompt: string;
+  readonly correctAnswer: unknown;
+  readonly answerRules: ActivityAnswerRules;
+  readonly choices?: readonly unknown[];
+  readonly stimulus?: Readonly<Record<string, unknown>>;
+}
