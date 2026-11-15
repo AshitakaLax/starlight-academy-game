@@ -106,7 +106,8 @@ test("activity definitions declare skills, objectives, tiers, answer rules, and 
 test("activity registry rejects duplicate IDs and returns stable sorted definitions", () => {
   const registry = createActivityRegistry([multiplicationActivity()]);
   const skip = registry.register(skipCountingActivity());
-  assert.equal(registry.get(skip.id), skip);
+  assert.deepEqual(registry.get(skip.id), skip);
+  assert.notEqual(registry.get(skip.id), skip);
   assert.equal(registry.has("chapter-01.multiplication-practice"), true);
   assert.deepEqual(registry.list().map((activity) => activity.id), [
     "chapter-01.multiplication-practice",
