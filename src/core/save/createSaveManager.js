@@ -110,7 +110,12 @@ export function createSaveManager({
     } catch (error) {
       throw makeError("INVALID_STATE", label + " contains data that cannot be saved.", error);
     }
-    const result = validateState(clone);
+    let result;
+    try {
+      result = validateState(clone);
+    } catch (error) {
+      throw makeError("INVALID_STATE", label + " failed validation.", error);
+    }
     if (result !== true) {
       throw makeError("INVALID_STATE", typeof result === "string" ? result : label + " failed validation.");
     }
@@ -310,32 +315,40 @@ export function createSaveManager({
   }
 
   function previewImport(serialized) {
-    const preview = parseEnvelope(serialized);
-    let hasExistingSave = false;
-    if (storage) {
-      try {
-        hasExistingSave = storage.getItem(storageKey) !== null;
-      } catch (error) {
-        throw makeError("STORAGE_READ_FAILED", "The current save could not be checked before import.", error);
+    try {
+      const preview = parseEnvelope(serialized);
+      let hasExistingSave = false;
+      if (storage) {
+        try {
+          hasExistingSave = storage.getItem(storageKey) !== null;
+        } catch (error) {
+          throw makeError("STORAGE_READ_FAILED", "The current save could not be checked before import.", error);
+        }
       }
+      updateStatus("import-preview", preview.migrated
+        ? "Import is valid and will be upgraded before saving."
+        : "Import is valid and ready for review.");
+      return Object.freeze({
+        state: validateAndCloneState(preview.state),
+        sourceVersion: preview.sourceVersion,
+        schemaVersion: preview.schemaVersion,
+        migrated: preview.migrated,
+        hasExistingSave,
+        replacesExistingSave: hasExistingSave
+      });
+    } catch (error) {
+      const code = error instanceof SaveDataError ? error.code : "IMPORT_VALIDATION_FAILED";
+      updateStatus("import-error", error.message || "The selected save could not be imported.", code);
+      throw error;
     }
-    updateStatus("import-preview", preview.migrated
-      ? "Import is valid and will be upgraded before saving."
-      : "Import is valid and ready for review.");
-    return Object.freeze({
-      state: validateAndCloneState(preview.state),
-      sourceVersion: preview.sourceVersion,
-      schemaVersion: preview.schemaVersion,
-      migrated: preview.migrated,
-      hasExistingSave,
-      replacesExistingSave: hasExistingSave
-    });
   }
 
   function importSave(serialized, { confirmReplace = false } = {}) {
     const preview = previewImport(serialized);
     if (preview.hasExistingSave && confirmReplace !== true) {
-      throw makeError("IMPORT_CONFIRMATION_REQUIRED", "Review the imported progress and confirm replacement before overwriting the current save.");
+      const error = makeError("IMPORT_CONFIRMATION_REQUIRED", "Review the imported progress and confirm replacement before overwriting the current save.");
+      updateStatus("confirmation-required", error.message, error.code);
+      throw error;
     }
 
     cancelAutosave();
