@@ -6,6 +6,7 @@
 export function createSaveService({
   store,
   saveManager,
+  normalizeRestoredState = (state) => state,
   onError = () => {}
 } = {}) {
   if (!store || typeof store.getState !== "function"
@@ -22,6 +23,7 @@ export function createSaveService({
       || typeof saveManager.import !== "function") {
     throw new TypeError("createSaveService requires a compatible save manager.");
   }
+  if (typeof normalizeRestoredState !== "function") throw new TypeError("normalizeRestoredState must be a function.");
   if (typeof onError !== "function") throw new TypeError("onError must be a function.");
 
   let started = false;
@@ -35,16 +37,21 @@ export function createSaveService({
     }
   }
 
+  function restoreState(state) {
+    const normalizedState = normalizeRestoredState(state);
+    store.dispatch({
+      type: "app/state-restored",
+      payload: { state: normalizedState }
+    });
+  }
+
   async function start() {
     if (started) return;
 
     try {
       const restoredState = await saveManager.load();
       if (restoredState) {
-        store.dispatch({
-          type: "app/state-restored",
-          payload: { state: restoredState }
-        });
+        restoreState(restoredState);
       }
     } catch (error) {
       reportError(error, "load");
@@ -100,10 +107,7 @@ export function createSaveService({
   function importSave(serialized, options) {
     assertStarted();
     const importedState = saveManager.import(serialized, options);
-    store.dispatch({
-      type: "app/state-restored",
-      payload: { state: importedState }
-    });
+    restoreState(importedState);
     return store.getState();
   }
 
