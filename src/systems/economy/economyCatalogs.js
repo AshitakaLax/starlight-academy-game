@@ -1,6 +1,7 @@
 import { gameConfig } from "../../config/gameConfig.js";
 
 const ID_PATTERN = /^[a-z][a-z0-9-]*(?:[.-][a-z][a-z0-9-]*)+$/;
+const SOURCE_ID_PATTERN = /^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)?$/;
 const REWARD_KEYS = Object.freeze(["id", "sourceId", "title", "starGems", "starlightSparkles", "replayPolicy"]);
 const ITEM_KEYS = Object.freeze(["id", "title", "priceStarGems", "maxOwned"]);
 
@@ -27,7 +28,7 @@ function validateReward(input) {
     return "A reward must be a plain object containing only id, sourceId, title, starGems, starlightSparkles, and replayPolicy.";
   }
   if (typeof input.id !== "string" || !ID_PATTERN.test(input.id)) return "Reward id must be a stable namespaced identifier.";
-  if (typeof input.sourceId !== "string" || !ID_PATTERN.test(input.sourceId)) return "Reward sourceId must be a stable namespaced identifier.";
+  if (typeof input.sourceId !== "string" || !SOURCE_ID_PATTERN.test(input.sourceId)) return "Reward sourceId must be a stable chapter, quest, or content identifier.";
   if (typeof input.title !== "string" || !input.title.trim()) return "Reward title must be non-empty.";
   for (const key of ["starGems", "starlightSparkles"]) {
     if (!Number.isSafeInteger(input[key]) || input[key] < 0) {
