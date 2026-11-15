@@ -34,3 +34,5 @@ Escape closes the active overlay; without an overlay it opens Settings. Enter/Sp
 A clicked element marked \`data-game-action="namespace/action"\` dispatches that action once. Optional \`data-game-payload\` must be a JSON object. Optional \`data-game-context\` restricts the click to a currently active context; \`data-game-prevent-default="true"\` opts into preventing the browser default.
 
 Shortcuts are ignored while an input, textarea, select, contenteditable region, or textbox is focused. Repeated keydown events, IME composition, keyCode 229, and Ctrl/Meta/Alt combinations are ignored. Native button/link keyboard activation is left to the browser to avoid double actions. \`stop()\` removes both event listeners; context registrations can be independently removed.
+
+When a modal overlay is open, unscoped background click actions are suspended; only controls registered to the active overlay context are accepted.
