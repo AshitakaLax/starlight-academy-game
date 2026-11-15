@@ -43,7 +43,7 @@ const DESTINATIONS = Object.freeze({
   })
 });
 
-const MARKUP = String.raw\`<div class="academy-shell" data-text-scale="normal" data-reduced-motion="false">
+const MARKUP = String.raw`<div class="academy-shell" data-text-scale="normal" data-reduced-motion="false">
 <a class="skip-link" href="#academy-main">Skip to academy content</a>
 <div class="academy-frame" data-application-view>
 <header class="academy-topbar">
@@ -132,7 +132,7 @@ const MARKUP = String.raw\`<div class="academy-shell" data-text-scale="normal" d
     <footer class="settings-footer"><span>Changes are saved with your academy progress.</span><button class="primary-action compact-action" type="button" data-game-context="settings" data-game-action="ui/overlay-closed" data-game-payload='{"overlayId":"settings"}'>Done</button></footer>
   </section>
 </div>
-</div>\`;
+</div>`;
 
 function requireElement(root, selector) {
   const element = root.querySelector(selector);
@@ -208,6 +208,7 @@ export function createAcademyShell({
     const preferences = selectUiPreferences(state);
 
     shell.dataset.textScale = preferences.textScale;
+    if (documentRef.documentElement) documentRef.documentElement.dataset.textScale = preferences.textScale;
     const systemReducedMotion = windowRef?.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
     shell.dataset.reducedMotion = String(preferences.reducedMotion || systemReducedMotion);
     panel.kicker.textContent = destination.kicker;

@@ -7,6 +7,7 @@ import { registerStandardInputContexts } from "./core/input/standardContexts.js"
 import { gameConfig } from "./config/gameConfig.js";
 import { createAcademyShell } from "./ui/createAcademyShell.js";
 import academyEmblem from "./assets/academy-emblem.svg";
+import releaseManifest from "./data/release-manifest.json";
 
 async function launch() {
   const root = document.getElementById("app");
@@ -62,6 +63,8 @@ async function launch() {
     emblemSvg: academyEmblem, documentRef: document, windowRef: window
   });
   document.documentElement.dataset.appStatus = app.status;
+  root.dataset.plannedChapters = String(releaseManifest.release.chapterCount);
+  root.dataset.plannedQuests = String(releaseManifest.release.sideQuestCount);
 
   window.addEventListener("pagehide", () => {
     academyShell.dispose();

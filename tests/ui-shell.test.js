@@ -24,8 +24,8 @@ test("settings reject unsupported values and unknown preference keys", () => {
   const initial = store.getState();
   assert.throws(() => store.dispatch({ type: "settings/preferences-updated", payload: { textScale: "extra-large" } }), /textScale/);
   assert.throws(() => store.dispatch({ type: "settings/preferences-updated", payload: { reducedMotion: "yes" } }), /reducedMotion/);
-  assert.throws(() => store.dispatch({ type: "settings/preferences-updated", payload: { textScale: "large", animations: false } }), /textScale and\\/or reducedMotion/);
-  assert.throws(() => store.dispatch({ type: "settings/preferences-updated", payload: {} }), /textScale and\\/or reducedMotion/);
+  assert.throws(() => store.dispatch({ type: "settings/preferences-updated", payload: { textScale: "large", animations: false } }), /textScale and\/or reducedMotion/);
+  assert.throws(() => store.dispatch({ type: "settings/preferences-updated", payload: {} }), /textScale and\/or reducedMotion/);
   assert.equal(store.getState(), initial);
 });
 

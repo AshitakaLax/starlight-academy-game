@@ -1,6 +1,8 @@
+import { gameConfig } from "../config/gameConfig.js";
+
 export const DEFAULT_UI_PREFERENCES = Object.freeze({
-  textScale: "normal",
-  reducedMotion: false
+  textScale: gameConfig.ui.defaultTextScale,
+  reducedMotion: gameConfig.ui.defaultReducedMotion
 });
 
 /** Return safe, presentation-ready preferences even when restoring an older save. */

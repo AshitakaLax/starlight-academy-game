@@ -15,6 +15,9 @@ body {
     radial-gradient(ellipse at 92% 88%, #c7deff 0, transparent 34rem),
     linear-gradient(135deg, #fbf5ff, #f0e9fa 48%, #f8f2ec);
 }
+html[data-text-scale="small"] { font-size: 14px; }
+html[data-text-scale="normal"], html:not([data-text-scale]) { font-size: 16px; }
+html[data-text-scale="large"] { font-size: 18px; }
 button, input { font: inherit; }
 button { cursor: pointer; }
 button:disabled { cursor: not-allowed; opacity: .55; }
@@ -59,7 +62,7 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .dock-item:hover { border-color: #eee4f5; background: #fff; }
 .dock-item[aria-current="page"] { border-color: #e5d5f1; background: #fff; color: #633d88; box-shadow: 0 3px 12px #5c3d7a12; }
 .dock-icon { display: grid; place-items: center; width: 27px; height: 27px; border-radius: 9px; background: #f0e5f7; color: #855bab; font-size: 1.05rem; }
-.dock-item kbd { color: #b1a4ba; font: .62rem inherit; }
+.dock-item kbd { color: #b1a4ba; font-family: inherit; font-size: .62rem; }
 .dock-bottom-note { display: flex; gap: 8px; margin: auto 5px 0; padding: 12px 6px 2px; border-top: 1px solid #eae0f0; color: #9a8ba4; font-size: .66rem; line-height: 1.45; }
 .dock-bottom-note p { margin: 0; }
 .dock-bottom-note strong { color: #806b90; }
@@ -131,14 +134,14 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .settings-header { display: flex; justify-content: space-between; gap: 18px; padding: 23px 25px 17px; border-bottom: 1px solid #f0e8f2; }
 .settings-header h2 { margin: 5px 0; color: #54376e; font: 700 1.52rem Georgia, serif; }
 .settings-header p:last-child { margin: 0; color: #81738c; font-size: .76rem; }
-.icon-close { flex: 0 0 auto; width: 42px; height: 42px; border: 1px solid #e9dff0; border-radius: 11px; background: #fff; color: #6d5086; font-size: 1.7rem; line-height: 1; }
+.icon-close { flex: 0 0 auto; width: 44px; height: 44px; border: 1px solid #e9dff0; border-radius: 11px; background: #fff; color: #6d5086; font-size: 1.7rem; line-height: 1; }
 .icon-close:hover { background: #f8f2fc; }
 .settings-content { display: grid; gap: 11px; padding: 17px 25px 19px; }
 .setting-card { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 13px 14px; border: 1px solid #eee7f1; border-radius: 13px; background: #fff; }
 .setting-card h3 { margin: 0 0 4px; color: #5b456e; font-size: .84rem; }
 .setting-card p { margin: 0; color: #8a7c92; font-size: .68rem; line-height: 1.42; }
 .setting-options { display: flex; gap: 4px; padding: 4px; border: 1px solid #e9e0ef; border-radius: 10px; background: #f8f4fa; }
-.setting-options button, .toggle-setting, .save-tool-actions button { min-height: 40px; padding: 0 11px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: #756482; font-size: .7rem; font-weight: 800; }
+.setting-options button, .toggle-setting, .save-tool-actions button { min-height: 44px; padding: 0 11px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: #756482; font-size: .7rem; font-weight: 800; }
 .setting-options button[aria-pressed="true"] { border-color: #d9c6e8; background: #fff; color: #633e86; box-shadow: 0 2px 6px #4e306814; }
 .toggle-setting { min-width: 74px; border-color: #e4d7ed; background: #f7f1fa; color: #734a97; }
 .toggle-setting[aria-pressed="true"] { border-color: #78539a; background: #78519a; color: #fff; }

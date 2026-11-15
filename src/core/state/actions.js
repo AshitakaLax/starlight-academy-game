@@ -1,4 +1,5 @@
 import { isPlainObject } from "./stateUtils.js";
+import { gameConfig } from "../../config/gameConfig.js";
 
 function hasOnlyKeys(value, allowedKeys) {
   return Object.keys(value).every((key) => allowedKeys.includes(key));
@@ -35,7 +36,7 @@ export function createInitialGameState() {
     app: { screenId: "academy" },
     ui: {
       activeOverlayId: null,
-      preferences: { textScale: "normal", reducedMotion: false }
+      preferences: { textScale: gameConfig.ui.defaultTextScale, reducedMotion: gameConfig.ui.defaultReducedMotion }
     }
   };
 }
@@ -134,7 +135,7 @@ export const coreActionDefinitions = Object.freeze({
     reduce(state, payload) {
       requireUiContainer(state);
       const current = isPlainObject(state.ui.preferences) ? state.ui.preferences : {};
-      const preferences = { textScale: "normal", reducedMotion: false, ...current, ...payload };
+      const preferences = { textScale: gameConfig.ui.defaultTextScale, reducedMotion: gameConfig.ui.defaultReducedMotion, ...current, ...payload };
       if (preferences.textScale === current.textScale && preferences.reducedMotion === current.reducedMotion) return state;
       return { ...state, ui: { ...state.ui, preferences } };
     }
