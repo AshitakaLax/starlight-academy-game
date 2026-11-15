@@ -1,6 +1,8 @@
 /** Public source-project entry point. */
 export { createGameApp } from "./app/createGameApp.js";
 export { createGameStore } from "./core/state/createGameStore.js";
+export { createSaveManager, getBrowserStorage, SAVE_FORMAT, SaveDataError } from "./core/save/createSaveManager.js";
+export { createSaveService } from "./core/save/createSaveService.js";
 export { createInitialGameState, coreActionDefinitions } from "./core/state/actions.js";
 export { createSelector, selectActiveOverlayId, selectAtPath, selectCurrentScreen } from "./core/state/selectors.js";
 export { gameConfig } from "./config/gameConfig.js";
