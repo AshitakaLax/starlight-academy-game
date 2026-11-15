@@ -238,6 +238,22 @@ test("every successful transaction is atomic and transaction history is bounded"
   assert.equal(economy.nextTransactionSequence, rewardList.length + 1);
 });
 
+test("currency overflow cannot partially grant a reward", () => {
+  const overflow = { ...firstChapterReward, starGems: 1, starlightSparkles: 2 };
+  const harness = createHarness({
+    initialEconomy: { ...createInitialEconomyState(), starGems: Number.MAX_SAFE_INTEGER },
+    rewards: [overflow]
+  });
+  const before = harness.store.getState();
+  const result = harness.service.claimReward(overflow.id);
+  assert.equal(result.granted, false);
+  assert.equal(result.reason, "balance-limit-reached");
+  assert.equal(harness.store.getState(), before);
+  assert.equal(harness.store.getState().economy.starGems, Number.MAX_SAFE_INTEGER);
+  assert.equal(harness.store.getState().economy.starlightSparkles, 0);
+  assert.equal(harness.store.getState().economy.transactions.length, 0);
+});
+
 test("legacy saves receive an empty economy without losing other saved progress", () => {
   const defaults = {
     ...createInitialGameState(),
