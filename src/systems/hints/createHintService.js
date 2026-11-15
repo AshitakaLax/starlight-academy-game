@@ -119,11 +119,11 @@ export function createHintService({
       });
     }
 
-    let stage = null;
-    for (const candidate of definition.stages) {
-      if (candidate.attempt <= requestedAttempt) stage = candidate;
+    let stageIndex = -1;
+    for (let index = 0; index < definition.stages.length; index += 1) {
+      if (definition.stages[index].attempt <= requestedAttempt) stageIndex = index;
     }
-    if (!stage) {
+    if (stageIndex < 0) {
       return freezeRecursively({
         available: false,
         reason: "no-stage-available-yet",
@@ -131,6 +131,8 @@ export function createHintService({
       });
     }
 
+    const stage = definition.stages[stageIndex];
+    const stageNumber = stageIndex + 1;
     const demonstration = stage.demonstration
       ? createProfessorHootDemonstration(stage.demonstration)
       : null;
@@ -141,7 +143,8 @@ export function createHintService({
       activityId: session.question.activityId,
       title: definition.title,
       attemptNumber: requestedAttempt,
-      stage: stage.attempt,
+      stage: stageNumber,
+      attemptThreshold: stage.attempt,
       kind: stage.kind,
       message: stage.message,
       narrationText,
@@ -152,7 +155,7 @@ export function createHintService({
       canComplete: true
     });
 
-    session.lastHintStage = stage.attempt;
+    session.lastHintStage = stageNumber;
     session.lastHintKind = stage.kind;
     try { narrationService?.speak(narrationText, { interrupt: true }); } catch {}
     try { onHint(presentation); } catch {}
