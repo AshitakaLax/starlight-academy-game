@@ -12,6 +12,7 @@ export const gameConfig = Object.freeze({
   curriculum: Object.freeze({ defaultTier: "core", onboardingTier: "core", masteryWindowSize: 5, masteryRequiredIndependentCorrect: 4, adaptiveWindowSize: 5, promotionIndependentCorrect: 4, demotionMaximumCorrect: 1, evidenceHistoryLimit: 100 }),
   release: Object.freeze({ chapterCount: 10, sideQuestCount: 20, standaloneHtml: true, offlineRuntime: true }),
   progression: Object.freeze({ spendableCurrency: "starGems", masteryCurrency: "starlightSparkles" }),
+  economy: Object.freeze({ defaultStarGems: 0, defaultStarlightSparkles: 0, transactionHistoryLimit: 200, maximumRewardClaims: 5 }),
   persistence: Object.freeze({
     storageKey: "starlight-academy.save",
     schemaVersion: 1,
