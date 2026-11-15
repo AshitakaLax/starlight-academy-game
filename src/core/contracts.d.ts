@@ -63,7 +63,7 @@ export interface InputRouter {
 export interface SaveStatus {
   readonly state: "idle" | "empty" | "pending" | "saved" | "loaded" | "migrated"
     | "migration-save-failed" | "unavailable" | "error" | "recovery-required"
-    | "import-preview" | "imported";
+    | "import-preview" | "import-error" | "confirmation-required" | "imported";
   readonly message: string;
   readonly savedAt: string | null;
   readonly code: string | null;
