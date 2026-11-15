@@ -35,6 +35,12 @@ export { WARDROBE_SLOTS, createWardrobeItem, validateWardrobeItem, createWardrob
 export { createInitialWardrobeState, selectWardrobe, selectEquippedItem, selectWardrobeOwnership } from "./gameplay/wardrobe/wardrobeState.js";
 export { createWardrobeActionDefinitions } from "./gameplay/wardrobe/wardrobeActions.js";
 export { createWardrobeService } from "./gameplay/wardrobe/createWardrobeService.js";
+export { COLORING_TEXTURE_WIDTH, COLORING_TEXTURE_HEIGHT, COLORING_PIXEL_COUNT, createGarmentTemplate, validateGarmentTemplate, isPointInGarmentMask, createGarmentMask, createGarmentTemplateRegistry, defaultGarmentTemplates } from "./gameplay/coloring/garmentTemplates.js";
+export { COLORING_TEXTURE_VERSION, COLORING_MAX_PALETTE_COLORS, COLORING_MAX_RUNS, COLORING_MAX_ENCODED_CHARS, encodeColorTexture, decodeColorTexture, createBlankColorTexture } from "./gameplay/coloring/textureCodec.js";
+export { createInitialColoringState, selectColoring, selectGarmentDesign } from "./gameplay/coloring/coloringState.js";
+export { createColoringActionDefinitions } from "./gameplay/coloring/coloringActions.js";
+export { createColoringService } from "./gameplay/coloring/createColoringService.js";
+export { renderColoringCanvas } from "./gameplay/coloring/renderColoringCanvas.js";
 export { gameConfig } from "./config/gameConfig.js";
 export { chapterDefinitions, getChapterDefinition } from "./chapters/registry.js";
 export { sideQuestDefinitions, getSideQuestDefinition } from "./side-quests/registry.js";
