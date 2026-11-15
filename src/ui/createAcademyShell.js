@@ -288,7 +288,7 @@ export function createAcademyShell({
     narrationVoiceSelect.value = settings.voiceURI;
   }
 
-  function renderWardrobe() {
+  function renderWardrobe(statusMessage = null) {
     if (!wardrobeService) {
       panel.wardrobeEquipped.replaceChildren();
       panel.wardrobeInventory.replaceChildren();
@@ -378,34 +378,37 @@ export function createAcademyShell({
     panel.wardrobeInventory.replaceChildren(inventoryFragment);
 
     const gems = preview.inventory.find((item) => item.acquisition.type === "purchase")?.available;
-    panel.wardrobeStatus.textContent = gems === false
+    panel.wardrobeStatus.textContent = statusMessage ?? (gems === false
       ? "Collect Star Gems through academy rewards to shop for optional cosmetics."
-      : "Your starter outfit is ready. Select any owned item to wear it.";
+      : "Your starter outfit is ready. Select any owned item to wear it.");
   }
 
   function handleWardrobeAction(event) {
     const actionElement = event.target?.closest?.("[data-wardrobe-action]");
     if (!actionElement || !root.contains(actionElement) || !wardrobeService) return false;
     const action = actionElement.dataset.wardrobeAction;
+    let statusMessage = "The wardrobe has been updated.";
     try {
       if (action === "purchase") {
         const result = wardrobeService.purchaseItem(actionElement.dataset.itemId);
-        panel.wardrobeStatus.textContent = result.purchased
+        statusMessage = result.purchased
           ? "Added " + result.itemId.replace(/^wardrobe\./, "").replaceAll("-", " ") + " to your wardrobe."
           : result.reason === "insufficient-star-gems"
             ? "You need more Star Gems for that item."
-            : "That item could not be purchased.";
+            : result.reason === "already-owned"
+              ? "You already own that item."
+              : "That item could not be purchased.";
       } else if (action === "equip") {
         const result = wardrobeService.equipItem(actionElement.dataset.itemId);
-        panel.wardrobeStatus.textContent = result.equipped ? "Your look has been updated." : "That item is still locked.";
+        statusMessage = result.equipped ? "Your look has been updated." : "That item is still locked.";
       } else if (action === "unequip") {
         wardrobeService.unequipSlot(actionElement.dataset.slot);
-        panel.wardrobeStatus.textContent = "Equipment updated.";
+        statusMessage = "Equipment updated.";
       }
     } catch (error) {
-      panel.wardrobeStatus.textContent = error?.message || "The wardrobe could not be updated.";
+      statusMessage = error?.message || "The wardrobe could not be updated.";
     }
-    renderWardrobe();
+    renderWardrobe(statusMessage);
     return true;
   }
 
@@ -479,7 +482,7 @@ export function createAcademyShell({
 
     const overlayId = state?.ui?.activeOverlayId ?? null;
     const settingsOpen = overlayId === "settings";
-    academyScene.setActive(state?.app?.screenId === "academy" && overlayId === null);
+    academyScene.setActive(state?.app?.screenId === "academy" && overlayId === null && !wardrobeMode);
     const justOpened = settingsOpen && lastOverlayId !== "settings";
     const justClosed = !settingsOpen && lastOverlayId === "settings";
     settingsBackdrop.hidden = !settingsOpen;
