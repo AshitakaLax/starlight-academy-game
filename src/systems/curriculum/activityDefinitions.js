@@ -1,5 +1,6 @@
 import { getDifficultyTier, DIFFICULTY_TIER_IDS } from "./difficultyTiers.js";
 import { getSkillDefinition } from "./skillRegistry.js";
+import { cloneSerializable } from "../../core/state/stateUtils.js";
 
 const ACTIVITY_ID_PATTERN = /^[a-z][a-z0-9-]*(?:[.-][a-z][a-z0-9-]*)+$/;
 const ANSWER_RULE_TYPES = Object.freeze(["numeric", "exact", "choice", "sequence"]);
@@ -20,12 +21,10 @@ function freezeRecursively(value) {
 
 function cloneJsonObject(value, label) {
   if (!isPlainObject(value)) throw new TypeError(label + " must be a plain object.");
-  let serialized;
-  try { serialized = JSON.stringify(value); } catch {
-    throw new TypeError(label + " must contain only serializable data.");
+  let copy;
+  try { copy = cloneSerializable(value, label); } catch {
+    throw new TypeError(label + " must contain only finite, JSON-compatible data.");
   }
-  if (typeof serialized !== "string") throw new TypeError(label + " must contain only serializable data.");
-  const copy = JSON.parse(serialized);
   if (!isPlainObject(copy)) throw new TypeError(label + " must be a plain object.");
   return copy;
 }
@@ -52,6 +51,11 @@ export function validateActivityDefinition(input) {
       || new Set(input.supportedTiers).size !== input.supportedTiers.length) {
     return "Activity supportedTiers must contain unique registered difficulty tiers.";
   }
+  if (input.skillIds.some((id) => {
+    const skill = getSkillDefinition(id);
+    return !skill || !input.supportedTiers.every((tier) => skill.supportedTiers.includes(tier));
+  })) {
+    return "Activity tiers must be supported by every linked skill.";
   if (!isPlainObject(input.answerRules) || !ANSWER_RULE_TYPES.includes(input.answerRules.type)) {
     return "Activity answerRules.type must be numeric, exact, choice, or sequence.";
   }
