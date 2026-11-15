@@ -311,6 +311,31 @@ test("modal overlays block background contexts and can own a higher-priority con
   assert.equal(app.store.getState().app.activeDockId, "settings-home");
 });
 
+test("modal overlays suspend unscoped background mouse actions", () => {
+  const app = setup();
+  app.router.registerContext("settings-modal", {
+    screenId: "academy",
+    overlayId: "settings",
+    keys: {}
+  });
+  app.store.dispatch({ type: "ui/overlay-opened", payload: { overlayId: "settings" } });
+
+  const backgroundButton = new FakeElement("button", {
+    "data-game-action": "hub/dock-selected",
+    "data-game-payload": JSON.stringify({ dockId: "pets" })
+  });
+  app.root.emit("click", { target: backgroundButton, defaultPrevented: false });
+  assert.equal(app.store.getState().app.activeDockId, undefined);
+
+  const modalButton = new FakeElement("button", {
+    "data-game-action": "hub/dock-selected",
+    "data-game-payload": JSON.stringify({ dockId: "settings-home" }),
+    "data-game-context": "settings-modal"
+  });
+  app.root.emit("click", { target: modalButton, defaultPrevented: false });
+  assert.equal(app.store.getState().app.activeDockId, "settings-home");
+});
+
 test("invalid bindings, duplicate contexts and malformed click payloads are reported safely", () => {
   const app = setup();
   assert.throws(() => app.router.registerContext("bad", { keys: { "1": { payload: {} } } }), /Invalid binding/);
