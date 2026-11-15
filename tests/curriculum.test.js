@@ -191,6 +191,35 @@ test("answer rules support numeric tolerance, normalized text, choice IDs, and s
   assert.equal(checkActivityAnswer("not a number", 3, { type: "numeric" }), false);
 });
 
+test("restoring a pre-curriculum save retains newly introduced default skill state", () => {
+  const store = createStore();
+  store.dispatch({
+    type: "app/state-restored",
+    payload: {
+      state: {
+        app: { screenId: "academy" },
+        ui: { activeOverlayId: null }
+      }
+    }
+  });
+  assert.equal(Object.keys(store.getState().curriculum.skills).length, skillDefinitions.length);
+  assert.equal(store.getState().audio.masterVolume, gameConfig.audio.defaultMasterVolume);
+  assert.equal(store.getState().narration.enabled, false);
+  store.dispatch({
+    type: "curriculum/evidence-recorded",
+    payload: {
+      skillId: "math.multiplication",
+      activityId: "chapter-01.multiplication-practice",
+      tier: "core",
+      correct: true,
+      hintLevel: 0,
+      attempts: 1
+    }
+  });
+  assert.equal(selectSkillProgress(store.getState(), "math.multiplication").totalResponses, 1);
+  store.destroy();
+});
+
 test("fresh curriculum progress starts every registered skill independently", () => {
   const progress = createInitialCurriculumProgress();
   assert.equal(Object.keys(progress.skills).length, skillDefinitions.length);
