@@ -124,9 +124,11 @@ export interface GameplaySystem {
 export interface ChapterDefinition {
   readonly id: string;
   readonly title: string;
-  readonly skillIds: readonly string[];
-  readonly activities: readonly Readonly<Record<string, unknown>>[];
+  readonly description: string;
+  readonly objectives: readonly string[];
+  readonly activities: readonly ChapterActivityDefinition[];
   readonly majorRewardIds: readonly string[];
+  readonly prerequisiteChapterIds: readonly string[];
 }
 
 export interface SideQuestDefinition {
@@ -560,16 +562,6 @@ export interface ChapterActivityDefinition {
   readonly activityId?: string;
   readonly skillIds?: readonly string[];
   readonly metadata: Readonly<Record<string, unknown>>;
-}
-
-export interface ChapterDefinition {
-  readonly id: string;
-  readonly title: string;
-  readonly description: string;
-  readonly objectives: readonly string[];
-  readonly activities: readonly ChapterActivityDefinition[];
-  readonly majorRewardIds: readonly string[];
-  readonly prerequisiteChapterIds: readonly string[];
 }
 
 export interface ChapterActivityResult {
