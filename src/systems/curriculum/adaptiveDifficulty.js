@@ -1,5 +1,6 @@
 import { gameConfig } from "../../config/gameConfig.js";
 import { DIFFICULTY_TIER_IDS, getDifficultyTier } from "./difficultyTiers.js";
+import { getSkillDefinition } from "./skillRegistry.js";
 
 /**
  * Evaluate only learning evidence from the currently selected tier.
@@ -62,6 +63,24 @@ export function createLowPressureOnboardingProfile() {
 }
 
 export function selectSkillTier(state, skillId) {
+  if (!getSkillDefinition(skillId)) return null;
   const candidate = state?.curriculum?.skills?.[skillId]?.currentTier;
   return getDifficultyTier(candidate) ? candidate : gameConfig.curriculum.defaultTier;
+}
+
+/** Select the nearest tier an activity can actually serve; ties prefer more support. */
+export function selectSupportedSkillTier(state, skillId, supportedTiers) {
+  if (!getSkillDefinition(skillId)) return null;
+  if (!Array.isArray(supportedTiers) || supportedTiers.length === 0
+      || supportedTiers.some((tier) => !getDifficultyTier(tier))) {
+    throw new TypeError("supportedTiers must be a non-empty list of registered tiers.");
+  }
+  const unique = [...new Set(supportedTiers)];
+  const preferredIndex = DIFFICULTY_TIER_IDS.indexOf(selectSkillTier(state, skillId));
+  return unique.sort((left, right) => {
+    const leftIndex = DIFFICULTY_TIER_IDS.indexOf(left);
+    const rightIndex = DIFFICULTY_TIER_IDS.indexOf(right);
+    const distance = Math.abs(leftIndex - preferredIndex) - Math.abs(rightIndex - preferredIndex);
+    return distance || leftIndex - rightIndex;
+  })[0];
 }
