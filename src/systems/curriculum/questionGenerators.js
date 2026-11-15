@@ -144,6 +144,7 @@ export function createQuestionGeneratorRegistry(customGenerators = {}) {
   }
   const generators = new Map(Object.entries(BUILT_IN_GENERATORS));
   for (const [id, generator] of Object.entries(customGenerators)) {
+    if (!/^[a-z][a-z0-9-]*(?:[.-][a-z][a-z0-9-]*)+$/.test(id)) throw new TypeError("Generator ID must be namespaced.");
     if (typeof generator !== "function") throw new TypeError("Generator " + id + " must be a function.");
     if (generators.has(id)) throw new Error("Cannot replace built-in generator: " + id);
     generators.set(id, generator);
@@ -179,6 +180,8 @@ export function createQuestionGeneratorRegistry(customGenerators = {}) {
       id: activity.id + ":" + tier + ":" + hashSeed(seed).toString(16),
       activityId: activity.id,
       tier,
+      skillIds: activity.skillIds.slice(),
+      objectives: activity.objectives.slice(),
       seed: typeof seed === "string" ? seed : String(seed),
       prompt: generated.prompt,
       correctAnswer: generated.correctAnswer,
