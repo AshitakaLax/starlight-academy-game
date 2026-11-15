@@ -13,6 +13,11 @@ export function evaluateAdaptiveTier({
 } = {}) {
   if (!getDifficultyTier(currentTier)) throw new TypeError("currentTier must be a registered difficulty tier.");
   if (!Array.isArray(evidence)) throw new TypeError("evidence must be an array.");
+  if (evidence.some((item) => !item || typeof item !== "object"
+      || typeof item.correct !== "boolean"
+      || !Number.isInteger(item.hintLevel) || item.hintLevel < 0 || item.hintLevel > 3)) {
+    throw new TypeError("Each adaptive evidence item must include a correct flag and a hintLevel from 0 to 3.");
+  }
   if (!Number.isInteger(windowSize) || windowSize < 2 || windowSize > 20) {
     throw new RangeError("windowSize must be an integer from 2 to 20.");
   }
