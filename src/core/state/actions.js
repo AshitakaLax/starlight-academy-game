@@ -65,8 +65,8 @@ export const coreActionDefinitions = Object.freeze({
   "hub/dock-selected": Object.freeze({
     validate(payload) {
       return isPlainObject(payload) && hasOnlyKeys(payload, ["dockId"])
-        && ["chapters", "gymnastics", "pets", "wardrobe", "quests"].includes(payload.dockId)
-        ? true : "hub/dock-selected expects a recognized academy dock ID.";
+        && typeof payload.dockId === "string" && payload.dockId.trim().length > 0
+        ? true : "hub/dock-selected expects { dockId: non-empty string }.";
     },
     reduce(state, payload) {
       requireScreenContainer(state);

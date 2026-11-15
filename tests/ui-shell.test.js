@@ -29,9 +29,11 @@ test("settings reject unsupported values and unknown preference keys", () => {
   assert.equal(store.getState(), initial);
 });
 
-test("navigation accepts only the five academy destinations", () => {
+test("navigation requires a non-empty destination ID and remains extensible", () => {
   const store = createGameStore();
-  assert.throws(() => store.dispatch({ type: "hub/dock-selected", payload: { dockId: "secret-room" } }), /recognized academy dock ID/);
+  assert.throws(() => store.dispatch({ type: "hub/dock-selected", payload: { dockId: " " } }), /non-empty string/);
   store.dispatch({ type: "hub/dock-selected", payload: { dockId: "pets" } });
   assert.equal(store.getState().app.activeDockId, "pets");
+  store.dispatch({ type: "hub/dock-selected", payload: { dockId: "settings-home" } });
+  assert.equal(store.getState().app.activeDockId, "settings-home");
 });
