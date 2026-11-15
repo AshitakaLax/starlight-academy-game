@@ -7,5 +7,6 @@ This layer contains player-facing activities and orchestration:
 - \`pets/\` — independent pet collection state, care activities, and active-pet ability selection.
 - \`coloring/\` — garment templates, paint tools, and custom design operations.
 - \\`wardrobe/\\` — cosmetic item catalog, ownership sources, saved inventory, equipment slots, and wardrobe service.
+- \\`coloring/\\` — validated garment masks, clipped brush/eraser/stamp operations, design history, and compressed saved textures.
 
 Gameplay modules own activity rules but not global persistence, currency balances, or DOM presentation. They request those capabilities through injected system interfaces and named actions.
