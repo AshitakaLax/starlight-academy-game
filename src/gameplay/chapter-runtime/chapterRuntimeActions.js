@@ -49,7 +49,11 @@ export function createChapterRuntimeActionDefinitions({ chapterCatalog } = {}) {
       },
       reduce(state, payload) {
         const chapter = chapterCatalog.get(payload.chapterId);
-        const current = selectChapterRuntimeProgress(state, chapterCatalog).chapters[payload.chapterId];
+        const progress = selectChapterRuntimeProgress(state, chapterCatalog);
+        if (!chapter.prerequisiteChapterIds.every((id) => progress.chapters[id]?.status === "completed")) {
+          throw new Error("This chapter is not available until its prerequisite chapters are completed.");
+        }
+        const current = progress.chapters[payload.chapterId];
         if (current.status === "in-progress") return state;
         return copyProgress(state, payload.chapterId, {
           ...current,
@@ -68,11 +72,20 @@ export function createChapterRuntimeActionDefinitions({ chapterCatalog } = {}) {
             || typeof payload.chapterId !== "string" || !chapterCatalog.has(payload.chapterId)) {
           return "chapters/checkpoint-saved expects a registered chapterId and activityResults.";
         }
-        return validateActivityResults(payload.activityResults, chapterCatalog.get(payload.chapterId));
+        const chapter = chapterCatalog.get(payload.chapterId);
+        const validation = validateActivityResults(payload.activityResults, chapter);
+        if (validation !== true) return validation;
+        if (payload.activityResults.length >= chapter.activities.length) {
+          return "The final activity must complete the chapter instead of saving a full checkpoint.";
+        }
+        return true;
       },
       reduce(state, payload) {
         const progress = selectChapterRuntimeProgress(state, chapterCatalog).chapters[payload.chapterId];
         if (progress.status !== "in-progress" || progress.completedRuns === Number.MAX_SAFE_INTEGER) return state;
+        if (progress.activityResults.some((entry, index) =>
+          payload.activityResults[index]?.activityId !== entry.activityId
+          || payload.activityResults[index]?.status !== entry.status)) return state;
         return copyProgress(state, payload.chapterId, {
           ...progress,
           currentActivityIndex: payload.activityResults.length,
@@ -110,7 +123,11 @@ export function createChapterRuntimeActionDefinitions({ chapterCatalog } = {}) {
       },
       reduce(state, payload) {
         const progress = selectChapterRuntimeProgress(state, chapterCatalog).chapters[payload.chapterId];
-        if (progress.status !== "in-progress") return state;
+        if (progress.status !== "in-progress"
+            || progress.activityResults.length !== chapterCatalog.get(payload.chapterId).activities.length - 1
+            || progress.activityResults.some((entry, index) =>
+              payload.activityResults[index]?.activityId !== entry.activityId
+              || payload.activityResults[index]?.status !== entry.status)) return state;
         const activityResults = payload.activityResults.map((entry) => Object.freeze({ ...entry }));
         const run = Object.freeze({
           completedActivityCount: activityResults.filter((entry) => entry.status === "completed").length,
