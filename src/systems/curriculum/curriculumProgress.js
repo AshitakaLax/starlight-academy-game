@@ -1,6 +1,7 @@
 import { gameConfig } from "../../config/gameConfig.js";
 import { isPlainObject } from "../../core/state/stateUtils.js";
 import { getDifficultyTier } from "./difficultyTiers.js";
+import { createLowPressureOnboardingProfile, evaluateAdaptiveTier } from "./adaptiveDifficulty.js";
 import { skillDefinitions, getSkillDefinition } from "./skillRegistry.js";
 
 const ACTIVITY_ID_PATTERN = /^[a-z][a-z0-9-]*(?:[.-][a-z][a-z0-9-]*)+$/;
@@ -14,13 +15,18 @@ function emptySkillProgress() {
     unassistedCorrect: 0,
     hintedResponses: 0,
     masteryStatus: "not-started",
-    recentEvidence: []
+    currentTier: gameConfig.curriculum.onboardingTier,
+    recentEvidence: [],
+    tierEvidence: [],
+    tierChanges: 0,
+    lastTierChangeReason: null
   };
 }
 
 /** Serializable blank progress for every registered skill. */
 export function createInitialCurriculumProgress() {
   return {
+    onboarding: createLowPressureOnboardingProfile(),
     skills: Object.fromEntries(skillDefinitions.map((skill) => [skill.id, emptySkillProgress()])),
     evidence: [],
     nextEvidenceSequence: 1
@@ -61,6 +67,19 @@ function updateSkillProgress(current, record) {
     ? "demonstrated"
     : "in-progress";
 
+  const currentTier = getDifficultyTier(prior.currentTier)
+    ? prior.currentTier
+    : gameConfig.curriculum.onboardingTier;
+  const previousTierEvidence = Array.isArray(prior.tierEvidence)
+    ? prior.tierEvidence.filter((item) => item?.tier === currentTier)
+    : [];
+  const tierEvidence = record.tier === currentTier
+    ? [...previousTierEvidence, record].slice(-gameConfig.curriculum.adaptiveWindowSize)
+    : previousTierEvidence;
+  const adaptation = evaluateAdaptiveTier({ currentTier, evidence: tierEvidence });
+  const changedTier = adaptation.changed;
+  const nextTierEvidence = changedTier ? [] : tierEvidence;
+
   return {
     totalResponses: (Number.isSafeInteger(prior.totalResponses) ? prior.totalResponses : 0) + 1,
     totalAttempts: (Number.isSafeInteger(prior.totalAttempts) ? prior.totalAttempts : 0) + record.attempts,
@@ -70,7 +89,11 @@ function updateSkillProgress(current, record) {
     hintedResponses: (Number.isSafeInteger(prior.hintedResponses) ? prior.hintedResponses : 0)
       + (record.hintLevel > 0 ? 1 : 0),
     masteryStatus,
-    recentEvidence
+    currentTier: adaptation.nextTier,
+    recentEvidence,
+    tierEvidence: nextTierEvidence,
+    tierChanges: (Number.isSafeInteger(prior.tierChanges) ? prior.tierChanges : 0) + (changedTier ? 1 : 0),
+    lastTierChangeReason: changedTier ? adaptation.reason : (prior.lastTierChangeReason ?? null)
   };
 }
 
@@ -111,7 +134,8 @@ export const curriculumActionDefinitions = Object.freeze({
 
 export function selectSkillProgress(state, skillId) {
   const progress = state?.curriculum?.skills?.[skillId];
-  return isPlainObject(progress) ? progress : Object.freeze(emptySkillProgress());
+  if (!isPlainObject(progress)) return Object.freeze(emptySkillProgress());
+  return progress;
 }
 
 export function selectCurriculumEvidence(state) {
