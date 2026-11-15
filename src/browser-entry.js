@@ -13,6 +13,10 @@ import { createGarmentTemplateRegistry, defaultGarmentTemplates } from "./gamepl
 import { createInitialColoringState } from "./gameplay/coloring/coloringState.js";
 import { createColoringActionDefinitions } from "./gameplay/coloring/coloringActions.js";
 import { createColoringService } from "./gameplay/coloring/createColoringService.js";
+import { createPetCatalog, defaultPetDefinitions } from "./gameplay/pets/petCatalog.js";
+import { createInitialPetCollectionState } from "./gameplay/pets/petCollectionState.js";
+import { createPetActionDefinitions } from "./gameplay/pets/petActions.js";
+import { createPetCollectionService } from "./gameplay/pets/createPetCollectionService.js";
 import { createSaveManager, getBrowserStorage } from "./core/save/createSaveManager.js";
 import { createSaveService } from "./core/save/createSaveService.js";
 import { createInputRouter } from "./core/input/createInputRouter.js";
@@ -56,23 +60,27 @@ async function launch() {
   const rewardRegistry = createRewardRegistry();
   const wardrobeCatalog = createWardrobeCatalog(defaultWardrobeItems);
   const garmentTemplateRegistry = createGarmentTemplateRegistry(defaultGarmentTemplates);
+  const petCatalog = createPetCatalog(defaultPetDefinitions);
   const shopCatalog = createShopCatalog(createWardrobeShopCatalog(wardrobeCatalog));
   const economyActionDefinitions = createEconomyActionDefinitions({ rewardRegistry, shopCatalog });
   const wardrobeActionDefinitions = createWardrobeActionDefinitions({ wardrobeCatalog, economyActionDefinitions });
   const coloringActionDefinitions = createColoringActionDefinitions({ templateRegistry: garmentTemplateRegistry });
+  const petActionDefinitions = createPetActionDefinitions({ petCatalog });
   const initialGameState = {
     ...createInitialGameState(),
     curriculum: createInitialCurriculumProgress(),
     economy: createInitialEconomyState(),
     wardrobe: createInitialWardrobeState(wardrobeCatalog),
-    coloring: createInitialColoringState(garmentTemplateRegistry)
+    coloring: createInitialColoringState(garmentTemplateRegistry),
+    petCollection: createInitialPetCollectionState(petCatalog)
   };
   const store = createGameStore({
     initialState: initialGameState,
-    actions: { ...curriculumActionDefinitions, ...economyActionDefinitions, ...wardrobeActionDefinitions, ...coloringActionDefinitions }
+    actions: { ...curriculumActionDefinitions, ...economyActionDefinitions, ...wardrobeActionDefinitions, ...coloringActionDefinitions, ...petActionDefinitions }
   });
   const wardrobeService = createWardrobeService({ store, wardrobeCatalog });
   const coloringService = createColoringService({ store, templateRegistry: garmentTemplateRegistry });
+  const petCollectionService = createPetCollectionService({ store, petCatalog });
   const saveManager = createSaveManager({
     storage: getBrowserStorage(),
     storageKey: gameConfig.persistence.storageKey,
@@ -142,7 +150,7 @@ async function launch() {
   const academyShell = createAcademyShell({
     root, store, saveService, saveStatusElement: saveHealth, audioStatusElement: audioStatus,
     narrationService, narrationStatusElement: narrationStatus, narrationTextElement: narrationCaption,
-    wardrobeService, coloringService, garmentTemplateRegistry,
+    wardrobeService, coloringService, garmentTemplateRegistry, petCollectionService, petCatalog,
     emblemSvg: academyEmblem, documentRef: document, windowRef: window
   });
   document.documentElement.dataset.appStatus = app.status;
