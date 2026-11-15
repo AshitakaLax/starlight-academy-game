@@ -367,9 +367,10 @@ export function createAcademyShell({
       } else {
         action.className = "wardrobe-secondary-action";
         action.disabled = true;
-        const sourceName = item.acquisition.sourceId?.replace(/^chapter-/, "Chapter ")
-          ?? item.acquisition.sourceId?.replace(/^quest-/, "Quest ")
-          ?? "your adventure";
+        const sourceId = item.acquisition.sourceId ?? "";
+        const sourceName = item.acquisition.type === "chapter"
+          ? sourceId.replace(/^chapter-/, "Chapter ")
+          : sourceId.replace(/^quest-/, "Quest ");
         action.textContent = "Earn in " + sourceName;
       }
       card.append(action);
