@@ -56,3 +56,8 @@ export { createGymnasticsEngine } from "./gameplay/gymnastics/gymnasticsEngine.j
 export { createInitialGymnasticsState, selectGymnasticsProgress } from "./gameplay/gymnastics/gymnasticsState.js";
 export { createGymnasticsActionDefinitions } from "./gameplay/gymnastics/gymnasticsActions.js";
 export { createGymnasticsService } from "./gameplay/gymnastics/createGymnasticsService.js";
+
+export { createChapterCatalog, createChapterDefinition, validateChapterDefinition } from "./gameplay/chapter-runtime/chapterCatalog.js";
+export { createInitialChapterRuntimeState, selectChapterRuntimeProgress } from "./gameplay/chapter-runtime/chapterRuntimeState.js";
+export { createChapterRuntimeActionDefinitions } from "./gameplay/chapter-runtime/chapterRuntimeActions.js";
+export { createChapterRuntimeService } from "./gameplay/chapter-runtime/createChapterRuntimeService.js";
