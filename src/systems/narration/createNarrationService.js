@@ -162,7 +162,7 @@ export function createNarrationService({
     speechSynthesis?.addEventListener?.("voiceschanged", onVoicesChanged);
     unsubscribeStore = store.subscribe((state, action) => {
       settings = selectNarrationSettings(state);
-      if (action?.type === "narration/settings-updated" && !settings.enabled) cancel();
+      if (!settings.enabled && speaking) cancel();
     });
     if (!available) {
       status("unavailable", "Narration is not available in this browser. Instructions will remain visible as text.");
