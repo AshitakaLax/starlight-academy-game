@@ -7,7 +7,8 @@ This repository is a modular JavaScript ES-module source project. The player-fac
 - [x] STEP-01 — Modular source foundation and interface boundaries
 - [~] STEP-02 — Build pipeline implemented; npm install/check/test/build pass per user; manual local launch in Chrome and Edge remains to be confirmed
 - [x] STEP-03 — Centralized immutable event-driven state store, validated actions, selectors, and scoped subscriptions
-- [x] STEP-04 — Versioned save manager, autosave/checkpoints, JSON backup/restore, migrations, and recovery status
+- [x] STEP-04 — Versioned save manager, autosave/checkpoints, JSON backup/restore, migrations, and recovery status (npm check/test/build confirmed passing by user)
+- [~] STEP-05 — Context-aware keyboard shortcuts and delegated mouse-action routing implemented; verification pending
 
 The current HTML is an offline launch shell demonstrating the packaged project foundation, state store, and local save health. Game screens and playable systems are added in their later ledger steps; the shell is not yet the completed game.
 
@@ -21,7 +22,7 @@ src/
   core/
     state/                 Immutable store, actions, selectors, subscription scopes
     save/                  Versioned persistence, import/export, migration and recovery
-    input/                 Context-aware keyboard and mouse routing boundary
+    input/                 Context-aware keyboard shortcuts and delegated mouse actions
   systems/                 Audio, narration, curriculum, hints, economy
   gameplay/                Chapter runtime, gymnastics, pets, coloring
   chapters/                Data-driven chapter definitions and registry
@@ -37,7 +38,7 @@ build/
   build.mjs                Bundles and validates the offline HTML
   index.template.html      HTML shell with inline CSS/JS insertion points
 
-tests/                     Node built-in tests for foundation, state, save, and build
+tests/                     Node built-in tests for foundation, state, save, input, and build
 dist/                       Generated, git-ignored HTML deliverable
 ~~~
 
@@ -62,6 +63,17 @@ dist/                       Generated, git-ignored HTML deliverable
 - Re-entrant dispatches from subscribers are queued FIFO so a transition finishes before the next transition begins.
 
 See src/core/state/README.md for the store API and usage details.
+
+## Input and navigation rules
+
+- Keyboard shortcuts are registered by screen and overlay context; modal overlays suspend background shortcuts.
+- Hub keys 1–5 select the five dock destinations. Multiple-choice activity keys 1–4 select answers only in multiple-choice mode.
+- H requests a hint only when the current activity explicitly supports hints. Enter/Space advance dialogue when appropriate or activate a focused primary control.
+- Escape closes the current overlay, or opens Settings when no overlay is active.
+- Text inputs, textareas, selects, contenteditable regions and textboxes retain normal keyboard behavior. Native buttons and links keep browser-managed activation, preventing duplicate actions.
+- Mouse clicks on `data-game-action` controls dispatch named actions once; optional JSON payloads and context gates are validated.
+
+See src/core/input/README.md for context registration, action bindings and event-lifecycle details.
 
 ## Save and recovery rules
 
