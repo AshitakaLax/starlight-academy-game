@@ -430,6 +430,11 @@ export function createAcademyShell({
   let gymnasticsClock = null;
   let gymnasticsPointerActive = false;
   let gymnasticsRecorded = false;
+  let gymnasticsCueRoutine = null;
+  let gymnasticsCountInStartAt = null;
+  let gymnasticsCountInCueBeat = 0;
+  let gymnasticsRhythmStartAt = null;
+  let gymnasticsRhythmCueIndex = 0;
   let gymnasticsStatusMessage = "Your routine is ready when you are.";
 
   function setSettingsMessage(message, kind = "info") {
@@ -910,8 +915,33 @@ export function createAcademyShell({
     gymnasticsClock = schedule(() => {
       if (!gymnasticsSession) { stopGymnasticsClock(); return; }
       try {
-        const snapshot = gymnasticsSession.update(gymnasticsNow());
-        if (snapshot.stage === "tracing" || snapshot.stage === "completed") stopGymnasticsClock();
+        const now = gymnasticsNow();
+        const snapshot = gymnasticsSession.update(now);
+        if (snapshot.stage === "count-in" && gymnasticsCueRoutine && gymnasticsCountInStartAt !== null) {
+          const interval = 60000 / gymnasticsCueRoutine.bpm;
+          let cueDue = false;
+          while (gymnasticsCountInCueBeat < gymnasticsCueRoutine.countInBeats
+              && now >= gymnasticsCountInStartAt + gymnasticsCountInCueBeat * interval) {
+            gymnasticsCountInCueBeat += 1;
+            cueDue = true;
+          }
+          if (cueDue) audioService?.playSfx?.("beat");
+        }
+        if (snapshot.stage === "rhythm" && gymnasticsCueRoutine && gymnasticsRhythmStartAt !== null) {
+          const interval = 60000 / gymnasticsCueRoutine.bpm;
+          let cueDue = false;
+          while (gymnasticsRhythmCueIndex < gymnasticsCueRoutine.beatCheckpoints.length
+              && now >= gymnasticsRhythmStartAt + gymnasticsCueRoutine.beatCheckpoints[gymnasticsRhythmCueIndex] * interval) {
+            gymnasticsRhythmCueIndex += 1;
+            cueDue = true;
+          }
+          if (cueDue) audioService?.playSfx?.("beat");
+        }
+        if (snapshot.stage === "tracing") {
+          stopGymnasticsClock();
+          gymnasticsCountInStartAt = null;
+        }
+        if (snapshot.stage === "completed") stopGymnasticsClock();
         renderGymnastics();
       } catch (error) {
         stopGymnasticsClock();
@@ -927,10 +957,16 @@ export function createAcademyShell({
     if (!routine) return;
     stopGymnasticsClock();
     gymnasticsSession = gymnasticsService.createSession(routine.id);
+    gymnasticsCueRoutine = routine;
     gymnasticsRecorded = false;
+    gymnasticsRhythmStartAt = null;
+    gymnasticsRhythmCueIndex = 0;
     gymnasticsStatusMessage = "Your count-in is beginning.";
-    gymnasticsSession.start(gymnasticsNow());
+    gymnasticsCountInStartAt = gymnasticsNow();
+    gymnasticsCountInCueBeat = 1;
+    gymnasticsSession.start(gymnasticsCountInStartAt);
     audioService?.playSfx?.("open");
+    audioService?.playSfx?.("beat");
     renderGymnastics();
     startGymnasticsClock();
   }
@@ -943,8 +979,15 @@ export function createAcademyShell({
       if (action === "start") {
         startGymnasticsPractice();
       } else if (action === "finish-trace" && gymnasticsSession) {
-        gymnasticsSession.finishTrace(gymnasticsNow());
-        gymnasticsStatusMessage = "Now listen for the stars and tap each beat.";
+        const rhythmStartAt = gymnasticsNow();
+        gymnasticsSession.finishTrace(rhythmStartAt);
+        gymnasticsRhythmStartAt = rhythmStartAt;
+        gymnasticsRhythmCueIndex = 0;
+        if (gymnasticsCueRoutine?.beatCheckpoints?.[0] === 0) {
+          audioService?.playSfx?.("beat");
+          gymnasticsRhythmCueIndex = 1;
+        }
+        gymnasticsStatusMessage = "Now listen for the soft beat ticks and tap each star.";
         renderGymnastics();
         startGymnasticsClock();
       } else if (action === "tap-beat" && gymnasticsSession) {
@@ -1199,6 +1242,9 @@ export function createAcademyShell({
       stopGymnasticsClock();
       gymnasticsSession = null;
       gymnasticsPointerActive = false;
+      gymnasticsCueRoutine = null;
+      gymnasticsCountInStartAt = null;
+      gymnasticsRhythmStartAt = null;
     }
     const wardrobeMode = dockId === "wardrobe";
     if (!wardrobeMode) coloringOpen = false;
