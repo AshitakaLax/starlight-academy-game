@@ -21,8 +21,8 @@ async function launch() {
   saveHealth.textContent = "Checking saved progress…";
 
   const store = createGameStore();
-  const screenScope = store.createScope("launch-screen");
-  screenScope.subscribeSelector(selectCurrentScreen, (screenId) => {
+  const appScope = store.createScope("application-shell", { screenId: null });
+  appScope.subscribeSelector(selectCurrentScreen, (screenId) => {
     root.dataset.screenId = screenId ?? "";
   }, { emitCurrent: true });
 
@@ -86,7 +86,7 @@ async function launch() {
   document.documentElement.dataset.appStatus = app.status;
 
   window.addEventListener("pagehide", () => {
-    screenScope.dispose();
+    appScope.dispose();
     store.destroy();
     void app.stop();
   }, { once: true });
