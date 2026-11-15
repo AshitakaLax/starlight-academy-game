@@ -158,7 +158,7 @@ async function launch() {
   const academyShell = createAcademyShell({
     root, store, saveService, saveStatusElement: saveHealth, audioStatusElement: audioStatus,
     narrationService, narrationStatusElement: narrationStatus, narrationTextElement: narrationCaption,
-    wardrobeService, coloringService, garmentTemplateRegistry, petCollectionService, petCatalog, gymnasticsService,
+    wardrobeService, coloringService, garmentTemplateRegistry, petCollectionService, petCatalog, gymnasticsService, audioService,
     emblemSvg: academyEmblem, documentRef: document, windowRef: window
   });
   document.documentElement.dataset.appStatus = app.status;
