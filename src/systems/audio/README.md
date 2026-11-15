@@ -10,3 +10,5 @@ STEP-08 implements local synthesized audio using the Web Audio API. The system o
 - If Web Audio is unsupported or blocked, the service reports a quiet fallback and the game continues without audio.
 
 The audio service unlocks on the first interaction inside the academy, routes screen and dialog changes to appropriate sounds, and closes audio resources on app shutdown.
+
+- Narration can duck only the music bus through `setMusicDuck(factor)`; the saved music volume and sound-effect level remain unchanged.
