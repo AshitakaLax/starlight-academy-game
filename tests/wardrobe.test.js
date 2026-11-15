@@ -50,7 +50,7 @@ test("wardrobe catalog defines stable item IDs, four equipment slots, and immuta
 
 test("wardrobe item definitions reject invalid slots, IDs, symbols, themes, and acquisition rules", () => {
   assert.throws(() => createWardrobeItem({ ...defaultWardrobeItems[0], slot: "hands" }), /slot/);
-  assert.throws(() => createWardrobeItem({ ...defaultWardrobeItems[0], id: "not-namespaced" }), /namespaced/);
+  assert.throws(() => createWardrobeItem({ ...defaultWardrobeItems[0], id: "Invalid ID" }), /namespaced/);
   assert.throws(() => createWardrobeItem({ ...defaultWardrobeItems[0], symbol: "ABCDE" }), /1 to 4/);
   assert.throws(() => createWardrobeItem({ ...defaultWardrobeItems[0], theme: "Lavender Glow" }), /lowercase token/);
   assert.throws(() => createWardrobeItem({ ...defaultWardrobeItems[0], acquisition: { type: "purchase", priceStarGems: 0 } }), /positive safe-integer/);
