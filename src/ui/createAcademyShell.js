@@ -205,7 +205,10 @@ export function createAcademyShell({
   const narrationStatusSlot = requireElement(root, "[data-narration-status-slot]");
   if (narrationStatusElement) narrationStatusSlot.replaceWith(narrationStatusElement);
   const narrationTextSlot = requireElement(root, "[data-narration-text-slot]");
-  if (narrationTextElement) narrationTextSlot.replaceWith(narrationTextElement);
+  if (narrationTextElement) {
+    narrationTextElement.dataset.narrationTextSlot = "";
+    narrationTextSlot.replaceWith(narrationTextElement);
+  }
 
   const panel = {
     kicker: requireElement(root, "[data-screen-kicker]"),
