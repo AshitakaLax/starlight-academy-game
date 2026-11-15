@@ -261,6 +261,29 @@ test("checkpoint cancels pending autosave and storage failures remain visible", 
   assert.equal(unavailable.getStatus().state, "unavailable");
 });
 
+
+test("failed import replacement leaves a queued autosave intact", () => {
+  const original = makeState("academy", { saved: true });
+  const queued = makeState("pets", { newer: true });
+  const storage = new MemoryStorage([["starlight-academy.save", envelope(original)]]);
+  const timers = makeTimers();
+  const manager = createSaveManager({
+    storage,
+    setTimer: timers.setTimer,
+    clearTimer: timers.clearTimer
+  });
+
+  manager.schedule(queued);
+  storage.failWrite = true;
+  assert.throws(() => manager.import(envelope(makeState("wardrobe")), { confirmReplace: true }), /could not be saved/);
+  assert.equal(timers.pending(), 1);
+  assert.deepEqual(JSON.parse(storage.values.get("starlight-academy.save")).state, original);
+
+  storage.failWrite = false;
+  timers.runNext();
+  assert.deepEqual(JSON.parse(storage.values.get("starlight-academy.save")).state, queued);
+});
+
 test("save service restores before subscribing and autosaves state transitions", async () => {
   const storage = new MemoryStorage();
   const manager = createSaveManager({ storage });
