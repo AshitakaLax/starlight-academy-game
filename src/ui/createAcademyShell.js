@@ -90,6 +90,15 @@ const MARKUP = String.raw`<div class="academy-shell" data-text-scale="normal" da
           <button class="path-card path-wardrobe" type="button" data-game-action="hub/dock-selected" data-game-payload='{"dockId":"wardrobe"}'><span class="path-card-icon" aria-hidden="true">❀</span><span class="path-card-title">Creative wardrobe</span><span class="path-card-note">Style &amp; imagination</span><span class="path-card-arrow" aria-hidden="true">↗</span></button>
         </div>
       </section>
+      <section class="wardrobe-panel" data-wardrobe-panel hidden aria-labelledby="wardrobe-panel-title">
+        <div class="wardrobe-panel-heading">
+          <div><p class="academy-overline">YOUR PERSONAL STYLE</p><h2 id="wardrobe-panel-title">Your wardrobe</h2><p>Choose an item you own, save your favorite look, or collect a new piece on your adventures.</p></div>
+          <span class="wardrobe-heading-star" aria-hidden="true">✧</span>
+        </div>
+        <div class="wardrobe-equipped-wrap"><h3>Currently wearing</h3><div class="wardrobe-equipped" data-wardrobe-equipped></div></div>
+        <div class="wardrobe-inventory-wrap"><div class="wardrobe-items-heading"><div><h3>Clothing &amp; accessories</h3><p>Starter pieces are ready to wear. Chapter rewards and optional shop pieces unlock as you play.</p></div></div><div class="wardrobe-inventory" data-wardrobe-inventory></div></div>
+        <p class="wardrobe-status" data-wardrobe-status role="status" aria-live="polite">Your starter outfit is ready.</p>
+      </section>
       <p class="narration-caption" data-narration-text-slot hidden role="status" aria-live="polite"></p>
     </div>
   </main>
@@ -171,7 +180,7 @@ function requireElement(root, selector) {
 /** Compose the semantic academy hub and accessible settings dialog. */
 export function createAcademyShell({
   root, store, saveService, saveStatusElement = null, audioStatusElement = null, narrationService = null,
-  narrationStatusElement = null, narrationTextElement = null, emblemSvg = "",
+  narrationStatusElement = null, narrationTextElement = null, wardrobeService = null, emblemSvg = "",
   documentRef = globalThis.document, windowRef = globalThis.window
 } = {}) {
   if (!root || typeof root.querySelector !== "function" || typeof root.addEventListener !== "function") {
@@ -218,8 +227,21 @@ export function createAcademyShell({
     description: requireElement(root, "[data-screen-description]"),
     heroTitle: requireElement(root, "[data-hero-title]"),
     heroDescription: requireElement(root, "[data-hero-description]"),
-    heroButton: requireElement(root, "[data-hero-button]")
+    heroButton: requireElement(root, "[data-hero-button]"),
+    hero: requireElement(root, ".academy-hero"),
+    quickPaths: requireElement(root, ".quick-paths"),
+    wardrobePanel: requireElement(root, "[data-wardrobe-panel]"),
+    wardrobeEquipped: requireElement(root, "[data-wardrobe-equipped]"),
+    wardrobeInventory: requireElement(root, "[data-wardrobe-inventory]"),
+    wardrobeStatus: requireElement(root, "[data-wardrobe-status]")
   };
+  if (wardrobeService !== null
+      && (typeof wardrobeService.getPreview !== "function"
+        || typeof wardrobeService.purchaseItem !== "function"
+        || typeof wardrobeService.equipItem !== "function"
+        || typeof wardrobeService.unequipSlot !== "function")) {
+    throw new TypeError("wardrobeService must expose wardrobe inventory and equipment operations.");
+  }
   const settingsTrigger = requireElement(root, ".settings-trigger");
   const narrationVoiceSelect = requireElement(root, "[data-narration-voice]");
   const academyScene = createAcademyScene({ canvas: requireElement(root, "[data-academy-scene]"), documentRef, windowRef });
@@ -266,6 +288,127 @@ export function createAcademyShell({
     narrationVoiceSelect.value = settings.voiceURI;
   }
 
+  function renderWardrobe() {
+    if (!wardrobeService) {
+      panel.wardrobeEquipped.replaceChildren();
+      panel.wardrobeInventory.replaceChildren();
+      panel.wardrobeStatus.textContent = "Wardrobe inventory will be available when the wardrobe service is connected.";
+      return;
+    }
+    const preview = wardrobeService.getPreview();
+    const fragment = documentRef.createDocumentFragment();
+    const slotLabels = {
+      head: "Headwear",
+      outfit: "Outfit",
+      footwear: "Footwear",
+      accessory: "Accessory"
+    };
+    for (const entry of preview.equipped) {
+      const card = documentRef.createElement("div");
+      card.className = "wardrobe-slot-card";
+      const label = documentRef.createElement("span");
+      label.className = "wardrobe-slot-label";
+      label.textContent = slotLabels[entry.slot] ?? entry.slot;
+      const itemName = documentRef.createElement("strong");
+      itemName.textContent = entry.item?.title ?? "Nothing equipped";
+      const symbol = documentRef.createElement("span");
+      symbol.className = "wardrobe-slot-symbol";
+      symbol.textContent = entry.item?.symbol ?? "—";
+      card.append(symbol, label, itemName);
+      if (entry.item) {
+        const remove = documentRef.createElement("button");
+        remove.type = "button";
+        remove.className = "wardrobe-secondary-action";
+        remove.dataset.wardrobeAction = "unequip";
+        remove.dataset.slot = entry.slot;
+        remove.textContent = "Take off";
+        card.append(remove);
+      }
+      fragment.append(card);
+    }
+    panel.wardrobeEquipped.replaceChildren(fragment);
+
+    const inventoryFragment = documentRef.createDocumentFragment();
+    for (const item of preview.inventory) {
+      const card = documentRef.createElement("article");
+      card.className = "wardrobe-item-card";
+      card.dataset.itemState = item.status;
+      card.dataset.itemTheme = item.theme;
+      const symbol = documentRef.createElement("span");
+      symbol.className = "wardrobe-item-symbol";
+      symbol.setAttribute("aria-hidden", "true");
+      symbol.textContent = item.symbol;
+      const slot = documentRef.createElement("span");
+      slot.className = "wardrobe-item-slot";
+      slot.textContent = slotLabels[item.slot] ?? item.slot;
+      const title = documentRef.createElement("h4");
+      title.textContent = item.title;
+      const description = documentRef.createElement("p");
+      description.textContent = item.description;
+      card.append(symbol, slot, title, description);
+
+      const action = documentRef.createElement("button");
+      action.type = "button";
+      if (item.owned && item.equipped) {
+        action.className = "wardrobe-secondary-action";
+        action.disabled = true;
+        action.textContent = "Wearing";
+      } else if (item.owned) {
+        action.className = "wardrobe-primary-action";
+        action.dataset.wardrobeAction = "equip";
+        action.dataset.itemId = item.id;
+        action.textContent = "Wear item";
+      } else if (item.acquisition.type === "purchase") {
+        action.className = "wardrobe-primary-action";
+        action.dataset.wardrobeAction = "purchase";
+        action.dataset.itemId = item.id;
+        action.disabled = !item.available;
+        action.textContent = "Buy · " + item.acquisition.priceStarGems + " Star Gems";
+      } else {
+        action.className = "wardrobe-secondary-action";
+        action.disabled = true;
+        const sourceName = item.acquisition.sourceId?.replace(/^chapter-/, "Chapter ")
+          ?? item.acquisition.sourceId?.replace(/^quest-/, "Quest ")
+          ?? "your adventure";
+        action.textContent = "Earn in " + sourceName;
+      }
+      card.append(action);
+      inventoryFragment.append(card);
+    }
+    panel.wardrobeInventory.replaceChildren(inventoryFragment);
+
+    const gems = preview.inventory.find((item) => item.acquisition.type === "purchase")?.available;
+    panel.wardrobeStatus.textContent = gems === false
+      ? "Collect Star Gems through academy rewards to shop for optional cosmetics."
+      : "Your starter outfit is ready. Select any owned item to wear it.";
+  }
+
+  function handleWardrobeAction(event) {
+    const actionElement = event.target?.closest?.("[data-wardrobe-action]");
+    if (!actionElement || !root.contains(actionElement) || !wardrobeService) return false;
+    const action = actionElement.dataset.wardrobeAction;
+    try {
+      if (action === "purchase") {
+        const result = wardrobeService.purchaseItem(actionElement.dataset.itemId);
+        panel.wardrobeStatus.textContent = result.purchased
+          ? "Added " + result.itemId.replace(/^wardrobe\./, "").replaceAll("-", " ") + " to your wardrobe."
+          : result.reason === "insufficient-star-gems"
+            ? "You need more Star Gems for that item."
+            : "That item could not be purchased.";
+      } else if (action === "equip") {
+        const result = wardrobeService.equipItem(actionElement.dataset.itemId);
+        panel.wardrobeStatus.textContent = result.equipped ? "Your look has been updated." : "That item is still locked.";
+      } else if (action === "unequip") {
+        wardrobeService.unequipSlot(actionElement.dataset.slot);
+        panel.wardrobeStatus.textContent = "Equipment updated.";
+      }
+    } catch (error) {
+      panel.wardrobeStatus.textContent = error?.message || "The wardrobe could not be updated.";
+    }
+    renderWardrobe();
+    return true;
+  }
+
   function render() {
     if (disposed) return;
     const state = store.getState();
@@ -292,6 +435,11 @@ export function createAcademyShell({
     panel.heroTitle.textContent = destination.heroTitle;
     panel.heroDescription.textContent = destination.heroDescription;
     panel.heroButton.textContent = destination.button;
+    const wardrobeMode = dockId === "wardrobe";
+    panel.hero.hidden = wardrobeMode;
+    panel.quickPaths.hidden = wardrobeMode;
+    panel.wardrobePanel.hidden = !wardrobeMode;
+    if (wardrobeMode) renderWardrobe();
 
     for (const button of root.querySelectorAll("[data-dock-id]")) {
       if (button.dataset.dockId === dockId) button.setAttribute("aria-current", "page");
@@ -356,6 +504,7 @@ export function createAcademyShell({
   }
 
   function handleClick(event) {
+    if (handleWardrobeAction(event)) return;
     const actionElement = event.target?.closest?.("[data-ui-action]");
     if (!actionElement || !root.contains(actionElement)) return;
     const action = actionElement.dataset.uiAction;
