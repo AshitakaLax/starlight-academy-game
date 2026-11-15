@@ -16,7 +16,10 @@ export function createSaveService({
   if (!saveManager || typeof saveManager.load !== "function"
       || typeof saveManager.schedule !== "function"
       || typeof saveManager.flush !== "function"
-      || typeof saveManager.checkpoint !== "function") {
+      || typeof saveManager.checkpoint !== "function"
+      || typeof saveManager.export !== "function"
+      || typeof saveManager.previewImport !== "function"
+      || typeof saveManager.import !== "function") {
     throw new TypeError("createSaveService requires a compatible save manager.");
   }
   if (typeof onError !== "function") throw new TypeError("onError must be a function.");
