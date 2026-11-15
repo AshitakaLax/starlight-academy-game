@@ -82,6 +82,19 @@ test("selectors support path access, memoization and equality-filtered subscript
   assert.deepEqual(updates, [["overlay", "settings"], ["academy", "pets"]]);
 });
 
+test("overlay close actions cannot close a different active overlay", () => {
+  const store = createGameStore();
+  store.dispatch({ type: "ui/overlay-opened", payload: { overlayId: "settings" } });
+  store.dispatch({ type: "ui/overlay-opened", payload: { overlayId: "inventory" } });
+  store.dispatch({ type: "ui/overlay-closed", payload: { overlayId: "settings" } });
+  assert.equal(selectActiveOverlayId(store.getState()), "inventory");
+  store.dispatch({ type: "ui/overlay-closed", payload: { overlayId: "inventory" } });
+  assert.equal(selectActiveOverlayId(store.getState()), null);
+  store.dispatch({ type: "ui/overlay-opened", payload: { overlayId: "map" } });
+  store.dispatch({ type: "ui/overlay-closed" });
+  assert.equal(selectActiveOverlayId(store.getState()), null);
+});
+
 test("screen-scoped subscriptions are disposed automatically when leaving their screen", () => {
   const store = createGameStore();
   const scope = store.createScope("academy-screen");
