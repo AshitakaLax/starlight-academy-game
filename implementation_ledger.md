@@ -1,13 +1,13 @@
 # Starlight Academy: Studio of Magic & Motion
 ## Revised Engineering Implementation Ledger
 
-This ledger operationalizes the Revised Gameplay, Architecture & Engineering Implementation Plan. Acceptance criteria are required test outcomes, not merely descriptions of features. Status values begin as **Planned**.
+This ledger operationalizes the Revised Gameplay, Architecture & Engineering Implementation Plan. Acceptance criteria are required test outcomes, not merely descriptions of features. Status reflects verified implementation progress on the active branch.
 
 **Release requirement:** All 10 chapters and 20 side quests ship in one self-contained HTML file. Multiple source files are allowed during development. Target browsers are desktop Chrome and Edge.
 
 | Step ID | Category | Implementation task | Dependencies | Acceptance criteria | Status |
 |---|---|---|---|---|---|
-| STEP-01 | Project foundation | Establish modular source project structure for app bootstrap, core state/input/save services, gameplay systems, rendering, UI, chapter data, side quests, and configuration. | None | Source files have documented responsibilities and stable interfaces; gameplay code does not directly manipulate unrelated systems. | Planned |
+| STEP-01 | Project foundation | Establish modular source project structure for app bootstrap, core state/input/save services, gameplay systems, rendering, UI, chapter data, side quests, and configuration. | None | Source files have documented responsibilities and stable interfaces; gameplay code does not directly manipulate unrelated systems. | Complete |
 | STEP-02 | Build and packaging | Create build pipeline that bundles source modules, CSS, data, vector assets, and generated audio logic into one standalone HTML file. | STEP-01 | Built HTML opens locally in Chrome and Edge, makes no runtime network requests, and requires no sibling asset files. | Planned |
 | STEP-03 | Core engine | Implement centralized event-driven state store, validated actions, selectors, and UI/render subscriptions. | STEP-01 | State transitions are deterministic; invalid actions are rejected; render loops do not mutate progression; no stale subscriptions remain after screen changes. | Planned |
 | STEP-04 | Save system | Implement versioned save manager, autosave checkpoints, JSON export/import, validation, migration hooks, and recovery/error messaging. | STEP-03 | Progress survives reload; export/import restores the same state; malformed imports do not overwrite an existing save; storage and quota failures are handled visibly. | Planned |

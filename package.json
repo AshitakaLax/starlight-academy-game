@@ -1,0 +1,14 @@
+{
+  "name": "starlight-academy-game",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Modular source project for the offline Starlight Academy game.",
+  "scripts": {
+    "check": "node --check src/index.js && node --check src/app/createGameApp.js && node --check src/chapters/registry.js && node --check src/side-quests/registry.js && node --check src/config/gameConfig.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
