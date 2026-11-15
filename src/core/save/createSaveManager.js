@@ -250,8 +250,10 @@ export function createSaveManager({
   }
 
   function save(inputState) {
+    // Keep a queued save alive if this immediate write fails.
+    const receipt = writeState(inputState);
     cancelAutosave();
-    return writeState(inputState);
+    return receipt;
   }
 
   function checkpoint(inputState) {
@@ -351,8 +353,9 @@ export function createSaveManager({
       throw error;
     }
 
-    cancelAutosave();
+    // Only discard a queued autosave after the imported save is written successfully.
     const receipt = writeState(preview.state);
+    cancelAutosave();
     updateStatus("imported", "Imported progress was saved on this device.", null, receipt.savedAt);
     return validateAndCloneState(preview.state);
   }
