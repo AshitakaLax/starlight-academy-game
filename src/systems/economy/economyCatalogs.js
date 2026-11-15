@@ -1,7 +1,7 @@
 import { gameConfig } from "../../config/gameConfig.js";
 
 const ID_PATTERN = /^[a-z][a-z0-9-]*(?:[.-][a-z][a-z0-9-]*)+$/;
-const SOURCE_ID_PATTERN = /^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)?$/;
+const SOURCE_ID_PATTERN = /^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*$/;
 const REWARD_KEYS = Object.freeze(["id", "sourceId", "title", "starGems", "starlightSparkles", "replayPolicy"]);
 const ITEM_KEYS = Object.freeze(["id", "title", "priceStarGems", "maxOwned"]);
 
