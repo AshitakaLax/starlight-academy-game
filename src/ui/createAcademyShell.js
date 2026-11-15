@@ -1087,9 +1087,18 @@ export function createAcademyShell({
       panel.chapterSessionActions.hidden = true;
       panel.chapterSessionCompletion.hidden = false;
       const granted = snapshot.completionReceipt?.rewards?.filter((reward) => reward.granted).length ?? 0;
-      panel.chapterSessionReward.textContent = granted > 0
+      const wardrobeReceipt = snapshot.completionReceipt?.wardrobe;
+      const wardrobeTitles = (wardrobeReceipt?.unlockedItemIds ?? [])
+        .map((itemId) => wardrobeService?.getInventory?.().find((item) => item.id === itemId)?.title ?? itemId);
+      const wardrobeMessage = wardrobeTitles.length
+        ? " You also unlocked " + wardrobeTitles.join(", ") + " in your Wardrobe."
+        : wardrobeReceipt?.alreadyOwnedItemIds?.length
+          ? " Your chapter outfit is already waiting in your Wardrobe."
+          : "";
+      panel.chapterSessionReward.textContent = (granted > 0
         ? "Your major chapter reward has been added to your academy progress. Replay is always welcome, but rewards are one-time."
-        : "Wonderful work. This replay kept your progress and did not duplicate any one-time rewards.";
+        : "Wonderful work. This replay kept your progress and did not duplicate any one-time rewards.")
+        + wardrobeMessage;
       return;
     }
     panel.chapterSessionStatus.textContent = "Your place is saved automatically after each activity. You can safely exit at any time.";
