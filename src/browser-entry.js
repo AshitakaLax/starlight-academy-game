@@ -19,6 +19,11 @@ import { createInitialPetCollectionState } from "./gameplay/pets/petCollectionSt
 import { createPetActionDefinitions } from "./gameplay/pets/petActions.js";
 import { createPetCollectionService } from "./gameplay/pets/createPetCollectionService.js";
 import { chapterDefinitions, createChapterCatalog } from "./chapters/registry.js";
+import { chapterOneActivityDefinitions, chapterOneHintDefinitions, chapterOneReward } from "./chapters/chapterOne.js";
+import { createActivityRegistry } from "./systems/curriculum/activityDefinitions.js";
+import { createQuestionGeneratorRegistry } from "./systems/curriculum/questionGenerators.js";
+import { createHintRegistry } from "./systems/hints/createHintRegistry.js";
+import { createHintService } from "./systems/hints/createHintService.js";
 import { createInitialChapterRuntimeState } from "./gameplay/chapter-runtime/chapterRuntimeState.js";
 import { createChapterRuntimeActionDefinitions } from "./gameplay/chapter-runtime/chapterRuntimeActions.js";
 import { createChapterRuntimeService } from "./gameplay/chapter-runtime/createChapterRuntimeService.js";
@@ -66,7 +71,10 @@ async function launch() {
   narrationStatus.setAttribute("aria-live", "polite");
   narrationStatus.textContent = "Narration is optional and turned off.";
 
-  const rewardRegistry = createRewardRegistry();
+  const rewardRegistry = createRewardRegistry([chapterOneReward]);
+  const activityRegistry = createActivityRegistry(chapterOneActivityDefinitions);
+  const questionGeneratorRegistry = createQuestionGeneratorRegistry();
+  const hintRegistry = createHintRegistry({ activityRegistry, initialDefinitions: chapterOneHintDefinitions });
   const wardrobeCatalog = createWardrobeCatalog(defaultWardrobeItems);
   const garmentTemplateRegistry = createGarmentTemplateRegistry(defaultGarmentTemplates);
   const petCatalog = createPetCatalog(defaultPetDefinitions);
@@ -150,6 +158,9 @@ async function launch() {
       narrationStatus.dataset.kind = status.kind;
     }
   });
+  const hintService = createHintService({
+    activityRegistry, hintRegistry, questionGeneratorRegistry, narrationService
+  });
 
   const inputRouter = createInputRouter({
     store, target: window, documentRef: document, root,
@@ -170,7 +181,7 @@ async function launch() {
   const academyShell = createAcademyShell({
     root, store, saveService, saveStatusElement: saveHealth, audioStatusElement: audioStatus,
     narrationService, narrationStatusElement: narrationStatus, narrationTextElement: narrationCaption,
-    wardrobeService, coloringService, garmentTemplateRegistry, petCollectionService, petCatalog, gymnasticsService, chapterRuntimeService, audioService,
+    activityRegistry, questionGeneratorRegistry, hintService, wardrobeService, coloringService, garmentTemplateRegistry, petCollectionService, petCatalog, gymnasticsService, chapterRuntimeService, audioService,
     emblemSvg: academyEmblem, documentRef: document, windowRef: window
   });
   document.documentElement.dataset.appStatus = app.status;
