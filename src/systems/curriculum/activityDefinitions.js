@@ -55,9 +55,25 @@ export function validateActivityDefinition(input) {
   if (!isPlainObject(input.answerRules) || !ANSWER_RULE_TYPES.includes(input.answerRules.type)) {
     return "Activity answerRules.type must be numeric, exact, choice, or sequence.";
   }
-  if (input.answerRules.type === "numeric" && input.answerRules.tolerance !== undefined
+  const allowedRuleKeys = input.answerRules.type === "numeric"
+    ? ["type", "tolerance"]
+    : input.answerRules.type === "sequence"
+      ? ["type", "itemType", "tolerance", "caseSensitive"]
+      : ["type", "caseSensitive"];
+  if (Object.keys(input.answerRules).some((key) => !allowedRuleKeys.includes(key))) {
+    return "Activity answerRules contains an unsupported property for its rule type.";
+  }
+  if (input.answerRules.caseSensitive !== undefined && typeof input.answerRules.caseSensitive !== "boolean") {
+    return "answerRules.caseSensitive must be a boolean.";
+  }
+  if (input.answerRules.type === "sequence"
+      && input.answerRules.itemType !== undefined
+      && !["numeric", "exact"].includes(input.answerRules.itemType)) {
+    return "Sequence itemType must be numeric or exact.";
+  }
+  if (input.answerRules.tolerance !== undefined
       && (!Number.isFinite(input.answerRules.tolerance) || input.answerRules.tolerance < 0)) {
-    return "Numeric answer tolerance must be a finite non-negative number.";
+    return "Answer tolerance must be a finite non-negative number.";
   }
   if (typeof input.generatorId !== "string" || !ACTIVITY_ID_PATTERN.test(input.generatorId)) {
     return "Activity generatorId must be a stable namespaced identifier.";
