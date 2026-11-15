@@ -207,7 +207,7 @@ test("unknown reward and item IDs are not accepted by the economy service", () =
 test("reward and purchase reducers enforce caps and affordability even when dispatched directly", () => {
   const harness = createHarness({
     rewards: [firstChapterReward],
-    items: [crown]
+    items: [{ ...crown, priceStarGems: 40 }]
   });
   harness.store.dispatch({ type: "economy/reward-claimed", payload: { rewardId: firstChapterReward.id } });
   const afterReward = harness.store.getState();
