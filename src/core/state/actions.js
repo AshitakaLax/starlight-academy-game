@@ -41,6 +41,18 @@ export const coreActionDefinitions = Object.freeze({
       return { ...state, app: { ...state.app, screenId: payload.screenId } };
     }
   }),
+  "app/state-restored": Object.freeze({
+    validate(payload) {
+      return isPlainObject(payload)
+        && hasOnlyKeys(payload, ["state"])
+        && isPlainObject(payload.state)
+        ? true
+        : 'app/state-restored expects { state: plain object }.';
+    },
+    reduce(_state, payload) {
+      return payload.state;
+    }
+  }),
   "ui/overlay-opened": Object.freeze({
     validate(payload) {
       return isPlainObject(payload)
