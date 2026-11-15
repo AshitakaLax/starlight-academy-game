@@ -118,7 +118,7 @@ Open that file locally in desktop Chrome or Edge. The packaging validator reject
 - Project CSS is minified and embedded in one inline style element.
 - Imported SVG files are embedded as JavaScript text and inserted as inline vector markup.
 - Imported JSON data is bundled into the JavaScript output.
-- Runtime modules reachable from the browser entry are bundled automatically, including the synthesized Web Audio engine. Narration code will be included when that system is implemented and connected in STEP-09.
+- Runtime modules reachable from the browser entry are bundled automatically, including the synthesized Web Audio engine and optional Web Speech narration.
 - No runtime network requests, CDN dependencies, external fonts, or external asset files are permitted.
 
 The empty chapter and side-quest registries are intentional scaffolding. Content is added in the corresponding chapter and side-quest ledger steps.
