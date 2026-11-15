@@ -484,6 +484,169 @@ export function createAcademyShell({
       : "Your starter outfit is ready. Select any owned item to wear it.");
   }
 
+  function renderColoring() {
+    if (!coloringService) {
+      panel.coloringStatus.textContent = "The Coloring Studio is not connected.";
+      return;
+    }
+    const snapshot = coloringService.getSnapshot();
+    if (garmentTemplateRegistry) {
+      if (panel.coloringTemplate.options.length !== garmentTemplateRegistry.list().length) {
+        const options = garmentTemplateRegistry.list().map((template) => {
+          const option = documentRef.createElement("option");
+          option.value = template.id;
+          option.textContent = template.title;
+          return option;
+        });
+        panel.coloringTemplate.replaceChildren(...options);
+      }
+    }
+    panel.coloringTemplate.value = snapshot.template.id;
+    panel.coloringTemplate.disabled = !garmentTemplateRegistry;
+    renderColoringCanvas(panel.coloringCanvas, snapshot, { documentRef });
+    for (const button of panel.coloringPalette.querySelectorAll("[data-coloring-color]")) {
+      button.setAttribute("aria-pressed", String(button.dataset.coloringColor === snapshot.selectedColor));
+    }
+    for (const button of root.querySelectorAll("[data-coloring-tool]")) {
+      button.setAttribute("aria-pressed", String(button.dataset.coloringTool === snapshot.selectedTool));
+    }
+    panel.coloringBrushSize.value = String(snapshot.brushSize);
+    const undo = root.querySelector('[data-coloring-action="undo"]');
+    const redo = root.querySelector('[data-coloring-action="redo"]');
+    if (undo) undo.disabled = !snapshot.canUndo;
+    if (redo) redo.disabled = !snapshot.canRedo;
+    panel.coloringStatus.textContent = selectedStamp
+      ? "Click or tap the garment to place your " + selectedStamp + " stamp."
+      : coloringStatusMessage;
+  }
+
+  function handleColoringAction(event) {
+    const actionElement = event.target?.closest?.(
+      "[data-coloring-action], [data-coloring-tool], [data-coloring-color], [data-coloring-stamp]"
+    );
+    if (!actionElement || !root.contains(actionElement) || !coloringService) return false;
+    try {
+      if (actionElement.dataset.coloringAction === "open") {
+        coloringOpen = true;
+        selectedStamp = null;
+        render();
+        panel.coloringCanvas.focus?.();
+      } else if (actionElement.dataset.coloringAction === "back") {
+        coloringOpen = false;
+        selectedStamp = null;
+        panel.coloringResetConfirm.hidden = true;
+        render();
+      } else if (actionElement.dataset.coloringAction === "undo") {
+        const result = coloringService.undo();
+        coloringStatusMessage = result.changed ? "Last change undone." : "There is nothing to undo yet.";
+        renderColoring();
+      } else if (actionElement.dataset.coloringAction === "redo") {
+        const result = coloringService.redo();
+        coloringStatusMessage = result.changed ? "Change restored." : "There is nothing to redo yet.";
+        renderColoring();
+      } else if (actionElement.dataset.coloringAction === "reset-request") {
+        selectedStamp = null;
+        panel.coloringResetConfirm.hidden = false;
+        panel.coloringStatus.textContent = "This will clear the current garment design. Confirm only when you're ready.";
+      } else if (actionElement.dataset.coloringAction === "reset-confirm") {
+        const result = coloringService.resetDesign({ confirmed: true });
+        panel.coloringResetConfirm.hidden = true;
+        coloringStatusMessage = result.reset ? "Design cleared. You can still undo this reset." : "This design is already blank.";
+        renderColoring();
+      } else if (actionElement.dataset.coloringAction === "reset-cancel") {
+        panel.coloringResetConfirm.hidden = true;
+        coloringStatusMessage = "Your design has been kept.";
+        renderColoring();
+      } else if (actionElement.dataset.coloringTool) {
+        coloringService.setTool(actionElement.dataset.coloringTool);
+        selectedStamp = null;
+        coloringStatusMessage = actionElement.dataset.coloringTool === "eraser"
+          ? "Eraser selected. Drag over the garment to remove color."
+          : "Brush selected. Drag over the garment to paint.";
+        renderColoring();
+      } else if (actionElement.dataset.coloringColor) {
+        coloringService.setColor(actionElement.dataset.coloringColor);
+        selectedStamp = null;
+        coloringStatusMessage = "Color selected. Paint or place a stamp on the garment.";
+        renderColoring();
+      } else if (actionElement.dataset.coloringStamp) {
+        coloringService.setTool("brush");
+        selectedStamp = actionElement.dataset.coloringStamp;
+        coloringStatusMessage = "Choose a place on the garment for your stamp.";
+        renderColoring();
+      }
+    } catch (error) {
+      coloringStatusMessage = error?.message || "The design could not be updated.";
+      renderColoring();
+    }
+    return true;
+  }
+
+  function getColoringPoint(event) {
+    const rect = panel.coloringCanvas.getBoundingClientRect();
+    if (!rect || rect.width <= 0 || rect.height <= 0
+        || event.clientX < rect.left || event.clientX >= rect.right
+        || event.clientY < rect.top || event.clientY >= rect.bottom) return null;
+    return {
+      x: ((event.clientX - rect.left) / rect.width) * 64,
+      y: ((event.clientY - rect.top) / rect.height) * 80
+    };
+  }
+
+  function handleColoringPointerDown(event) {
+    if (!coloringOpen || !coloringService || event.button !== 0 || activePointerId !== null) return;
+    const point = getColoringPoint(event);
+    if (!point) return;
+    event.preventDefault();
+    activePointerId = event.pointerId;
+    if (selectedStamp) {
+      try {
+        coloringService.addStamp(selectedStamp, point.x, point.y, 2);
+        coloringStatusMessage = "Your " + selectedStamp + " stamp has been added.";
+      } catch (error) {
+        coloringStatusMessage = error?.message || "The stamp could not be added.";
+      }
+      selectedStamp = null;
+      activePointerId = null;
+      renderColoring();
+      return;
+    }
+    try {
+      panel.coloringCanvas.setPointerCapture?.(event.pointerId);
+      coloringService.beginStroke(point);
+      coloringStatusMessage = "Painting saves automatically.";
+      renderColoring();
+    } catch (error) {
+      activePointerId = null;
+      coloringStatusMessage = error?.message || "The brush could not start.";
+      renderColoring();
+    }
+  }
+
+  function handleColoringPointerMove(event) {
+    if (event.pointerId !== activePointerId || !coloringService) return;
+    const point = getColoringPoint(event);
+    if (!point) return;
+    event.preventDefault();
+    try {
+      if (coloringService.continueStroke(point)) renderColoring();
+    } catch (error) {
+      coloringStatusMessage = error?.message || "The brush could not continue.";
+    }
+  }
+
+  function handleColoringPointerEnd(event) {
+    if (event.pointerId !== activePointerId || !coloringService) return;
+    activePointerId = null;
+    try {
+      const result = coloringService.endStroke();
+      if (result.changed) coloringStatusMessage = "Your design has been saved.";
+    } catch (error) {
+      coloringStatusMessage = error?.message || "Your design could not be saved.";
+    }
+    renderColoring();
+  }
+
   function handleWardrobeAction(event) {
     const actionElement = event.target?.closest?.("[data-wardrobe-action]");
     if (!actionElement || !root.contains(actionElement) || !wardrobeService) return false;
@@ -540,10 +703,14 @@ export function createAcademyShell({
     panel.heroDescription.textContent = destination.heroDescription;
     panel.heroButton.textContent = destination.button;
     const wardrobeMode = dockId === "wardrobe";
+    if (!wardrobeMode) coloringOpen = false;
+    const coloringMode = wardrobeMode && coloringOpen;
     panel.hero.hidden = wardrobeMode;
     panel.quickPaths.hidden = wardrobeMode;
-    panel.wardrobePanel.hidden = !wardrobeMode;
-    if (wardrobeMode) renderWardrobe();
+    panel.wardrobePanel.hidden = !wardrobeMode || coloringMode;
+    panel.coloringPanel.hidden = !coloringMode;
+    if (coloringMode) renderColoring();
+    else if (wardrobeMode) renderWardrobe();
 
     for (const button of root.querySelectorAll("[data-dock-id]")) {
       if (button.dataset.dockId === dockId) button.setAttribute("aria-current", "page");
@@ -608,6 +775,7 @@ export function createAcademyShell({
   }
 
   function handleClick(event) {
+    if (handleColoringAction(event)) return;
     if (handleWardrobeAction(event)) return;
     const actionElement = event.target?.closest?.("[data-ui-action]");
     if (!actionElement || !root.contains(actionElement)) return;
@@ -685,6 +853,30 @@ export function createAcademyShell({
   }
 
   function handleChange(event) {
+    const templateSelect = event.target?.closest?.("[data-coloring-template]");
+    if (templateSelect && root.contains(templateSelect) && coloringService) {
+      try {
+        coloringService.selectTemplate(templateSelect.value);
+        selectedStamp = null;
+        coloringStatusMessage = "Opened " + templateSelect.selectedOptions?.[0]?.textContent + ".";
+        renderColoring();
+      } catch (error) {
+        coloringStatusMessage = error?.message || "That garment could not be opened.";
+        renderColoring();
+      }
+      return;
+    }
+    const brushSizeSelect = event.target?.closest?.("[data-coloring-brush-size]");
+    if (brushSizeSelect && root.contains(brushSizeSelect) && coloringService) {
+      try {
+        coloringService.setBrushSize(Number(brushSizeSelect.value));
+        coloringStatusMessage = "Brush size updated.";
+      } catch (error) {
+        coloringStatusMessage = error?.message || "Brush size could not be changed.";
+      }
+      renderColoring();
+      return;
+    }
     const voiceSelect = event.target?.closest?.("[data-narration-voice]");
     if (!voiceSelect || !root.contains(voiceSelect)) return;
     store.dispatch({ type: "narration/settings-updated", payload: { voiceURI: voiceSelect.value } });
@@ -733,10 +925,22 @@ export function createAcademyShell({
 
   root.addEventListener("click", handleClick);
   root.addEventListener("input", handleInput);
+  panel.coloringCanvas.addEventListener("pointerdown", handleColoringPointerDown);
+  panel.coloringCanvas.addEventListener("pointermove", handleColoringPointerMove);
+  panel.coloringCanvas.addEventListener("pointerup", handleColoringPointerEnd);
+  panel.coloringCanvas.addEventListener("pointercancel", handleColoringPointerEnd);
   root.addEventListener("change", handleChange);
   root.addEventListener("keydown", handleDialogKeydown);
   importInput.addEventListener("change", handleFileChange);
-  const unsubscribe = store.subscribe(render);
+  const unsubscribe = store.subscribe((state, action) => {
+    if (action.type === "app/state-restored" && coloringService) {
+      coloringService.restoreFromStore();
+      coloringOpen = false;
+      selectedStamp = null;
+      coloringStatusMessage = "Your saved designs have been restored.";
+    }
+    render();
+  });
   const unsubscribeVoices = narrationService?.subscribeVoices?.((voices) => renderNarrationVoices(voices)) ?? (() => {});
   renderNarrationVoices();
   render();
@@ -747,10 +951,15 @@ export function createAcademyShell({
       if (disposed) return;
       disposed = true;
       academyScene.destroy();
+      coloringService?.dispose?.();
       unsubscribe();
       unsubscribeVoices();
       root.removeEventListener("click", handleClick);
       root.removeEventListener("input", handleInput);
+      panel.coloringCanvas.removeEventListener("pointerdown", handleColoringPointerDown);
+      panel.coloringCanvas.removeEventListener("pointermove", handleColoringPointerMove);
+      panel.coloringCanvas.removeEventListener("pointerup", handleColoringPointerEnd);
+      panel.coloringCanvas.removeEventListener("pointercancel", handleColoringPointerEnd);
       root.removeEventListener("change", handleChange);
       root.removeEventListener("keydown", handleDialogKeydown);
       importInput.removeEventListener("change", handleFileChange);
@@ -760,7 +969,9 @@ export function createAcademyShell({
       return Object.freeze({
         disposed,
         settingsOpen: (store.getState()?.ui?.activeOverlayId ?? null) === "settings",
-        pendingImport: typeof pendingImportText === "string"
+        pendingImport: typeof pendingImportText === "string",
+        coloringOpen,
+        activeGarmentTemplateId: coloringService?.getSnapshot?.().template.id ?? null
       });
     }
   });
