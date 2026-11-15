@@ -2,7 +2,6 @@ import { selectUiPreferences } from "./uiPreferences.js";
 import { selectAudioSettings } from "../systems/audio/audioSettings.js";
 import { selectNarrationSettings } from "../systems/narration/narrationSettings.js";
 import { selectEconomy } from "../systems/economy/economyState.js";
-import { createAcademyScene } from "../rendering/scenes/createAcademyScene.js";
 import { renderColoringCanvas } from "../gameplay/coloring/renderColoringCanvas.js";
 import { createAcademyScene } from "../rendering/scenes/createAcademyScene.js";
 
@@ -260,7 +259,7 @@ function requireElement(root, selector) {
 export function createAcademyShell({
   root, store, saveService, saveStatusElement = null, audioStatusElement = null, narrationService = null,
   narrationStatusElement = null, narrationTextElement = null, wardrobeService = null,
-  coloringService = null, garmentTemplateRegistry = null, emblemSvg = "",
+  coloringService = null, garmentTemplateRegistry = null, petCollectionService = null, petCatalog = null, emblemSvg = "",
   documentRef = globalThis.document, windowRef = globalThis.window
 } = {}) {
   if (!root || typeof root.querySelector !== "function" || typeof root.addEventListener !== "function") {
