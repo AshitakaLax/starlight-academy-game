@@ -44,7 +44,7 @@ build/
   build.mjs                Bundles and validates the offline HTML
   index.template.html      HTML shell with inline CSS/JS insertion points
 
-tests/                     Node built-in tests for foundation, state, save, input, UI, rendering, and build
+tests/                     Node built-in tests for foundation, state, save, input, UI, audio/narration, rendering, and build
 dist/                       Generated, git-ignored HTML deliverable
 ~~~
 
