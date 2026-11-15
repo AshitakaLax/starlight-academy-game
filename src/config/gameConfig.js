@@ -39,6 +39,14 @@ export const gameConfig = Object.freeze({
       })
     })
   }),
+  gymnastics: Object.freeze({
+    traceTolerance: 0.085,
+    traceSampleSpacing: 0.025,
+    timingWindowMs: 260,
+    scoreWeights: Object.freeze({ trace: 0.5, rhythm: 0.5 }),
+    starThresholds: Object.freeze([50, 70, 90]),
+    completedHistoryLimit: 10
+  }),
   persistence: Object.freeze({
     storageKey: "starlight-academy.save",
     schemaVersion: 1,
