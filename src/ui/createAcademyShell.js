@@ -303,7 +303,7 @@ export function createAcademyShell({
   root, store, saveService, saveStatusElement = null, audioStatusElement = null, narrationService = null,
   narrationStatusElement = null, narrationTextElement = null, wardrobeService = null,
   coloringService = null, garmentTemplateRegistry = null, petCollectionService = null, petCatalog = null,
-  gymnasticsService = null, emblemSvg = "",
+  gymnasticsService = null, audioService = null, emblemSvg = "",
   documentRef = globalThis.document, windowRef = globalThis.window
 } = {}) {
   if (!root || typeof root.querySelector !== "function" || typeof root.addEventListener !== "function") {
@@ -930,6 +930,7 @@ export function createAcademyShell({
     gymnasticsRecorded = false;
     gymnasticsStatusMessage = "Your count-in is beginning.";
     gymnasticsSession.start(gymnasticsNow());
+    audioService?.playSfx?.("open");
     renderGymnastics();
     startGymnasticsClock();
   }
@@ -948,6 +949,7 @@ export function createAcademyShell({
         startGymnasticsClock();
       } else if (action === "tap-beat" && gymnasticsSession) {
         const result = gymnasticsSession.tapBeat(gymnasticsNow());
+        if (result.accepted) audioService?.playSfx?.("correct");
         gymnasticsStatusMessage = result.accepted ? "Beat caught! Keep going." : "That one was a little early or late. The next star is waiting.";
         renderGymnastics(gymnasticsStatusMessage);
       }
