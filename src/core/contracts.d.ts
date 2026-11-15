@@ -182,7 +182,11 @@ export interface SkillMasteryProgress {
   readonly unassistedCorrect: number;
   readonly hintedResponses: number;
   readonly masteryStatus: "not-started" | "in-progress" | "demonstrated";
+  readonly currentTier: DifficultyTierId;
   readonly recentEvidence: readonly LearningEvidence[];
+  readonly tierEvidence: readonly LearningEvidence[];
+  readonly tierChanges: number;
+  readonly lastTierChangeReason: string | null;
 }
 
 export interface GeneratedQuestion {
