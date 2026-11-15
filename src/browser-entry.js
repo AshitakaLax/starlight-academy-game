@@ -1,5 +1,7 @@
 import { createGameApp } from "./app/createGameApp.js";
 import { createGameStore } from "./core/state/createGameStore.js";
+import { createInitialGameState } from "./core/state/actions.js";
+import { createInitialCurriculumProgress, curriculumActionDefinitions } from "./systems/curriculum/curriculumProgress.js";
 import { createSaveManager, getBrowserStorage } from "./core/save/createSaveManager.js";
 import { createSaveService } from "./core/save/createSaveService.js";
 import { createInputRouter } from "./core/input/createInputRouter.js";
@@ -40,7 +42,13 @@ async function launch() {
   narrationStatus.setAttribute("aria-live", "polite");
   narrationStatus.textContent = "Narration is optional and turned off.";
 
-  const store = createGameStore();
+  const store = createGameStore({
+    initialState: {
+      ...createInitialGameState(),
+      curriculum: createInitialCurriculumProgress()
+    },
+    actions: curriculumActionDefinitions
+  });
   const saveManager = createSaveManager({
     storage: getBrowserStorage(),
     storageKey: gameConfig.persistence.storageKey,
