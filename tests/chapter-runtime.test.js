@@ -138,6 +138,17 @@ test("a chapter cannot begin until all prerequisite chapters are completed", () 
   assert.equal(store.getState().chapterRuntime.chapters["chapter-02"], undefined);
 });
 
+test("only one live chapter session can advance saved progress at a time", () => {
+  const { service } = harness();
+  const first = service.createSession("chapter-01");
+  const second = service.createSession("chapter-01");
+  first.start();
+  assert.throws(() => second.start(), /Another chapter session is already active/);
+  assert.throws(() => second.completeActivity(), /active chapter session/);
+  first.exit();
+  assert.equal(second.start().currentActivityIndex, 0);
+});
+
 test("activities advance in their declared order and save a checkpoint after each step", () => {
   const { service, store } = harness();
   const session = service.createSession("chapter-01");
