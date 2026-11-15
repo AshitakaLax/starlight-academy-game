@@ -102,7 +102,7 @@ const MARKUP = String.raw`<div class="academy-shell" data-text-scale="normal" da
     </section>
   </aside>
 </div>
-<footer class="academy-footer"><span>✧ STAY CURIOUS ✧</span><span>Made for learning, movement &amp; imagination</span></footer>
+<footer class="academy-footer"><span>✧ STAY CURIOUS ✧</span><div data-save-health-slot></div><span>Made for learning, movement &amp; imagination</span></footer>
 </div>
 <div class="settings-backdrop" data-settings-backdrop hidden>
   <section class="settings-dialog" id="academy-settings" role="dialog" aria-modal="true" aria-labelledby="settings-title" aria-describedby="settings-description" tabindex="-1" data-settings-dialog>
@@ -127,7 +127,6 @@ const MARKUP = String.raw`<div class="academy-shell" data-text-scale="normal" da
         </div>
         <p class="settings-message" role="status" aria-live="polite" data-settings-message>Importing a backup will never happen without your confirmation.</p>
       </section>
-      <div class="settings-save-status" data-save-health-slot></div>
     </div>
     <footer class="settings-footer"><span>Changes are saved with your academy progress.</span><button class="primary-action compact-action" type="button" data-game-context="settings" data-game-action="ui/overlay-closed" data-game-payload='{"overlayId":"settings"}'>Done</button></footer>
   </section>

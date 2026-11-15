@@ -30,6 +30,8 @@ src/
   side-quests/             Data-driven optional quest definitions and registry
   rendering/               Canvas scenes, sprites, animation and effects
   ui/
+    createAcademyShell.js  Responsive hub, settings dialog and save controls
+    uiPreferences.js       Accessible presentation preference selectors
     screens/               Semantic DOM screens and controls
     styles.css             CSS embedded in the final HTML
   assets/                  Vector assets embedded by the build

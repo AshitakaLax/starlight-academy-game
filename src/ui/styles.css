@@ -127,6 +127,8 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .companion-note { margin-top: 7px; }
 .academy-footer { min-height: 32px; display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 0 19px; border-top: 1px solid #eee7f2; background: #fff; color: #a295aa; font-size: .58rem; letter-spacing: .07em; }
 .academy-footer > span:first-child { color: #b69a60; font-weight: 900; }
+.academy-footer [data-save-health-slot] { flex: 1; min-width: 0; text-align: center; }
+.academy-footer .academy-save-status { margin: 0; font-size: .58rem; line-height: 1.25; }
 :focus-visible { outline: 3px solid #8c5ab4 !important; outline-offset: 3px; box-shadow: 0 0 0 5px #c29bdd33; }
 [hidden] { display: none !important; }
 .settings-backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 24px; overflow: auto; background: #281b367a; backdrop-filter: blur(5px); }
