@@ -14,6 +14,31 @@ export const gameConfig = Object.freeze({
   progression: Object.freeze({ spendableCurrency: "starGems", masteryCurrency: "starlightSparkles" }),
   economy: Object.freeze({ defaultStarGems: 0, defaultStarlightSparkles: 0, transactionHistoryLimit: 200, maximumRewardClaims: 5 }),
   petCare: Object.freeze({ progressPerInteraction: 25, progressMaximum: 100, bondExperiencePerInteraction: 5 }),
+  petAbilities: Object.freeze({
+    definitions: Object.freeze({
+      "pet.pegasus": Object.freeze({
+        id: "ability.skyward-shine",
+        title: "Skyward Shine",
+        description: "While Pegasus is your active companion, sparkle grooming adds 10 extra care points.",
+        careType: "grooming",
+        careProgressBonus: 10
+      }),
+      "pet.phoenix": Object.freeze({
+        id: "ability.ember-treat",
+        title: "Ember Treat",
+        description: "While Phoenix is your active companion, treat feeding adds 10 extra care points.",
+        careType: "feeding",
+        careProgressBonus: 10
+      }),
+      "pet.nymph-kitten": Object.freeze({
+        id: "ability.ribbontail-whirl",
+        title: "Ribbontail Whirl",
+        description: "While Nymph Kitten is your active companion, ribbon play adds 10 extra care points.",
+        careType: "play",
+        careProgressBonus: 10
+      })
+    })
+  }),
   persistence: Object.freeze({
     storageKey: "starlight-academy.save",
     schemaVersion: 1,
