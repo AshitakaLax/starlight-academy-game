@@ -27,6 +27,10 @@ export { createLowPressureOnboardingProfile, evaluateAdaptiveTier, selectSkillTi
 export { createHintDefinition, createProfessorHootDemonstration, validateHintDefinition } from "./systems/hints/hintDefinitions.js";
 export { createHintRegistry } from "./systems/hints/createHintRegistry.js";
 export { createHintService } from "./systems/hints/createHintService.js";
+export { createRewardDefinition, createShopItemDefinition, createRewardRegistry, createShopCatalog } from "./systems/economy/economyCatalogs.js";
+export { createInitialEconomyState, selectEconomy, selectOwnedItemCount } from "./systems/economy/economyState.js";
+export { createEconomyActionDefinitions } from "./systems/economy/economyActions.js";
+export { createEconomyService } from "./systems/economy/createEconomyService.js";
 export { gameConfig } from "./config/gameConfig.js";
 export { chapterDefinitions, getChapterDefinition } from "./chapters/registry.js";
 export { sideQuestDefinitions, getSideQuestDefinition } from "./side-quests/registry.js";
