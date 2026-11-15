@@ -1,6 +1,6 @@
 import { selectPetCollection, selectPet } from "./petCollectionState.js";
 import { gameConfig } from "../../config/gameConfig.js";
-import { getPetAbilityDefinition, selectActivePetAbility } from "./petAbilities.js";
+import { getPetAbilityDefinition, selectActivePetAbility, selectPetAbilityCareBonus } from "./petAbilities.js";
 
 /** Runtime facade for pet collection; each species retains its own saved data. */
 export function createPetCollectionService({ store, petCatalog } = {}) {
@@ -70,6 +70,7 @@ export function createPetCollectionService({ store, petCatalog } = {}) {
     const before = getPet(petId);
     if (!before) throw new RangeError("Unknown pet ID: " + petId);
     if (!before.unlocked) throw new Error("A locked companion cannot receive care.");
+    const abilityBonus = selectPetAbilityCareBonus(store.getState(), petCatalog, petId, careType);
     const receipt = store.dispatch({
       type: "pets/care-performed",
       payload: { petId, careType }
@@ -85,6 +86,7 @@ export function createPetCollectionService({ store, petCatalog } = {}) {
       progressBefore,
       progressAfter,
       progressIncreased: progressAfter > progressBefore,
+      abilityBonus,
       meterFull: progressAfter >= gameConfig.petCare.progressMaximum,
       bondExperienceBefore: before.bondExperience,
       bondExperienceAfter: after.bondExperience,
