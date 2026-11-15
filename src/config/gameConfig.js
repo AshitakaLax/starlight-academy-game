@@ -8,6 +8,7 @@ export const gameConfig = Object.freeze({
   }),
   ui: Object.freeze({ defaultTextScale: "normal", defaultReducedMotion: false }),
   audio: Object.freeze({ defaultMasterVolume: 70, defaultMusicVolume: 24, defaultSfxVolume: 55, defaultMuted: false }),
+  narration: Object.freeze({ defaultEnabled: false, defaultVoiceURI: "", defaultRate: 1 }),
   release: Object.freeze({ chapterCount: 10, sideQuestCount: 20, standaloneHtml: true, offlineRuntime: true }),
   progression: Object.freeze({ spendableCurrency: "starGems", masteryCurrency: "starlightSparkles" }),
   persistence: Object.freeze({
