@@ -260,6 +260,19 @@ test("focused custom primary actions activate by Enter or Space exactly once", (
   assert.equal(event.defaultPrevented, true);
   assert.equal(button.clickCount, 1);
   assert.equal(app.store.getState().app.activeDockId, "wardrobe");
+
+  const spaceButton = new FakeElement("div", {
+    "data-primary-action": "true",
+    "data-game-action": "hub/dock-selected",
+    "data-game-payload": JSON.stringify({ dockId: "chapters" })
+  });
+  spaceButton.onClick = () => app.root.emit("click", { target: spaceButton, defaultPrevented: false });
+  app.documentRef.activeElement = spaceButton;
+
+  const spaceEvent = press(app.target, " ");
+  assert.equal(spaceEvent.defaultPrevented, true);
+  assert.equal(spaceButton.clickCount, 1);
+  assert.equal(app.store.getState().app.activeDockId, "chapters");
 });
 
 test("mouse click delegation dispatches one action with its JSON payload", () => {
