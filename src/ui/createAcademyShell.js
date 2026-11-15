@@ -92,6 +92,48 @@ const MARKUP = String.raw`<div class="academy-shell" data-text-scale="normal" da
           <button class="path-card path-wardrobe" type="button" data-game-action="hub/dock-selected" data-game-payload='{"dockId":"wardrobe"}'><span class="path-card-icon" aria-hidden="true">❀</span><span class="path-card-title">Creative wardrobe</span><span class="path-card-note">Style &amp; imagination</span><span class="path-card-arrow" aria-hidden="true">↗</span></button>
         </div>
       </section>
+      <section class="gymnastics-panel" data-gymnastics-panel hidden aria-labelledby="gymnastics-panel-title">
+        <div class="gymnastics-panel-heading">
+          <div><p class="academy-overline">MOVEMENT &amp; MUSIC</p><h2 id="gymnastics-panel-title">Gymnastics Studio</h2>
+            <p>Preview a routine, trace the glowing ribbon, and tap along with the stars. You can take your time, skip a trace, and finish every routine.</p></div>
+          <span class="gymnastics-heading-symbol" aria-hidden="true">✧</span>
+        </div>
+        <article class="gymnastics-routine-card">
+          <div class="gymnastics-routine-copy">
+            <p class="academy-overline">TODAY'S ROUTINE</p>
+            <h3 data-gymnastics-routine-title>Starlight Ribbon Waltz</h3>
+            <p data-gymnastics-routine-description>Follow the ribbon, then tap each star as the music reaches its beat.</p>
+            <p class="gymnastics-stats" data-gymnastics-stats>Practice records will appear here.</p>
+            <button class="wardrobe-primary-action" type="button" data-gymnastics-action="start">Begin practice</button>
+          </div>
+          <span class="gymnastics-ribbon-art" aria-hidden="true">〰 ✦ 〰</span>
+        </article>
+        <section class="gymnastics-practice" data-gymnastics-practice hidden aria-label="Routine practice">
+          <p class="gymnastics-status" data-gymnastics-status role="status" aria-live="polite">Your routine is ready.</p>
+          <div class="gymnastics-canvas-frame">
+            <canvas class="gymnastics-canvas" data-gymnastics-canvas width="720" height="360" role="img" aria-label="Trace the glowing ribbon path with your mouse"></canvas>
+          </div>
+          <p class="gymnastics-canvas-help">During tracing, drag your mouse along the glowing path. During rhythm, use the button or press Space while it is focused.</p>
+          <div class="gymnastics-practice-actions" data-gymnastics-trace-actions hidden>
+            <button class="wardrobe-primary-action" type="button" data-gymnastics-action="finish-trace">Finish tracing and continue</button>
+            <span>You may finish whenever you are ready. A skipped trace simply receives its own score.</span>
+          </div>
+          <div class="gymnastics-practice-actions" data-gymnastics-rhythm-actions hidden>
+            <button class="wardrobe-primary-action gymnastics-beat-button" type="button" data-gymnastics-action="tap-beat">✦ Tap the beat</button>
+            <span>Each star has a generous timing window. Miss one? Keep going to the next.</span>
+          </div>
+          <section class="gymnastics-result" data-gymnastics-result hidden aria-labelledby="gymnastics-result-title">
+            <h3 id="gymnastics-result-title">Routine complete!</h3>
+            <p class="gymnastics-stars" data-gymnastics-stars aria-label="Star rating">☆☆☆</p>
+            <div class="gymnastics-score-grid">
+              <div><span>Tracing accuracy</span><strong data-gymnastics-trace-score>0%</strong></div>
+              <div><span>Rhythm timing</span><strong data-gymnastics-rhythm-score>0%</strong></div>
+              <div><span>Combined score</span><strong data-gymnastics-combined-score>0%</strong></div>
+            </div>
+            <p>Lovely work! Every routine reaches its finish, and you can always practice again.</p>
+          </section>
+        </section>
+      </section>
       <section class="pet-collection-panel" data-pet-collection-panel hidden aria-labelledby="pet-collection-title">
         <div class="wardrobe-panel-heading"><div><p class="academy-overline">MAGICAL COMPANIONS</p><h2 id="pet-collection-title">Your Pet Collection</h2><p>Every companion keeps its own appearance and friendship progress. Choose who joins you today.</p></div><span class="wardrobe-heading-star" aria-hidden="true">♡</span></div>
         <div class="pet-collection-grid" data-pet-collection-grid></div>
@@ -260,7 +302,8 @@ function requireElement(root, selector) {
 export function createAcademyShell({
   root, store, saveService, saveStatusElement = null, audioStatusElement = null, narrationService = null,
   narrationStatusElement = null, narrationTextElement = null, wardrobeService = null,
-  coloringService = null, garmentTemplateRegistry = null, petCollectionService = null, petCatalog = null, emblemSvg = "",
+  coloringService = null, garmentTemplateRegistry = null, petCollectionService = null, petCatalog = null,
+  gymnasticsService = null, emblemSvg = "",
   documentRef = globalThis.document, windowRef = globalThis.window
 } = {}) {
   if (!root || typeof root.querySelector !== "function" || typeof root.addEventListener !== "function") {
@@ -310,6 +353,22 @@ export function createAcademyShell({
     heroButton: requireElement(root, "[data-hero-button]"),
     hero: requireElement(root, ".academy-hero"),
     quickPaths: requireElement(root, ".quick-paths"),
+    gymnasticsPanel: requireElement(root, "[data-gymnastics-panel]"),
+    gymnasticsRoutineTitle: requireElement(root, "[data-gymnastics-routine-title]"),
+    gymnasticsRoutineDescription: requireElement(root, "[data-gymnastics-routine-description]"),
+    gymnasticsStats: requireElement(root, "[data-gymnastics-stats]"),
+    gymnasticsPractice: requireElement(root, "[data-gymnastics-practice]"),
+    gymnasticsStatus: requireElement(root, "[data-gymnastics-status]"),
+    gymnasticsCanvas: requireElement(root, "[data-gymnastics-canvas]"),
+    gymnasticsStart: requireElement(root, '[data-gymnastics-action="start"]'),
+    gymnasticsTraceActions: requireElement(root, "[data-gymnastics-trace-actions]"),
+    gymnasticsRhythmActions: requireElement(root, "[data-gymnastics-rhythm-actions]"),
+    gymnasticsBeat: requireElement(root, '[data-gymnastics-action="tap-beat"]'),
+    gymnasticsResult: requireElement(root, "[data-gymnastics-result]"),
+    gymnasticsStars: requireElement(root, "[data-gymnastics-stars]"),
+    gymnasticsTraceScore: requireElement(root, "[data-gymnastics-trace-score]"),
+    gymnasticsRhythmScore: requireElement(root, "[data-gymnastics-rhythm-score]"),
+    gymnasticsCombinedScore: requireElement(root, "[data-gymnastics-combined-score]"),
     wardrobePanel: requireElement(root, "[data-wardrobe-panel]"),
     petCollectionPanel: requireElement(root, "[data-pet-collection-panel]"),
     petCollectionGrid: requireElement(root, "[data-pet-collection-grid]"),
@@ -327,6 +386,12 @@ export function createAcademyShell({
   };
   if (petCollectionService !== null && typeof petCollectionService.getSnapshot !== "function") {
     throw new TypeError("petCollectionService must expose getSnapshot().");
+  }
+  if (gymnasticsService !== null
+      && (typeof gymnasticsService.getSnapshot !== "function"
+        || typeof gymnasticsService.createSession !== "function"
+        || typeof gymnasticsService.recordCompletion !== "function")) {
+    throw new TypeError("gymnasticsService must expose routine snapshots, sessions, and completion recording.");
   }
   if (wardrobeService !== null
       && (typeof wardrobeService.getPreview !== "function"
@@ -361,6 +426,11 @@ export function createAcademyShell({
   let selectedStamp = null;
   let activePointerId = null;
   let coloringStatusMessage = "Your design saves automatically as you paint.";
+  let gymnasticsSession = null;
+  let gymnasticsClock = null;
+  let gymnasticsPointerActive = false;
+  let gymnasticsRecorded = false;
+  let gymnasticsStatusMessage = "Your routine is ready when you are.";
 
   function setSettingsMessage(message, kind = "info") {
     settingsMessage.textContent = message;
@@ -685,6 +755,256 @@ export function createAcademyShell({
       : coloringStatusMessage;
   }
 
+  function gymnasticsNow() {
+    return windowRef?.performance?.now?.() ?? globalThis.performance?.now?.() ?? Date.now();
+  }
+
+  function stopGymnasticsClock() {
+    if (gymnasticsClock === null) return;
+    const clear = windowRef?.clearInterval?.bind(windowRef) ?? globalThis.clearInterval;
+    clear(gymnasticsClock);
+    gymnasticsClock = null;
+  }
+
+  function drawGymnasticsCanvas(snapshot = gymnasticsSession?.getSnapshot?.() ?? null) {
+    const canvas = panel.gymnasticsCanvas;
+    const context = canvas.getContext?.("2d");
+    const routine = gymnasticsService?.getSnapshot?.().routines?.[0];
+    if (!context || !routine) return;
+    const width = canvas.width;
+    const height = canvas.height;
+    context.clearRect(0, 0, width, height);
+    context.fillStyle = "#fbf8fd";
+    context.fillRect(0, 0, width, height);
+    context.fillStyle = "rgba(137, 111, 165, .12)";
+    for (let x = 24; x < width; x += 36) {
+      for (let y = 24; y < height; y += 36) {
+        context.beginPath();
+        context.arc(x, y, 1.5, 0, Math.PI * 2);
+        context.fill();
+      }
+    }
+    const path = routine.tracePath;
+    const px = (point) => ({ x: point.x * width, y: point.y * height });
+    context.save();
+    context.lineCap = "round";
+    context.lineJoin = "round";
+    context.beginPath();
+    path.forEach((point, index) => {
+      const position = px(point);
+      if (index === 0) context.moveTo(position.x, position.y);
+      else context.lineTo(position.x, position.y);
+    });
+    context.strokeStyle = "rgba(151, 120, 182, .23)";
+    context.lineWidth = 28;
+    context.stroke();
+    context.setLineDash([9, 10]);
+    context.strokeStyle = "#a98cc3";
+    context.lineWidth = 6;
+    context.stroke();
+    context.setLineDash([]);
+    for (let index = 0; index < path.length; index += 1) {
+      const position = px(path[index]);
+      context.beginPath();
+      context.arc(position.x, position.y, index === 0 ? 10 : 5, 0, Math.PI * 2);
+      context.fillStyle = index === 0 ? "#8e6db1" : "#c6b2d8";
+      context.fill();
+    }
+    if (snapshot?.tracePoints?.length) {
+      context.beginPath();
+      snapshot.tracePoints.forEach((point, index) => {
+        const position = px(point);
+        if (index === 0) context.moveTo(position.x, position.y);
+        else context.lineTo(position.x, position.y);
+      });
+      context.strokeStyle = "#e18bb6";
+      context.lineWidth = 9;
+      context.shadowColor = "rgba(225, 139, 182, .35)";
+      context.shadowBlur = 8;
+      context.stroke();
+      context.shadowBlur = 0;
+    }
+    if (snapshot?.stage === "rhythm" && snapshot.nextCheckpointId) {
+      const index = snapshot.checkpoints.findIndex((checkpoint) => checkpoint.id === snapshot.nextCheckpointId);
+      const progress = Math.max(0, index) / Math.max(1, snapshot.checkpoints.length - 1);
+      const segmentPosition = progress * (path.length - 1);
+      const segmentIndex = Math.min(path.length - 2, Math.floor(segmentPosition));
+      const amount = segmentPosition - segmentIndex;
+      const a = path[segmentIndex], b = path[segmentIndex + 1];
+      const marker = px({ x: a.x + (b.x - a.x) * amount, y: a.y + (b.y - a.y) * amount });
+      context.beginPath();
+      context.arc(marker.x, marker.y, 17, 0, Math.PI * 2);
+      context.fillStyle = "#f4c86b";
+      context.shadowColor = "rgba(244, 200, 107, .8)";
+      context.shadowBlur = 18;
+      context.fill();
+      context.shadowBlur = 0;
+      context.beginPath();
+      context.arc(marker.x, marker.y, 6, 0, Math.PI * 2);
+      context.fillStyle = "#fff";
+      context.fill();
+    }
+    context.restore();
+  }
+
+  function renderGymnastics(statusMessage = null) {
+    if (!gymnasticsService) {
+      panel.gymnasticsRoutineTitle.textContent = "Gymnastics is not connected";
+      panel.gymnasticsRoutineDescription.textContent = "The routine engine will be available when its service is connected.";
+      panel.gymnasticsStats.textContent = "";
+      return;
+    }
+    const routine = gymnasticsService.getSnapshot().routines[0];
+    if (!routine) return;
+    panel.gymnasticsRoutineTitle.textContent = routine.title;
+    panel.gymnasticsRoutineDescription.textContent = routine.description;
+    const progress = routine.progress;
+    panel.gymnasticsStats.textContent = progress.completedRuns > 0
+      ? "Completed practices: " + progress.completedRuns + " · Best combined score: " + progress.personalBest.combinedScore + "% · Best stars: " + "★".repeat(progress.personalBest.starRating) + "☆".repeat(3 - progress.personalBest.starRating)
+      : "No practice records yet. Your first try is just for exploring.";
+    if (!gymnasticsSession) {
+      panel.gymnasticsPractice.hidden = true;
+      panel.gymnasticsStart.hidden = false;
+      panel.gymnasticsStart.textContent = "Begin practice";
+      panel.gymnasticsStatus.textContent = statusMessage ?? gymnasticsStatusMessage;
+      drawGymnasticsCanvas(null);
+      return;
+    }
+    const snapshot = gymnasticsSession.getSnapshot();
+    panel.gymnasticsPractice.hidden = false;
+    panel.gymnasticsStart.hidden = snapshot.stage !== "completed";
+    panel.gymnasticsStart.textContent = "Practice again";
+    panel.gymnasticsTraceActions.hidden = snapshot.stage !== "tracing";
+    panel.gymnasticsRhythmActions.hidden = snapshot.stage !== "rhythm";
+    panel.gymnasticsResult.hidden = snapshot.stage !== "completed";
+    panel.gymnasticsBeat.disabled = snapshot.stage !== "rhythm";
+    panel.gymnasticsStatus.textContent = statusMessage ?? (
+      snapshot.stage === "count-in" ? "Get ready! Count-in: " + snapshot.countInBeat
+        : snapshot.stage === "tracing" ? "Trace the glowing ribbon. Move along the path, then choose Continue when you are ready."
+          : snapshot.stage === "rhythm" ? "Star " + (snapshot.checkpoints.length - snapshot.checkpoints.filter((checkpoint) => checkpoint.status !== "pending").length + 1)
+            + " of " + snapshot.checkpoints.length + " is waiting. Tap with the beat; a missed star never ends your routine."
+            : snapshot.stage === "completed" ? "Routine complete! Your tracing and rhythm scores are saved separately. Lovely work!"
+              : "Your routine is ready.";
+    if (snapshot.stage === "completed") {
+      panel.gymnasticsStars.textContent = "★".repeat(snapshot.starRating) + "☆".repeat(3 - snapshot.starRating);
+      panel.gymnasticsStars.setAttribute("aria-label", snapshot.starRating + " out of 3 stars");
+      panel.gymnasticsTraceScore.textContent = snapshot.traceAccuracyScore + "%";
+      panel.gymnasticsRhythmScore.textContent = snapshot.rhythmTimingScore + "%";
+      panel.gymnasticsCombinedScore.textContent = snapshot.combinedScore + "%";
+      if (!gymnasticsRecorded) {
+        gymnasticsRecorded = true;
+        try {
+          gymnasticsService.recordCompletion(gymnasticsSession);
+        } catch (error) {
+          gymnasticsRecorded = false;
+          gymnasticsStatusMessage = error?.message || "The routine result could not be saved.";
+        }
+      }
+    }
+    drawGymnasticsCanvas(snapshot);
+  }
+
+  function startGymnasticsClock() {
+    stopGymnasticsClock();
+    const schedule = windowRef?.setInterval?.bind(windowRef) ?? globalThis.setInterval;
+    gymnasticsClock = schedule(() => {
+      if (!gymnasticsSession) { stopGymnasticsClock(); return; }
+      try {
+        const snapshot = gymnasticsSession.update(gymnasticsNow());
+        if (snapshot.stage === "tracing" || snapshot.stage === "completed") stopGymnasticsClock();
+        renderGymnastics();
+      } catch (error) {
+        stopGymnasticsClock();
+        gymnasticsStatusMessage = error?.message || "The routine clock could not continue.";
+        renderGymnastics(gymnasticsStatusMessage);
+      }
+    }, 50);
+  }
+
+  function startGymnasticsPractice() {
+    if (!gymnasticsService) return;
+    const routine = gymnasticsService.getSnapshot().routines[0];
+    if (!routine) return;
+    stopGymnasticsClock();
+    gymnasticsSession = gymnasticsService.createSession(routine.id);
+    gymnasticsRecorded = false;
+    gymnasticsStatusMessage = "Your count-in is beginning.";
+    gymnasticsSession.start(gymnasticsNow());
+    renderGymnastics();
+    startGymnasticsClock();
+  }
+
+  function handleGymnasticsAction(event) {
+    const control = event.target?.closest?.("[data-gymnastics-action]");
+    if (!control || !root.contains(control) || !gymnasticsService) return false;
+    const action = control.dataset.gymnasticsAction;
+    try {
+      if (action === "start") {
+        startGymnasticsPractice();
+      } else if (action === "finish-trace" && gymnasticsSession) {
+        gymnasticsSession.finishTrace(gymnasticsNow());
+        gymnasticsStatusMessage = "Now listen for the stars and tap each beat.";
+        renderGymnastics();
+        startGymnasticsClock();
+      } else if (action === "tap-beat" && gymnasticsSession) {
+        const result = gymnasticsSession.tapBeat(gymnasticsNow());
+        gymnasticsStatusMessage = result.accepted ? "Beat caught! Keep going." : "That one was a little early or late. The next star is waiting.";
+        renderGymnastics(gymnasticsStatusMessage);
+      }
+    } catch (error) {
+      gymnasticsStatusMessage = error?.message || "That routine action could not be completed.";
+      renderGymnastics(gymnasticsStatusMessage);
+    }
+    return true;
+  }
+
+  function getGymnasticsPoint(event) {
+    const rect = panel.gymnasticsCanvas.getBoundingClientRect();
+    if (!rect || rect.width <= 0 || rect.height <= 0
+        || event.clientX < rect.left || event.clientX >= rect.right
+        || event.clientY < rect.top || event.clientY >= rect.bottom) return null;
+    return {
+      x: Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width)),
+      y: Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height))
+    };
+  }
+
+  function handleGymnasticsPointerDown(event) {
+    if (!gymnasticsSession || gymnasticsSession.getSnapshot().stage !== "tracing"
+        || event.button !== 0 || gymnasticsPointerActive) return;
+    const point = getGymnasticsPoint(event);
+    if (!point) return;
+    event.preventDefault();
+    gymnasticsPointerActive = true;
+    panel.gymnasticsCanvas.setPointerCapture?.(event.pointerId);
+    try {
+      gymnasticsSession.recordTracePoint(point);
+      drawGymnasticsCanvas();
+    } catch (error) {
+      gymnasticsPointerActive = false;
+      renderGymnastics(error?.message || "The trace could not start.");
+    }
+  }
+
+  function handleGymnasticsPointerMove(event) {
+    if (!gymnasticsPointerActive || !gymnasticsSession) return;
+    const point = getGymnasticsPoint(event);
+    if (!point) return;
+    event.preventDefault();
+    try {
+      gymnasticsSession.recordTracePoint(point);
+      drawGymnasticsCanvas();
+    } catch (error) {
+      gymnasticsStatusMessage = error?.message || "The trace could not continue.";
+    }
+  }
+
+  function handleGymnasticsPointerEnd() {
+    if (!gymnasticsPointerActive) return;
+    gymnasticsPointerActive = false;
+    renderGymnastics("Trace paused. Continue tracing or finish whenever you are ready.");
+  }
+
   function handleColoringAction(event) {
     const actionElement = event.target?.closest?.(
       "[data-coloring-action], [data-coloring-tool], [data-coloring-color], [data-coloring-stamp]"
@@ -870,11 +1190,19 @@ export function createAcademyShell({
     const petsMode = dockId === "pets";
     panel.petCollectionPanel.hidden = !petsMode;
     if (petsMode) renderPetCollection();
+    const gymnasticsMode = dockId === "gymnastics";
+    panel.gymnasticsPanel.hidden = !gymnasticsMode;
+    if (gymnasticsMode) renderGymnastics();
+    else if (gymnasticsSession && gymnasticsSession.getSnapshot().stage !== "completed") {
+      stopGymnasticsClock();
+      gymnasticsSession = null;
+      gymnasticsPointerActive = false;
+    }
     const wardrobeMode = dockId === "wardrobe";
     if (!wardrobeMode) coloringOpen = false;
     const coloringMode = wardrobeMode && coloringOpen;
-    panel.hero.hidden = wardrobeMode || petsMode;
-    panel.quickPaths.hidden = wardrobeMode || petsMode;
+    panel.hero.hidden = wardrobeMode || petsMode || gymnasticsMode;
+    panel.quickPaths.hidden = wardrobeMode || petsMode || gymnasticsMode;
     panel.wardrobePanel.hidden = !wardrobeMode || coloringMode;
     panel.coloringPanel.hidden = !coloringMode;
     if (coloringMode) renderColoring();
@@ -943,6 +1271,7 @@ export function createAcademyShell({
   }
 
   function handleClick(event) {
+    if (handleGymnasticsAction(event)) return;
     if (handleColoringAction(event)) return;
     if (handlePetAction(event)) return;
     if (handleWardrobeAction(event)) return;
@@ -1104,6 +1433,10 @@ export function createAcademyShell({
 
   root.addEventListener("click", handleClick);
   root.addEventListener("input", handleInput);
+  panel.gymnasticsCanvas.addEventListener("pointerdown", handleGymnasticsPointerDown);
+  panel.gymnasticsCanvas.addEventListener("pointermove", handleGymnasticsPointerMove);
+  panel.gymnasticsCanvas.addEventListener("pointerup", handleGymnasticsPointerEnd);
+  panel.gymnasticsCanvas.addEventListener("pointercancel", handleGymnasticsPointerEnd);
   panel.coloringCanvas.addEventListener("pointerdown", handleColoringPointerDown);
   panel.coloringCanvas.addEventListener("pointermove", handleColoringPointerMove);
   panel.coloringCanvas.addEventListener("pointerup", handleColoringPointerEnd);
@@ -1130,11 +1463,16 @@ export function createAcademyShell({
       if (disposed) return;
       disposed = true;
       academyScene.destroy();
+      stopGymnasticsClock();
       coloringService?.dispose?.();
       unsubscribe();
       unsubscribeVoices();
       root.removeEventListener("click", handleClick);
       root.removeEventListener("input", handleInput);
+      panel.gymnasticsCanvas.removeEventListener("pointerdown", handleGymnasticsPointerDown);
+      panel.gymnasticsCanvas.removeEventListener("pointermove", handleGymnasticsPointerMove);
+      panel.gymnasticsCanvas.removeEventListener("pointerup", handleGymnasticsPointerEnd);
+      panel.gymnasticsCanvas.removeEventListener("pointercancel", handleGymnasticsPointerEnd);
       panel.coloringCanvas.removeEventListener("pointerdown", handleColoringPointerDown);
       panel.coloringCanvas.removeEventListener("pointermove", handleColoringPointerMove);
       panel.coloringCanvas.removeEventListener("pointerup", handleColoringPointerEnd);
@@ -1150,6 +1488,7 @@ export function createAcademyShell({
         settingsOpen: (store.getState()?.ui?.activeOverlayId ?? null) === "settings",
         pendingImport: typeof pendingImportText === "string",
         coloringOpen,
+        gymnasticsStage: gymnasticsSession?.getSnapshot?.().stage ?? "preview",
         activeGarmentTemplateId: coloringService?.getSnapshot?.().template.id ?? null
       });
     }
