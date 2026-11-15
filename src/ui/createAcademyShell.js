@@ -1,6 +1,8 @@
 import { selectUiPreferences } from "./uiPreferences.js";
 import { selectAudioSettings } from "../systems/audio/audioSettings.js";
 import { selectNarrationSettings } from "../systems/narration/narrationSettings.js";
+import { checkActivityAnswer } from "../systems/curriculum/answerRules.js";
+import { selectSupportedSkillTier } from "../systems/curriculum/adaptiveDifficulty.js";
 import { selectEconomy } from "../systems/economy/economyState.js";
 import { gameConfig } from "../config/gameConfig.js";
 import { renderColoringCanvas } from "../gameplay/coloring/renderColoringCanvas.js";
@@ -102,6 +104,7 @@ const MARKUP = String.raw`<div class="academy-shell" data-text-scale="normal" da
           <h3 data-chapter-session-title>Chapter activity</h3>
           <p data-chapter-session-description>Activity instructions will appear here.</p>
           <p class="chapter-session-type" data-chapter-session-type></p>
+          <div class="chapter-activity-body" data-chapter-activity-body aria-live="polite"></div>
           <div class="chapter-session-actions" data-chapter-session-actions>
             <button class="wardrobe-primary-action" type="button" data-chapter-action="complete-activity">Complete activity</button>
             <button class="wardrobe-secondary-action" type="button" data-chapter-action="skip-activity">Skip this activity</button>
@@ -325,7 +328,8 @@ export function createAcademyShell({
   root, store, saveService, saveStatusElement = null, audioStatusElement = null, narrationService = null,
   narrationStatusElement = null, narrationTextElement = null, wardrobeService = null,
   coloringService = null, garmentTemplateRegistry = null, petCollectionService = null, petCatalog = null,
-  gymnasticsService = null, chapterRuntimeService = null, audioService = null, emblemSvg = "",
+  gymnasticsService = null, chapterRuntimeService = null, activityRegistry = null,
+  questionGeneratorRegistry = null, hintService = null, audioService = null, emblemSvg = "",
   documentRef = globalThis.document, windowRef = globalThis.window
 } = {}) {
   if (!root || typeof root.querySelector !== "function" || typeof root.addEventListener !== "function") {
@@ -383,6 +387,7 @@ export function createAcademyShell({
     chapterSessionTitle: requireElement(root, "[data-chapter-session-title]"),
     chapterSessionDescription: requireElement(root, "[data-chapter-session-description]"),
     chapterSessionType: requireElement(root, "[data-chapter-session-type]"),
+    chapterActivityBody: requireElement(root, "[data-chapter-activity-body]"),
     chapterSessionActions: requireElement(root, "[data-chapter-session-actions]"),
     chapterSessionCompletion: requireElement(root, "[data-chapter-session-completion]"),
     chapterSessionReward: requireElement(root, "[data-chapter-session-reward]"),
@@ -467,6 +472,14 @@ export function createAcademyShell({
   let coloringStatusMessage = "Your design saves automatically as you paint.";
   let activeChapterSession = null;
   let activeChapterId = null;
+  let chapterQuestion = null;
+  let chapterQuestionForActivity = null;
+  let chapterQuestionIndex = 0;
+  let chapterQuestionAttempts = 0;
+  let chapterQuestionSeedSequence = 0;
+  let chapterHintPresentation = null;
+  let chapterActivityFeedback = "";
+  let chapterGymnasticsCompleted = false;
   let gymnasticsSession = null;
   let gymnasticsClock = null;
   let gymnasticsPointerActive = false;
@@ -801,6 +814,203 @@ export function createAcademyShell({
       : coloringStatusMessage;
   }
 
+  function resetChapterQuestion() {
+    chapterQuestion = null;
+    chapterQuestionForActivity = null;
+    chapterQuestionIndex = 0;
+    chapterQuestionAttempts = 0;
+    chapterHintPresentation = null;
+    chapterActivityFeedback = "";
+  }
+
+  function ensureChapterQuestion(activity) {
+    if (!activity?.activityId || !activityRegistry || !questionGeneratorRegistry) return null;
+    if (chapterQuestion && chapterQuestionForActivity === activity.id) return chapterQuestion;
+    const definition = activityRegistry.get(activity.activityId);
+    if (!definition) throw new Error("This chapter question is not registered: " + activity.activityId);
+    if (chapterQuestionForActivity !== activity.id) {
+      chapterQuestionForActivity = activity.id;
+      chapterQuestionIndex = 0;
+      chapterQuestionAttempts = 0;
+      chapterHintPresentation = null;
+      chapterActivityFeedback = "";
+    }
+    const skillId = definition.skillIds[0];
+    const tier = selectSupportedSkillTier(store.getState(), skillId, definition.supportedTiers);
+    const seed = [activeChapterId, activity.id, String(chapterQuestionIndex), String(chapterQuestionSeedSequence++)].join(":");
+    chapterQuestion = questionGeneratorRegistry.generate(definition, { seed, tier });
+    return chapterQuestion;
+  }
+
+  function appendChapterText(parent, tagName, value, className = "") {
+    const element = documentRef.createElement(tagName);
+    if (className) element.className = className;
+    element.textContent = value;
+    parent.append(element);
+    return element;
+  }
+
+  function renderChapterActivity(snapshot, activity) {
+    const body = panel.chapterActivityBody;
+    body.replaceChildren();
+    if (!activity) return;
+    const metadata = activity.metadata ?? {};
+    if (activity.type === "story" || activity.type === "reflection") {
+      const scene = documentRef.createElement("div");
+      scene.className = "chapter-story-scene";
+      for (const paragraph of Array.isArray(metadata.paragraphs) ? metadata.paragraphs : [activity.description]) {
+        appendChapterText(scene, "p", paragraph);
+      }
+      if (narrationService && metadata.paragraphs?.length) {
+        const readButton = documentRef.createElement("button");
+        readButton.type = "button";
+        readButton.className = "wardrobe-secondary-action";
+        readButton.dataset.chapterAction = "read-aloud";
+        readButton.textContent = "Read this scene aloud";
+        scene.append(readButton);
+      }
+      body.append(scene);
+      return;
+    }
+    if (activity.type === "learning" || activity.type === "challenge") {
+      const question = ensureChapterQuestion(activity);
+      if (!question) {
+        appendChapterText(body, "p", "This learning activity is not connected yet.");
+        return;
+      }
+      const definition = activityRegistry.get(activity.activityId);
+      const questionCount = Math.max(1, Number.isInteger(metadata.questionCount) ? metadata.questionCount : 1);
+      const card = documentRef.createElement("section");
+      card.className = "chapter-question-card";
+      card.setAttribute("aria-label", activity.type === "challenge" ? "Lantern challenge question" : "Learning question");
+      if (activity.type === "challenge") {
+        appendChapterText(card, "p", (metadata.challengeLabel ?? "Challenge progress") + ": " + chapterQuestionIndex + " of " + questionCount);
+      } else if (metadata.lessonLabel) {
+        appendChapterText(card, "p", metadata.lessonLabel, "chapter-question-kicker");
+      }
+      appendChapterText(card, "h4", question.prompt, "chapter-question-prompt");
+      const choices = documentRef.createElement("div");
+      choices.className = "chapter-answer-grid";
+      choices.setAttribute("role", "group");
+      choices.setAttribute("aria-label", "Choose an answer");
+      for (const choice of question.choices ?? []) {
+        const button = documentRef.createElement("button");
+        button.type = "button";
+        button.className = "chapter-answer-choice";
+        button.dataset.chapterAnswer = String(choice);
+        button.textContent = String(choice);
+        button.setAttribute("aria-label", "Answer " + choice);
+        choices.append(button);
+      }
+      card.append(choices);
+      const feedback = documentRef.createElement("p");
+      feedback.className = "chapter-question-feedback";
+      feedback.setAttribute("role", "status");
+      feedback.setAttribute("aria-live", "polite");
+      feedback.textContent = chapterActivityFeedback || "Choose an answer. You can retry or ask Professor Hoot for a clue.";
+      card.append(feedback);
+      const tools = documentRef.createElement("div");
+      tools.className = "chapter-question-tools";
+      const hintButton = documentRef.createElement("button");
+      hintButton.type = "button";
+      hintButton.className = "wardrobe-secondary-action";
+      hintButton.dataset.chapterAction = "request-hint";
+      hintButton.textContent = "Ask Professor Hoot for a hint";
+      tools.append(hintButton);
+      if (chapterQuestionAttempts > 0) {
+        const parallelButton = documentRef.createElement("button");
+        parallelButton.type = "button";
+        parallelButton.className = "wardrobe-secondary-action";
+        parallelButton.dataset.chapterAction = "parallel-question";
+        parallelButton.textContent = "Try a fresh example";
+        tools.append(parallelButton);
+      }
+      card.append(tools);
+      if (chapterHintPresentation?.available) {
+        const hint = documentRef.createElement("aside");
+        hint.className = "chapter-hint-card";
+        appendChapterText(hint, "h5", chapterHintPresentation.title + " · Clue " + chapterHintPresentation.stage);
+        appendChapterText(hint, "p", chapterHintPresentation.visibleTextEquivalent ?? chapterHintPresentation.message);
+        const demonstration = chapterHintPresentation.demonstration;
+        if (demonstration) {
+          appendChapterText(hint, "h6", demonstration.title);
+          appendChapterText(hint, "p", demonstration.introduction);
+          const list = documentRef.createElement("ol");
+          for (const step of demonstration.steps) {
+            const item = documentRef.createElement("li");
+            const strong = documentRef.createElement("strong");
+            strong.textContent = step.label + ": ";
+            item.append(strong, documentRef.createTextNode(step.explanation + " (" + step.visual.content + ")"));
+            list.append(item);
+          }
+          hint.append(list);
+          appendChapterText(hint, "p", demonstration.summary);
+        }
+        card.append(hint);
+      }
+      body.append(card);
+      return;
+    }
+    if (activity.type === "gymnastics") {
+      const card = documentRef.createElement("div");
+      card.className = "chapter-story-scene";
+      appendChapterText(card, "p", "Your movement studio is ready below. Start the ribbon routine, trace at your own pace, then tap along with each star. A missed beat never stops the routine.");
+      appendChapterText(card, "p", "The activity is saved when the routine reaches its finish. You may also skip this step and return to it on a replay.");
+      body.append(card);
+      return;
+    }
+    appendChapterText(body, "p", activity.description);
+  }
+
+  function recordChapterEvidence(question, correct, hintLevel) {
+    if (!question?.skillIds?.length) return;
+    store.dispatch({
+      type: "curriculum/evidence-recorded",
+      payload: {
+        skillId: question.skillIds[0],
+        activityId: question.activityId,
+        tier: question.tier,
+        correct,
+        hintLevel: Math.max(0, Math.min(3, hintLevel)),
+        attempts: 1
+      }
+    });
+  }
+
+  function submitChapterAnswer(answer) {
+    if (!activeChapterSession || !chapterQuestion) return;
+    const question = chapterQuestion;
+    const correct = checkActivityAnswer(answer, question.correctAnswer, question.answerRules);
+    chapterQuestionAttempts += 1;
+    if (correct) {
+      const hintLevel = hintService?.getSession?.(question.id)?.lastHintStage ?? 0;
+      recordChapterEvidence(question, true, hintLevel);
+      hintService?.complete?.(question.id);
+      const snapshot = activeChapterSession.getSnapshot();
+      const activity = snapshot.currentActivity;
+      const questionCount = Math.max(1, Number.isInteger(activity?.metadata?.questionCount) ? activity.metadata.questionCount : 1);
+      if (chapterQuestionIndex + 1 >= questionCount) {
+        chapterActivityFeedback = activity?.metadata?.successText ?? "Lovely work. You completed this activity.";
+        activeChapterSession.completeActivity();
+        resetChapterQuestion();
+      } else {
+        chapterQuestionIndex += 1;
+        chapterQuestion = null;
+        chapterQuestionAttempts = 0;
+        chapterHintPresentation = null;
+        chapterActivityFeedback = "Lantern lit! One more puzzle is waiting.";
+      }
+      renderChapters();
+      return;
+    }
+    const presentation = hintService?.recordIncorrect?.(question) ?? null;
+    const hintLevel = presentation?.stage ?? hintService?.getSession?.(question.id)?.lastHintStage ?? 0;
+    recordChapterEvidence(question, false, hintLevel);
+    chapterHintPresentation = presentation;
+    chapterActivityFeedback = "Good try. Take another look, use a clue, and try again. There is no penalty for taking your time.";
+    renderChapters();
+  }
+
   function renderChapters() {
     if (!chapterRuntimeService) {
       panel.chapterPathList.textContent = "The chapter runtime is not connected.";
@@ -817,7 +1027,7 @@ export function createAcademyShell({
         const title = documentRef.createElement("h3");
         title.textContent = "The academy stories are being prepared";
         const description = documentRef.createElement("p");
-        description.textContent = "Your chapter runtime is ready. The first complete adventure, with its own story and activities, arrives in the next implementation step.";
+        description.textContent = "Your chapter runtime is ready. The first complete adventure is ready. Follow the fireflies and bring the Lantern Tree back to life.";
         empty.append(title, description);
         panel.chapterPathList.replaceChildren(empty);
         return;
@@ -866,6 +1076,8 @@ export function createAcademyShell({
     const snapshot = activeChapterSession.getSnapshot();
     const activity = snapshot.currentActivity;
     if (snapshot.isComplete) {
+      panel.chapterActivityBody.replaceChildren();
+      panel.chapterActivityBody.hidden = true;
       panel.chapterSessionStatus.textContent = "Chapter complete! You finished all " + snapshot.activityCount + " activities.";
       panel.chapterSessionProgress.textContent = "ADVENTURE COMPLETE";
       panel.chapterSessionTitle.textContent = snapshot.title;
@@ -887,27 +1099,78 @@ export function createAcademyShell({
     panel.chapterSessionType.textContent = activity
       ? activity.type.toUpperCase().replaceAll("-", " ") + " · " + snapshot.completedActivityCount + " completed · " + snapshot.skippedActivityCount + " skipped"
       : "Ready to begin";
+    panel.chapterActivityBody.hidden = !activity;
+    renderChapterActivity(snapshot, activity);
     panel.chapterSessionActions.hidden = !activity;
+    const completeButton = panel.chapterSessionActions.querySelector('[data-chapter-action="complete-activity"]');
+    if (completeButton) {
+      completeButton.hidden = Boolean(activity && ["learning", "challenge", "gymnastics"].includes(activity.type));
+      completeButton.textContent = activity?.type === "story" ? "Continue the story" : "Complete activity";
+    }
     panel.chapterSessionCompletion.hidden = true;
   }
 
   function handleChapterAction(event) {
+    const answerControl = event.target?.closest?.("[data-chapter-answer]");
+    if (answerControl && root.contains(answerControl)) {
+      try {
+        const value = Number(answerControl.dataset.chapterAnswer);
+        submitChapterAnswer(Number.isFinite(value) ? value : answerControl.dataset.chapterAnswer);
+      } catch (error) {
+        chapterActivityFeedback = error?.message || "That answer could not be checked. Please try again.";
+        renderChapters();
+      }
+      return true;
+    }
     const control = event.target?.closest?.("[data-chapter-action]");
     if (!control || !root.contains(control) || !chapterRuntimeService) return false;
     const action = control.dataset.chapterAction;
     try {
       if (action === "start") {
         activeChapterId = control.dataset.chapterId;
+        resetChapterQuestion();
         activeChapterSession = chapterRuntimeService.createSession(activeChapterId);
         activeChapterSession.start();
       } else if (action === "complete-activity" && activeChapterSession) {
         activeChapterSession.completeActivity();
+        resetChapterQuestion();
       } else if (action === "skip-activity" && activeChapterSession) {
+        if (activeChapterSession.getSnapshot().currentActivity?.type === "gymnastics") {
+          stopGymnasticsClock();
+          gymnasticsSession = null;
+          gymnasticsPointerActive = false;
+          gymnasticsCueRoutine = null;
+          chapterGymnasticsCompleted = false;
+        }
         activeChapterSession.skipActivity();
+        resetChapterQuestion();
+      } else if (action === "request-hint" && activeChapterSession && chapterQuestion) {
+        chapterHintPresentation = hintService?.requestHint?.(chapterQuestion) ?? null;
+        chapterActivityFeedback = "A clue is ready. Read it, then try the same question again.";
+      } else if (action === "parallel-question" && activeChapterSession && chapterQuestion) {
+        const result = hintService?.solveParallel?.(chapterQuestion.id);
+        if (result?.question) {
+          chapterQuestion = result.question;
+          chapterQuestionAttempts = 0;
+          chapterHintPresentation = null;
+          chapterActivityFeedback = "Here is a fresh example with the same skill. You can do it!";
+        }
+      } else if (action === "read-aloud" && activeChapterSession && narrationService) {
+        const activity = activeChapterSession.getSnapshot().currentActivity;
+        const paragraphs = activity?.metadata?.paragraphs ?? [];
+        if (paragraphs.length) narrationService.speak(paragraphs.join(" "));
       } else if (action === "exit" && activeChapterSession) {
         activeChapterSession.exit();
         activeChapterSession = null;
         activeChapterId = null;
+        resetChapterQuestion();
+        if (gymnasticsSession && gymnasticsSession.getSnapshot().stage !== "completed") {
+          stopGymnasticsClock();
+          gymnasticsSession = null;
+          gymnasticsPointerActive = false;
+          gymnasticsCueRoutine = null;
+          chapterGymnasticsCompleted = false;
+        }
       }
       renderChapters();
     } catch (error) {
@@ -1108,6 +1371,13 @@ export function createAcademyShell({
         }
         if (snapshot.stage === "completed") stopGymnasticsClock();
         renderGymnastics();
+        if (snapshot.stage === "completed" && !chapterGymnasticsCompleted
+            && activeChapterSession?.getSnapshot?.().currentActivity?.type === "gymnastics") {
+          chapterGymnasticsCompleted = true;
+          activeChapterSession.completeActivity();
+          resetChapterQuestion();
+          renderChapters();
+        }
       } catch (error) {
         stopGymnasticsClock();
         gymnasticsStatusMessage = error?.message || "The routine clock could not continue.";
@@ -1124,6 +1394,7 @@ export function createAcademyShell({
     gymnasticsSession = gymnasticsService.createSession(routine.id);
     gymnasticsCueRoutine = routine;
     gymnasticsRecorded = false;
+    chapterGymnasticsCompleted = false;
     gymnasticsRhythmStartAt = null;
     gymnasticsRhythmCueIndex = 0;
     gymnasticsStatusMessage = "Your count-in is beginning.";
@@ -1410,8 +1681,11 @@ export function createAcademyShell({
     panel.petCollectionPanel.hidden = !petsMode;
     if (petsMode) renderPetCollection();
     const gymnasticsMode = dockId === "gymnastics";
-    panel.gymnasticsPanel.hidden = !gymnasticsMode;
-    if (gymnasticsMode) renderGymnastics();
+    const chapterGymnasticsActive = chaptersMode
+      && activeChapterSession?.getSnapshot?.().currentActivity?.type === "gymnastics";
+    const gymnasticsVisible = gymnasticsMode || chapterGymnasticsActive;
+    panel.gymnasticsPanel.hidden = !gymnasticsVisible;
+    if (gymnasticsVisible) renderGymnastics();
     else if (gymnasticsSession && gymnasticsSession.getSnapshot().stage !== "completed") {
       stopGymnasticsClock();
       gymnasticsSession = null;
