@@ -5,6 +5,7 @@ import { createInitialCurriculumProgress, curriculumActionDefinitions } from "./
 import { createInitialEconomyState } from "./systems/economy/economyState.js";
 import { createRewardRegistry, createShopCatalog } from "./systems/economy/economyCatalogs.js";
 import { createEconomyActionDefinitions } from "./systems/economy/economyActions.js";
+import { createEconomyService } from "./systems/economy/createEconomyService.js";
 import { createWardrobeCatalog, createWardrobeShopCatalog, defaultWardrobeItems } from "./gameplay/wardrobe/wardrobeCatalog.js";
 import { createInitialWardrobeState } from "./gameplay/wardrobe/wardrobeState.js";
 import { createWardrobeActionDefinitions } from "./gameplay/wardrobe/wardrobeActions.js";
@@ -17,6 +18,10 @@ import { createPetCatalog, defaultPetDefinitions } from "./gameplay/pets/petCata
 import { createInitialPetCollectionState } from "./gameplay/pets/petCollectionState.js";
 import { createPetActionDefinitions } from "./gameplay/pets/petActions.js";
 import { createPetCollectionService } from "./gameplay/pets/createPetCollectionService.js";
+import { chapterDefinitions, createChapterCatalog } from "./chapters/registry.js";
+import { createInitialChapterRuntimeState } from "./gameplay/chapter-runtime/chapterRuntimeState.js";
+import { createChapterRuntimeActionDefinitions } from "./gameplay/chapter-runtime/chapterRuntimeActions.js";
+import { createChapterRuntimeService } from "./gameplay/chapter-runtime/createChapterRuntimeService.js";
 import { createGymnasticsRoutineCatalog, defaultGymnasticsRoutines } from "./gameplay/gymnastics/gymnasticsCatalog.js";
 import { createInitialGymnasticsState } from "./gameplay/gymnastics/gymnasticsState.js";
 import { createGymnasticsActionDefinitions } from "./gameplay/gymnastics/gymnasticsActions.js";
@@ -66,12 +71,14 @@ async function launch() {
   const garmentTemplateRegistry = createGarmentTemplateRegistry(defaultGarmentTemplates);
   const petCatalog = createPetCatalog(defaultPetDefinitions);
   const gymnasticsRoutineCatalog = createGymnasticsRoutineCatalog(defaultGymnasticsRoutines);
+  const chapterCatalog = createChapterCatalog(chapterDefinitions);
   const shopCatalog = createShopCatalog(createWardrobeShopCatalog(wardrobeCatalog));
   const economyActionDefinitions = createEconomyActionDefinitions({ rewardRegistry, shopCatalog });
   const wardrobeActionDefinitions = createWardrobeActionDefinitions({ wardrobeCatalog, economyActionDefinitions });
   const coloringActionDefinitions = createColoringActionDefinitions({ templateRegistry: garmentTemplateRegistry });
   const petActionDefinitions = createPetActionDefinitions({ petCatalog });
   const gymnasticsActionDefinitions = createGymnasticsActionDefinitions({ routineCatalog: gymnasticsRoutineCatalog });
+  const chapterRuntimeActionDefinitions = createChapterRuntimeActionDefinitions({ chapterCatalog });
   const initialGameState = {
     ...createInitialGameState(),
     curriculum: createInitialCurriculumProgress(),
@@ -79,16 +86,21 @@ async function launch() {
     wardrobe: createInitialWardrobeState(wardrobeCatalog),
     coloring: createInitialColoringState(garmentTemplateRegistry),
     petCollection: createInitialPetCollectionState(petCatalog),
-    gymnastics: createInitialGymnasticsState()
+    gymnastics: createInitialGymnasticsState(),
+    chapterRuntime: createInitialChapterRuntimeState()
   };
   const store = createGameStore({
     initialState: initialGameState,
-    actions: { ...curriculumActionDefinitions, ...economyActionDefinitions, ...wardrobeActionDefinitions, ...coloringActionDefinitions, ...petActionDefinitions, ...gymnasticsActionDefinitions }
+    actions: { ...curriculumActionDefinitions, ...economyActionDefinitions, ...wardrobeActionDefinitions, ...coloringActionDefinitions, ...petActionDefinitions, ...gymnasticsActionDefinitions, ...chapterRuntimeActionDefinitions }
   });
   const wardrobeService = createWardrobeService({ store, wardrobeCatalog });
   const coloringService = createColoringService({ store, templateRegistry: garmentTemplateRegistry });
   const petCollectionService = createPetCollectionService({ store, petCatalog });
   const gymnasticsService = createGymnasticsService({ store, routineCatalog: gymnasticsRoutineCatalog });
+  const economyService = createEconomyService({ store, rewardRegistry, shopCatalog });
+  const chapterRuntimeService = createChapterRuntimeService({
+    store, chapterCatalog, rewardRegistry, economyService
+  });
   const saveManager = createSaveManager({
     storage: getBrowserStorage(),
     storageKey: gameConfig.persistence.storageKey,
@@ -158,7 +170,7 @@ async function launch() {
   const academyShell = createAcademyShell({
     root, store, saveService, saveStatusElement: saveHealth, audioStatusElement: audioStatus,
     narrationService, narrationStatusElement: narrationStatus, narrationTextElement: narrationCaption,
-    wardrobeService, coloringService, garmentTemplateRegistry, petCollectionService, petCatalog, gymnasticsService, audioService,
+    wardrobeService, coloringService, garmentTemplateRegistry, petCollectionService, petCatalog, gymnasticsService, chapterRuntimeService, audioService,
     emblemSvg: academyEmblem, documentRef: document, windowRef: window
   });
   document.documentElement.dataset.appStatus = app.status;
