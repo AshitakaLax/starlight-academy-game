@@ -6,6 +6,10 @@ import { createInitialEconomyState, selectEconomy } from "../src/systems/economy
 import { createRewardRegistry, createShopCatalog } from "../src/systems/economy/economyCatalogs.js";
 import { createEconomyActionDefinitions } from "../src/systems/economy/economyActions.js";
 import { createEconomyService } from "../src/systems/economy/createEconomyService.js";
+import { createWardrobeCatalog, defaultWardrobeItems } from "../src/gameplay/wardrobe/wardrobeCatalog.js";
+import { createInitialWardrobeState } from "../src/gameplay/wardrobe/wardrobeState.js";
+import { createWardrobeActionDefinitions } from "../src/gameplay/wardrobe/wardrobeActions.js";
+import { createWardrobeService } from "../src/gameplay/wardrobe/createWardrobeService.js";
 import { createActivityRegistry } from "../src/systems/curriculum/activityDefinitions.js";
 import { createQuestionGeneratorRegistry } from "../src/systems/curriculum/questionGenerators.js";
 import { checkActivityAnswer } from "../src/systems/curriculum/answerRules.js";
@@ -77,25 +81,31 @@ test("Chapter 1 Professor Hoot clues advance through nudge, strategy, and a work
   assert.equal(hints.complete(question.id).completed, true);
 });
 
-test("Chapter 1 saves progress, resumes at the next activity, and grants its keepsake only once", () => {
+test("Chapter 1 saves and resumes, then grants its keepsake and chapter wardrobe item only once", () => {
   const chapterCatalog = createChapterCatalog(chapterDefinitions);
   const rewardRegistry = createRewardRegistry([chapterOneReward]);
   const shopCatalog = createShopCatalog([]);
+  const wardrobeCatalog = createWardrobeCatalog(defaultWardrobeItems);
+  const economyActions = createEconomyActionDefinitions({ rewardRegistry, shopCatalog });
+  const wardrobeActions = createWardrobeActionDefinitions({ wardrobeCatalog, economyActionDefinitions: economyActions });
   const store = createGameStore({
     initialState: {
       ...createInitialGameState(),
       curriculum: createInitialCurriculumProgress(),
       economy: createInitialEconomyState(),
+      wardrobe: createInitialWardrobeState(wardrobeCatalog),
       chapterRuntime: createInitialChapterRuntimeState()
     },
     actions: {
       ...curriculumActionDefinitions,
-      ...createEconomyActionDefinitions({ rewardRegistry, shopCatalog }),
+      ...economyActions,
+      ...wardrobeActions,
       ...createChapterRuntimeActionDefinitions({ chapterCatalog })
     }
   });
   const economyService = createEconomyService({ store, rewardRegistry, shopCatalog });
-  const chapterService = createChapterRuntimeService({ store, chapterCatalog, rewardRegistry, economyService });
+  const wardrobeService = createWardrobeService({ store, wardrobeCatalog });
+  const chapterService = createChapterRuntimeService({ store, chapterCatalog, rewardRegistry, economyService, wardrobeService });
 
   const firstRun = chapterService.createSession("chapter-01");
   firstRun.start();
@@ -112,12 +122,15 @@ test("Chapter 1 saves progress, resumes at the next activity, and grants its kee
   assert.equal(completed.completedActivityCount, 5);
   assert.equal(completed.completionReceipt.rewards[0].granted, true);
   assert.equal(completed.completionReceipt.rewards[0].reason, "reward-granted");
+  assert.deepEqual(completed.completionReceipt.wardrobe.unlockedItemIds, ["wardrobe.comet-dance-dress"]);
+  assert.equal(wardrobeService.getInventory().find((item) => item.id === "wardrobe.comet-dance-dress").ownership.sourceType, "chapter");
 
   const replay = chapterService.createSession("chapter-01");
   replay.start();
   for (let index = 0; index < chapterOneDefinition.activities.length; index += 1) replay.completeActivity();
   assert.equal(replay.getSnapshot().isComplete, true);
   assert.equal(replay.getSnapshot().completionReceipt.rewards[0].reason, "already-claimed");
+  assert.deepEqual(replay.getSnapshot().completionReceipt.wardrobe.alreadyOwnedItemIds, ["wardrobe.comet-dance-dress"]);
   const economy = selectEconomy(store.getState());
   assert.equal(economy.rewardClaims[chapterOneReward.id], 1);
   assert.equal(economy.starGems, 40);
