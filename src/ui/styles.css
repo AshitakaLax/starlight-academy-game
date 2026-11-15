@@ -369,3 +369,39 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .pet-ability-card[data-ability-state="active"] { border-color: #ad91c6; background: #f3ebfa; box-shadow: inset 3px 0 #9672b3; }
 .pet-ability-card strong { color: #694e80; font-size: .67rem; letter-spacing: .035em; }
 .pet-ability-card p { margin: 0; color: #74677e; font-size: .68rem; line-height: 1.45; }
+
+
+.gymnastics-panel { display: grid; gap: 18px; margin-top: 24px; }
+.gymnastics-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.gymnastics-panel-heading h2 { margin: 2px 0 5px; color: #4f3b64; font-family: Georgia, serif; font-size: 1.45rem; }
+.gymnastics-panel-heading p:not(.academy-overline) { max-width: 690px; margin: 0; color: #7d6e88; font-size: .78rem; line-height: 1.5; }
+.gymnastics-heading-symbol { color: #a283c1; font-size: 2.7rem; }
+.gymnastics-routine-card { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 18px 20px; border: 1px solid #e7dced; border-radius: 16px; background: linear-gradient(120deg, #fff, #f8f1fc); box-shadow: 0 6px 20px rgba(78, 53, 98, .045); }
+.gymnastics-routine-copy { display: grid; justify-items: start; gap: 8px; }
+.gymnastics-routine-copy h3 { margin: 0; color: #5a456e; font-family: Georgia, serif; font-size: 1.12rem; }
+.gymnastics-routine-copy > p:not(.academy-overline) { max-width: 620px; margin: 0; color: #786b83; font-size: .75rem; line-height: 1.5; }
+.gymnastics-ribbon-art { color: #b48bc6; font-size: 2rem; letter-spacing: .14em; white-space: nowrap; }
+.gymnastics-stats { color: #765e8b !important; font-weight: 800; }
+.gymnastics-practice { display: grid; gap: 12px; }
+.gymnastics-status { margin: 0; padding: 11px 14px; border: 1px solid #e7dced; border-radius: 10px; color: #684f7b; background: #f8f2fc; font-size: .75rem; font-weight: 800; }
+.gymnastics-canvas-frame { padding: 10px; overflow: hidden; border: 1px solid #e7dced; border-radius: 15px; background: radial-gradient(ellipse at 50% 30%, #fff, #f5effa); }
+.gymnastics-canvas { display: block; width: 100%; height: auto; border-radius: 9px; touch-action: none; cursor: crosshair; }
+.gymnastics-canvas-help { margin: 0; color: #8a7b94; font-size: .68rem; line-height: 1.5; text-align: center; }
+.gymnastics-practice-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.gymnastics-practice-actions span { color: #81748b; font-size: .68rem; }
+.gymnastics-beat-button { min-width: 180px; min-height: 48px; font-size: .82rem; }
+.gymnastics-beat-button:focus-visible { outline: 3px solid #e4bf72; outline-offset: 3px; }
+.gymnastics-result { display: grid; justify-items: center; gap: 9px; padding: 18px; border: 1px solid #e5d8ee; border-radius: 14px; background: #fff; text-align: center; }
+.gymnastics-result h3 { margin: 0; color: #5c456f; font-family: Georgia, serif; font-size: 1.15rem; }
+.gymnastics-result > p:last-child { margin: 0; color: #7b6e86; font-size: .72rem; }
+.gymnastics-stars { margin: 0; color: #d5a64c; font-size: 1.6rem; letter-spacing: .18em; }
+.gymnastics-score-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; gap: 10px; }
+.gymnastics-score-grid > div { display: grid; gap: 4px; padding: 10px; border-radius: 9px; background: #f8f4fb; }
+.gymnastics-score-grid span { color: #897a93; font-size: .63rem; font-weight: 700; }
+.gymnastics-score-grid strong { color: #674d7c; font-size: 1.05rem; }
+.gymnastics-panel[hidden], .gymnastics-practice[hidden], .gymnastics-practice-actions[hidden], .gymnastics-result[hidden] { display: none !important; }
+@media (max-width: 650px) {
+  .gymnastics-routine-card { align-items: flex-start; }
+  .gymnastics-ribbon-art { display: none; }
+  .gymnastics-score-grid { grid-template-columns: 1fr; }
+}
