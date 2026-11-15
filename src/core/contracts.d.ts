@@ -53,11 +53,27 @@ export interface StateStore<TState extends object = Record<string, unknown>> {
   destroy(): void;
 }
 
+export interface InputBinding {
+  readonly type: string;
+  readonly payload?: Readonly<Record<string, unknown>>;
+  readonly preventDefault?: boolean;
+}
+
+export interface InputContextBindings {
+  /** Defaults to contextId. Use null for an application-wide context. */
+  readonly screenId?: string | null;
+  /** When provided, this context is active only while this overlay is open (or closed when null). */
+  readonly overlayId?: string | null;
+  readonly priority?: number;
+  readonly enabledWhen?: (state: Readonly<Record<string, unknown>>) => boolean;
+  readonly keys?: Readonly<Record<string, string | InputBinding>>;
+}
+
 export interface InputRouter {
   start(): void;
   stop(): void;
-  /** Register bindings for one active screen/context. */
-  registerContext(contextId: string, bindings: Record<string, string>): void;
+  /** Register named action bindings for one active screen/context and return an unregister function. */
+  registerContext(contextId: string, bindings: InputContextBindings): () => void;
 }
 
 export interface SaveStatus {
