@@ -10,19 +10,47 @@ export interface ApplicationService {
 }
 
 export interface GameAction<TPayload = unknown> {
-  /** Stable, namespaced action name, such as \`pet/feed\`. */
+  /** Stable, namespaced action name, such as pet/feed. */
   readonly type: string;
   /** Serializable action data, validated at the receiving boundary. */
   readonly payload?: TPayload;
 }
 
+export interface StateActionDefinition<TState extends object = Record<string, unknown>, TPayload = unknown> {
+  /** Return true for valid input, otherwise return a short validation message. */
+  validate(payload: TPayload | undefined): true | string;
+  /** Pure reducer: return the next state without mutating the supplied snapshot. */
+  reduce(state: Readonly<TState>, payload: TPayload | undefined, action: Readonly<GameAction<TPayload>>): TState;
+}
+
+export interface StateSubscriptionScope<TState extends object = Record<string, unknown>> {
+  readonly id: string;
+  readonly screenId: string | null;
+  readonly active: boolean;
+  subscribe(listener: (state: Readonly<TState>, action: GameAction, version: number) => void): () => void;
+  subscribeSelector<TSelected>(
+    selector: (state: Readonly<TState>) => TSelected,
+    listener: (value: TSelected, previous: TSelected | undefined, action: GameAction | null, version: number) => void,
+    options?: { equalityFn?: (left: TSelected, right: TSelected) => boolean; emitCurrent?: boolean }
+  ): () => void;
+  dispose(): void;
+}
+
 export interface StateStore<TState extends object = Record<string, unknown>> {
-  /** Return a read-only state snapshot. */
+  /** Return a deeply immutable state snapshot. */
   getState(): Readonly<TState>;
+  getVersion(): number;
   /** Validate and dispatch a named action. */
-  dispatch(action: GameAction): unknown;
-  /** Subscribe to committed state changes; return an unsubscribe function. */
-  subscribe(listener: (state: Readonly<TState>, action: GameAction) => void): () => void;
+  dispatch(action: GameAction): Readonly<{ accepted: true; changed?: boolean; queued?: boolean; version: number; type: string }>;
+  subscribe(listener: (state: Readonly<TState>, action: GameAction, version: number) => void): () => void;
+  subscribeSelector<TSelected>(
+    selector: (state: Readonly<TState>) => TSelected,
+    listener: (value: TSelected, previous: TSelected | undefined, action: GameAction | null, version: number) => void,
+    options?: { equalityFn?: (left: TSelected, right: TSelected) => boolean; emitCurrent?: boolean }
+  ): () => void;
+  /** A screen-bound scope is disposed automatically after navigation leaves its screen. */
+  createScope(scopeId: string, options?: { screenId?: string | null }): StateSubscriptionScope<TState>;
+  destroy(): void;
 }
 
 export interface InputRouter {
