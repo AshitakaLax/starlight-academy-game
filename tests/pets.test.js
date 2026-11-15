@@ -219,3 +219,99 @@ test("care moments, meters, and bond survive save serialization and active-pet s
   assert.equal(phoenix.bondExperience, 5);
   assert.equal(phoenix.careMoments, 1);
 });
+
+
+test("each species has one distinct centrally configured care ability", async () => {
+  const { gameConfig } = await import("../src/config/gameConfig.js");
+  const abilities = gameConfig.petAbilities.definitions;
+  assert.deepEqual(Object.keys(abilities).sort(), ["pet.nymph-kitten", "pet.pegasus", "pet.phoenix"]);
+  assert.deepEqual(
+    Object.values(abilities).map((ability) => ability.careType).sort(),
+    ["feeding", "grooming", "play"]
+  );
+  assert.ok(Object.values(abilities).every((ability) => ability.careProgressBonus === 10));
+});
+
+test("Pegasus ability adds a grooming bonus only while Pegasus is active", async () => {
+  const { service } = harness();
+  const { selectPetAbilityCareBonus, selectActivePetAbility } = await import("../src/gameplay/pets/petAbilities.js");
+  assert.equal(selectActivePetAbility(service.getPet("pet.pegasus") ? { petCollection: service.getSnapshot() } : {}, { has: () => true }), null);
+  const state = () => ({ petCollection: originalStoreState });
+  const { store } = harness();
+  const abilityService = createPetCollectionService({ store, petCatalog: createPetCatalog(defaultPetDefinitions) });
+  const active = abilityService.getSnapshot().activeAbility;
+  assert.equal(active.id, "ability.skyward-shine");
+  assert.equal(selectPetAbilityCareBonus(store.getState(), createPetCatalog(defaultPetDefinitions), "pet.pegasus", "grooming"), 10);
+  assert.equal(selectPetAbilityCareBonus(store.getState(), createPetCatalog(defaultPetDefinitions), "pet.pegasus", "feeding"), 0);
+  assert.equal(abilityService.performCare("pet.pegasus", "grooming").progressAfter, 35);
+  assert.equal(abilityService.performCare("pet.pegasus", "feeding").progressAfter, 25);
+});
+
+test("switching companions replaces the active ability and prevents ability stacking", async () => {
+  const { service, store, catalog } = harness();
+  const { selectPetAbilityCareBonus } = await import("../src/gameplay/pets/petAbilities.js");
+  service.unlockPet("pet.phoenix", "chapter-02");
+  service.unlockPet("pet.nymph-kitten", "chapter-03");
+
+  const pegasus = service.getSnapshot();
+  assert.equal(pegasus.activeAbility.id, "ability.skyward-shine");
+  service.selectActivePet("pet.phoenix");
+  const phoenix = service.getSnapshot();
+  assert.equal(phoenix.activeAbility.id, "ability.ember-treat");
+  assert.equal(phoenix.activeAbility.petId, "pet.phoenix");
+  assert.equal(selectPetAbilityCareBonus(store.getState(), catalog, "pet.phoenix", "feeding"), 10);
+  assert.equal(selectPetAbilityCareBonus(store.getState(), catalog, "pet.pegasus", "grooming"), 0);
+  assert.equal(service.performCare("pet.phoenix", "feeding").progressAfter, 35);
+  assert.equal(service.performCare("pet.pegasus", "grooming").progressAfter, 25);
+
+  service.selectActivePet("pet.nymph-kitten");
+  const kitten = service.getSnapshot();
+  assert.equal(kitten.activeAbility.id, "ability.ribbontail-whirl");
+  assert.equal(kitten.pets.filter((pet) => pet.active).length, 1);
+  assert.equal(selectPetAbilityCareBonus(store.getState(), catalog, "pet.nymph-kitten", "play"), 10);
+  assert.equal(selectPetAbilityCareBonus(store.getState(), catalog, "pet.phoenix", "feeding"), 0);
+  assert.equal(service.performCare("pet.nymph-kitten", "play").progressAfter, 35);
+});
+
+test("pet ability selection is derived from the saved active pet and restores without stacking", () => {
+  const initial = harness();
+  initial.service.unlockPet("pet.phoenix", "chapter-02");
+  initial.service.unlockPet("pet.nymph-kitten", "chapter-03");
+  initial.service.selectActivePet("pet.nymph-kitten");
+  const saved = JSON.parse(JSON.stringify(initial.store.getState()));
+  const restored = harness(saved);
+  assert.equal(restored.service.getSnapshot().activeAbility.id, "ability.ribbontail-whirl");
+  assert.equal(restored.service.getSnapshot().activePetId, "pet.nymph-kitten");
+  assert.equal(restored.service.getSnapshot().pets.filter((pet) => pet.active).length, 1);
+});
+
+test("pet abilities cannot be supplied or stacked through care action payloads", () => {
+  const { store, service } = harness();
+  const initial = service.getPet("pet.pegasus");
+  assert.throws(() => store.dispatch({
+    type: "pets/care-performed",
+    payload: { petId: "pet.pegasus", careType: "grooming", abilityId: "ability.ember-treat", careBonus: 100 }
+  }), /registered petId and careType/);
+  assert.equal(service.getPet("pet.pegasus").careProgress.grooming, initial.careProgress.grooming);
+});
+
+test("changing the active pet does not change adaptive difficulty or answer correctness", async () => {
+  const { service } = harness();
+  const { checkActivityAnswer } = await import("../src/systems/curriculum/answerRules.js");
+  const { evaluateAdaptiveTier } = await import("../src/systems/curriculum/adaptiveDifficulty.js");
+  service.unlockPet("pet.phoenix", "chapter-02");
+  const evidence = [
+    { correct: true, hintLevel: 0 },
+    { correct: false, hintLevel: 1 },
+    { correct: true, hintLevel: 0 },
+    { correct: true, hintLevel: 0 },
+    { correct: false, hintLevel: 2 }
+  ];
+  const beforeTier = evaluateAdaptiveTier({ currentTier: "core", evidence });
+  const beforeAnswer = checkActivityAnswer(42, 42, { type: "numeric" });
+  service.selectActivePet("pet.phoenix");
+  const afterTier = evaluateAdaptiveTier({ currentTier: "core", evidence });
+  const afterAnswer = checkActivityAnswer(42, 42, { type: "numeric" });
+  assert.deepEqual(afterTier, beforeTier);
+  assert.equal(afterAnswer, beforeAnswer);
+});
