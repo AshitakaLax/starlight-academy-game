@@ -3,7 +3,7 @@
 The curriculum layer is data-driven and independent of DOM, rendering, and chapter navigation.
 
 - `skillRegistry.js` owns stable skill IDs, subject labels, learning objectives, and supported tiers.
-- `difficultyTiers.js` defines Foundation, Core, and Stretch. Core is the recommended starting tier; the later adaptive-difficulty step can move each skill independently.
+- `difficultyTiers.js` defines Foundation, Core, and Stretch. New players start at Core; the adaptive policy moves each skill independently from its own evidence window.
 - `activityDefinitions.js` validates immutable activity contracts. Every activity declares skill IDs, objectives, supported tiers, answer rules, a generator ID, and one constraints object per tier.
 - `questionGenerators.js` provides a seeded PRNG, built-in multiplication/addition/skip-counting generators, and isolated custom generator registries. Reusing the same activity, seed, and tier yields the same question.
 - `answerRules.js` evaluates numeric, exact-text, choice, and sequence responses.
