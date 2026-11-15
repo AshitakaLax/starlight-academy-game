@@ -10,7 +10,8 @@ const EFFECTS = Object.freeze({
   open: Object.freeze({ frequency: 523.25, endFrequency: 783.99, duration: 0.22, type: "sine" }),
   close: Object.freeze({ frequency: 440.0, endFrequency: 329.63, duration: 0.15, type: "sine" }),
   sparkle: Object.freeze({ frequency: 880.0, endFrequency: 1318.51, duration: 0.28, type: "triangle" }),
-  correct: Object.freeze({ frequency: 523.25, endFrequency: 1046.5, duration: 0.3, type: "triangle" })
+  correct: Object.freeze({ frequency: 523.25, endFrequency: 1046.5, duration: 0.3, type: "triangle" }),
+  beat: Object.freeze({ frequency: 880, endFrequency: 880, duration: 0.075, type: "triangle" })
 });
 
 const DEFAULT_SETTINGS = Object.freeze({ masterVolume: 70, musicVolume: 24, sfxVolume: 55, muted: false });
