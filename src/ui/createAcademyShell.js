@@ -884,7 +884,7 @@ export function createAcademyShell({
           : snapshot.stage === "rhythm" ? "Star " + (snapshot.checkpoints.length - snapshot.checkpoints.filter((checkpoint) => checkpoint.status !== "pending").length + 1)
             + " of " + snapshot.checkpoints.length + " is waiting. Tap with the beat; a missed star never ends your routine."
             : snapshot.stage === "completed" ? "Routine complete! Your tracing and rhythm scores are saved separately. Lovely work!"
-              : "Your routine is ready.";
+              : "Your routine is ready.");
     if (snapshot.stage === "completed") {
       panel.gymnasticsStars.textContent = "★".repeat(snapshot.starRating) + "☆".repeat(3 - snapshot.starRating);
       panel.gymnasticsStars.setAttribute("aria-label", snapshot.starRating + " out of 3 stars");
