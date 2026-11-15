@@ -170,7 +170,8 @@ function requireElement(root, selector) {
 
 /** Compose the semantic academy hub and accessible settings dialog. */
 export function createAcademyShell({
-  root, store, saveService, saveStatusElement = null, audioStatusElement = null, narrationService = null,\n  narrationStatusElement = null, narrationTextElement = null, emblemSvg = "",
+  root, store, saveService, saveStatusElement = null, audioStatusElement = null, narrationService = null,
+  narrationStatusElement = null, narrationTextElement = null, emblemSvg = "",
   documentRef = globalThis.document, windowRef = globalThis.window
 } = {}) {
   if (!root || typeof root.querySelector !== "function" || typeof root.addEventListener !== "function") {
