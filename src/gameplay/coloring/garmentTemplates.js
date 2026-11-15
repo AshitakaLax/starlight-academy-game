@@ -18,11 +18,14 @@ function freezeRecursively(value) {
   return value;
 }
 
-function validatePoints(points) {
-  if (!Array.isArray(points) || points.length < 6 || points.length > 40) return false;
+function validateCoordinatePath(points, minimum, maximum) {
+  if (!Array.isArray(points) || points.length < minimum || points.length > maximum) return false;
   return points.every((point) => Array.isArray(point) && point.length === 2
     && Number.isFinite(point[0]) && point[0] >= 0 && point[0] <= COLORING_TEXTURE_WIDTH
     && Number.isFinite(point[1]) && point[1] >= 0 && point[1] <= COLORING_TEXTURE_HEIGHT);
+}
+function validatePoints(points) {
+  return validateCoordinatePath(points, 6, 40);
 }
 
 export function validateGarmentTemplate(input) {
@@ -39,7 +42,7 @@ export function validateGarmentTemplate(input) {
   }
   if (input.accentLines !== undefined) {
     if (!Array.isArray(input.accentLines) || input.accentLines.length > 12
-        || input.accentLines.some((line) => !validatePoints(line) || line.length < 2)) {
+        || input.accentLines.some((line) => !validateCoordinatePath(line, 2, 40))) {
       return "Garment accentLines must be arrays of in-bounds points.";
     }
   }
