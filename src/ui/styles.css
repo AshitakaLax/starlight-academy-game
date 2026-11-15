@@ -258,3 +258,45 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 @media (max-width: 480px) {
   .narration-controls { grid-template-columns: 1fr; }
 }
+
+
+.wardrobe-panel { display: grid; gap: 22px; margin-top: 24px; }
+.wardrobe-panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 22px 25px; border: 1px solid #e8deef; border-radius: 17px; background: linear-gradient(120deg, #fbf7ff, #fffafd 58%, #f7f8ff); }
+.wardrobe-panel-heading h2 { margin: 4px 0 7px; color: #4f3b64; font-family: Georgia, serif; font-size: 1.45rem; }
+.wardrobe-panel-heading p:last-child { max-width: 620px; margin: 0; color: #7d6e88; font-size: .78rem; line-height: 1.5; }
+.wardrobe-heading-star { color: #9a78bd; font-size: 2.2rem; }
+.wardrobe-equipped-wrap, .wardrobe-inventory-wrap { display: grid; gap: 11px; }
+.wardrobe-equipped-wrap h3, .wardrobe-items-heading h3 { margin: 0; color: #5c486e; font-size: .88rem; }
+.wardrobe-items-heading p { margin: 4px 0 0; color: #867992; font-size: .7rem; line-height: 1.45; }
+.wardrobe-equipped { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.wardrobe-slot-card { display: grid; align-content: start; justify-items: start; gap: 5px; min-width: 0; padding: 12px; border: 1px solid #e9e0ef; border-radius: 12px; background: #fff; }
+.wardrobe-slot-symbol { display: grid; place-items: center; width: 37px; height: 37px; border-radius: 11px; color: #755492; background: #f5effa; font-size: 1.25rem; }
+.wardrobe-slot-label, .wardrobe-item-slot { color: #9b8ca4; font-size: .59rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.wardrobe-slot-card strong { overflow-wrap: anywhere; color: #5e4a6d; font-size: .72rem; }
+.wardrobe-secondary-action, .wardrobe-primary-action { min-height: 34px; margin-top: 5px; padding: 7px 10px; border: 1px solid #e4d8ec; border-radius: 8px; color: #684b82; background: #fff; font: inherit; font-size: .65rem; font-weight: 800; cursor: pointer; }
+.wardrobe-primary-action { border-color: #78559a; color: #fff; background: #78559a; }
+.wardrobe-primary-action:disabled, .wardrobe-secondary-action:disabled { cursor: not-allowed; opacity: .48; }
+.wardrobe-inventory { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 11px; }
+.wardrobe-item-card { display: grid; align-content: start; justify-items: start; gap: 7px; min-width: 0; padding: 13px; border: 1px solid #e9e0ef; border-radius: 13px; background: #fff; box-shadow: 0 4px 14px rgba(78, 53, 98, .035); }
+.wardrobe-item-symbol { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 15px; color: #76528f; background: #f3edfa; font-size: 1.55rem; }
+.wardrobe-item-card[data-item-theme="silver"] .wardrobe-item-symbol, .wardrobe-item-card[data-item-theme="moonlight"] .wardrobe-item-symbol { color: #64718d; background: #eff2fa; }
+.wardrobe-item-card[data-item-theme="comet"] .wardrobe-item-symbol { color: #83548e; background: #f6ebfa; }
+.wardrobe-item-card[data-item-theme="cloud"] .wardrobe-item-symbol { color: #647c9d; background: #eef4fb; }
+.wardrobe-item-card[data-item-theme="sparkle"] .wardrobe-item-symbol, .wardrobe-item-card[data-item-theme="moonbeam"] .wardrobe-item-symbol { color: #966f46; background: #fbf3e7; }
+.wardrobe-item-card h4 { margin: 0; color: #584568; font-size: .77rem; }
+.wardrobe-item-card p { min-height: 38px; margin: 0; color: #897d90; font-size: .65rem; line-height: 1.45; }
+.wardrobe-item-card button { width: 100%; margin-top: 3px; }
+.wardrobe-item-card[data-item-state="equipped"] { border-color: #cbb8dd; background: #fdfbff; }
+.wardrobe-status { margin: 0; padding: 10px 13px; border-radius: 10px; color: #715a81; background: #f7f2fb; font-size: .7rem; line-height: 1.45; }
+.academy-hero[hidden], .quick-paths[hidden], .wardrobe-panel[hidden] { display: none !important; }
+@media (max-width: 980px) {
+  .wardrobe-inventory { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .wardrobe-equipped { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wardrobe-inventory { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wardrobe-panel-heading { padding: 17px; }
+}
+@media (max-width: 480px) {
+  .wardrobe-inventory { grid-template-columns: 1fr; }
+}
