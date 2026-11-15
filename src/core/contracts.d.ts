@@ -198,3 +198,23 @@ export interface GeneratedQuestion {
   readonly choices?: readonly unknown[];
   readonly stimulus?: Readonly<Record<string, unknown>>;
 }
+
+
+export interface CurriculumOnboardingProfile {
+  readonly mode: "guided-discovery";
+  readonly placementTestRequired: false;
+  readonly initialTier: DifficultyTierId;
+  readonly startingGuidance: string;
+}
+
+export interface AdaptiveTierDecision {
+  readonly currentTier: DifficultyTierId;
+  readonly nextTier: DifficultyTierId;
+  readonly changed: boolean;
+  readonly direction: "maintain" | "increase" | "decrease";
+  readonly reason: string;
+  readonly evidenceCount: number;
+  readonly correctResponses: number;
+  readonly independentCorrect: number;
+  readonly windowSize: number;
+}
