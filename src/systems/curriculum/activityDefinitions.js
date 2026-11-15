@@ -86,6 +86,12 @@ export function validateActivityDefinition(input) {
   if (!isPlainObject(input.generatorConstraints)) {
     return "Activity generatorConstraints must be a plain object keyed by difficulty tier.";
   }
+  try {
+    cloneJsonObject(input.answerRules, "answerRules");
+    cloneJsonObject(input.generatorConstraints, "generatorConstraints");
+  } catch (error) {
+    return error.message;
+  }
   const constraintTiers = Object.keys(input.generatorConstraints);
   if (constraintTiers.length !== input.supportedTiers.length
       || constraintTiers.some((tier) => !input.supportedTiers.includes(tier)
