@@ -474,10 +474,10 @@ export interface PetCollectionSnapshot {
 
 export interface PetCollectionService {
   getSnapshot(): PetCollectionSnapshot;
-  getPet(petId: string): (PetDefinition & PetProgress & { active: boolean }) | null;
+  getPet(petId: string): Readonly<{ definition: PetDefinition; ability: PetAbilityDefinition | null; active: boolean } & PetProgress> | null;
   unlockPet(petId: string, sourceId: string): Readonly<{ unlocked: boolean; changed: boolean; reason: string; petId: string; unlockSource: string | null }>;
-  selectActivePet(petId: string): Readonly<{ changed: boolean; activePetId: string; pet: unknown }>;
-  setAppearancePalette(petId: string, paletteId: string): Readonly<{ changed: boolean; pet: unknown }>;
+  selectActivePet(petId: string): Readonly<{ changed: boolean; activePetId: string; pet: (Readonly<{ definition: PetDefinition; ability: PetAbilityDefinition | null; active: boolean } & PetProgress>) | null }>;
+  setAppearancePalette(petId: string, paletteId: string): Readonly<{ changed: boolean; pet: (Readonly<{ definition: PetDefinition; ability: PetAbilityDefinition | null; active: boolean } & PetProgress>) | null }>;
   performCare(petId: string, careType: PetCareType): PetCareProgressResult;
 }
 
