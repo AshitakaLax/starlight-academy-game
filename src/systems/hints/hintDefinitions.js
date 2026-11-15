@@ -166,7 +166,7 @@ export function createProfessorHootDemonstration(demonstration) {
   const textEquivalent = [
     "Professor Hoot: " + demonstration.title,
     demonstration.introduction,
-    ...steps.map((step) => step.number + ". " + step.label + ": " + step.explanation + " Visual: " + step.visual.ariaLabel),
+    ...steps.map((step) => "Step " + step.number + ". " + step.label + ": " + step.explanation + " Visual: " + step.visual.ariaLabel),
     demonstration.summary
   ].join("\n");
   return freezeRecursively({
