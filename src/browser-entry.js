@@ -9,6 +9,10 @@ import { createWardrobeCatalog, createWardrobeShopCatalog, defaultWardrobeItems 
 import { createInitialWardrobeState } from "./gameplay/wardrobe/wardrobeState.js";
 import { createWardrobeActionDefinitions } from "./gameplay/wardrobe/wardrobeActions.js";
 import { createWardrobeService } from "./gameplay/wardrobe/createWardrobeService.js";
+import { createGarmentTemplateRegistry, defaultGarmentTemplates } from "./gameplay/coloring/garmentTemplates.js";
+import { createInitialColoringState } from "./gameplay/coloring/coloringState.js";
+import { createColoringActionDefinitions } from "./gameplay/coloring/coloringActions.js";
+import { createColoringService } from "./gameplay/coloring/createColoringService.js";
 import { createSaveManager, getBrowserStorage } from "./core/save/createSaveManager.js";
 import { createSaveService } from "./core/save/createSaveService.js";
 import { createInputRouter } from "./core/input/createInputRouter.js";
@@ -51,20 +55,24 @@ async function launch() {
 
   const rewardRegistry = createRewardRegistry();
   const wardrobeCatalog = createWardrobeCatalog(defaultWardrobeItems);
+  const garmentTemplateRegistry = createGarmentTemplateRegistry(defaultGarmentTemplates);
   const shopCatalog = createShopCatalog(createWardrobeShopCatalog(wardrobeCatalog));
   const economyActionDefinitions = createEconomyActionDefinitions({ rewardRegistry, shopCatalog });
   const wardrobeActionDefinitions = createWardrobeActionDefinitions({ wardrobeCatalog, economyActionDefinitions });
+  const coloringActionDefinitions = createColoringActionDefinitions({ templateRegistry: garmentTemplateRegistry });
   const initialGameState = {
     ...createInitialGameState(),
     curriculum: createInitialCurriculumProgress(),
     economy: createInitialEconomyState(),
-    wardrobe: createInitialWardrobeState(wardrobeCatalog)
+    wardrobe: createInitialWardrobeState(wardrobeCatalog),
+    coloring: createInitialColoringState(garmentTemplateRegistry)
   };
   const store = createGameStore({
     initialState: initialGameState,
-    actions: { ...curriculumActionDefinitions, ...economyActionDefinitions, ...wardrobeActionDefinitions }
+    actions: { ...curriculumActionDefinitions, ...economyActionDefinitions, ...wardrobeActionDefinitions, ...coloringActionDefinitions }
   });
   const wardrobeService = createWardrobeService({ store, wardrobeCatalog });
+  const coloringService = createColoringService({ store, templateRegistry: garmentTemplateRegistry });
   const saveManager = createSaveManager({
     storage: getBrowserStorage(),
     storageKey: gameConfig.persistence.storageKey,
@@ -134,7 +142,7 @@ async function launch() {
   const academyShell = createAcademyShell({
     root, store, saveService, saveStatusElement: saveHealth, audioStatusElement: audioStatus,
     narrationService, narrationStatusElement: narrationStatus, narrationTextElement: narrationCaption,
-    wardrobeService,
+    wardrobeService, coloringService, garmentTemplateRegistry,
     emblemSvg: academyEmblem, documentRef: document, windowRef: window
   });
   document.documentElement.dataset.appStatus = app.status;
