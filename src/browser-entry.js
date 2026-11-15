@@ -8,6 +8,7 @@ import { gameConfig } from "./config/gameConfig.js";
 import { createAcademyShell } from "./ui/createAcademyShell.js";
 import { createAudioEngine } from "./systems/audio/createAudioEngine.js";
 import { createAudioService } from "./systems/audio/createAudioService.js";
+import { createNarrationService } from "./systems/narration/createNarrationService.js";
 import academyEmblem from "./assets/academy-emblem.svg";
 import releaseManifest from "./data/release-manifest.json";
 
@@ -26,6 +27,18 @@ async function launch() {
   audioStatus.setAttribute("role", "status");
   audioStatus.setAttribute("aria-live", "polite");
   audioStatus.textContent = "Audio begins after your first interaction.";
+
+  const narrationCaption = document.createElement("p");
+  narrationCaption.className = "narration-caption";
+  narrationCaption.setAttribute("role", "status");
+  narrationCaption.setAttribute("aria-live", "polite");
+  narrationCaption.hidden = true;
+
+  const narrationStatus = document.createElement("p");
+  narrationStatus.className = "narration-status";
+  narrationStatus.setAttribute("role", "status");
+  narrationStatus.setAttribute("aria-live", "polite");
+  narrationStatus.textContent = "Narration is optional and turned off.";
 
   const store = createGameStore();
   const saveManager = createSaveManager({
@@ -67,6 +80,16 @@ async function launch() {
     }
   });
 
+  const narrationService = createNarrationService({
+    store,
+    audioEngine,
+    textElement: narrationCaption,
+    onStatus(status) {
+      narrationStatus.textContent = status.message;
+      narrationStatus.dataset.kind = status.kind;
+    }
+  });
+
   const inputRouter = createInputRouter({
     store, target: window, documentRef: document, root,
     onError(error, context) {
@@ -80,11 +103,11 @@ async function launch() {
     stop() { inputRouter.stop(); unregisterInputContexts(); }
   };
 
-  const app = createGameApp({ services: [saveService, audioService, inputService] });
+  const app = createGameApp({ services: [saveService, audioService, narrationService, inputService] });
   await app.start();
 
   const academyShell = createAcademyShell({
-    root, store, saveService, saveStatusElement: saveHealth, audioStatusElement: audioStatus,
+    root, store, saveService, saveStatusElement: saveHealth, audioStatusElement: audioStatus,\n    narrationService, narrationStatusElement: narrationStatus, narrationTextElement: narrationCaption,
     emblemSvg: academyEmblem, documentRef: document, windowRef: window
   });
   document.documentElement.dataset.appStatus = app.status;
