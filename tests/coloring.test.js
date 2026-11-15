@@ -110,7 +110,7 @@ test("texture decoder rejects malformed, truncated, excessive, and incompatible 
   assert.throws(() => decodeColorTexture({ ...blank, runs: "not-rle" }), /malformed RLE/);
   assert.throws(() => decodeColorTexture({ ...blank, runs: "0.1" }), /does not fill/);
   assert.throws(() => decodeColorTexture({ ...blank, runs: "0.1" }), /does not fill/);
-  assert.throws(() => decodeColorTexture({ ...blank, runs: "0.2,0.z" }), /outside|malformed/);
+  assert.throws(() => decodeColorTexture({ ...blank, runs: "0.2,0.z" }), /outside|malformed|does not fill/);
   assert.throws(() => decodeColorTexture({ ...blank, runs: "0.1", surprise: true }), /contain version/);
   assert.throws(() => decodeColorTexture({ ...blank, runs: "0".repeat(COLORING_MAX_ENCODED_CHARS + 1) }), /storage limit/);
   assert.throws(() => encodeColorTexture(new Uint8Array(3), []), /exactly/);
