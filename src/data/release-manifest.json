@@ -1,0 +1,8 @@
+{
+  "release": {
+    "chapterCount": 10,
+    "sideQuestCount": 20,
+    "platforms": ["desktop Chrome", "desktop Edge"],
+    "offline": true
+  }
+}

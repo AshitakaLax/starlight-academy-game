@@ -5,10 +5,14 @@
   "type": "module",
   "description": "Modular source project for the offline Starlight Academy game.",
   "scripts": {
-    "check": "node --check src/index.js && node --check src/app/createGameApp.js && node --check src/chapters/registry.js && node --check src/side-quests/registry.js && node --check src/config/gameConfig.js",
-    "test": "node --test"
+    "check": "node --check src/index.js && node --check src/browser-entry.js && node --check src/app/createGameApp.js && node --check src/chapters/registry.js && node --check src/side-quests/registry.js && node --check src/config/gameConfig.js && node --check build/build.mjs",
+    "test": "node --test",
+    "build": "node build/build.mjs"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
   }
 }
