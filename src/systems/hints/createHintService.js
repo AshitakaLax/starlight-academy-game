@@ -194,6 +194,7 @@ export function createHintService({
     requireQuestionId(questionId);
     const session = sessions.get(questionId);
     if (!session) throw new Error("Cannot retry an unknown hint session: " + questionId);
+    if (session.completed) throw new Error("A completed question cannot be retried.");
     return freezeRecursively({
       kind: "retry",
       question: session.question,
