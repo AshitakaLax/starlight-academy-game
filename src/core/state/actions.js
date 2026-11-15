@@ -145,7 +145,7 @@ export const coreActionDefinitions = Object.freeze({
       if (preferences.textScale === current.textScale && preferences.reducedMotion === current.reducedMotion) return state;
       return { ...state, ui: { ...state.ui, preferences } };
     }
-  })
+  }),
   "audio/settings-updated": Object.freeze({
     validate(payload) {
       if (!isPlainObject(payload) || Object.keys(payload).length === 0
