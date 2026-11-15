@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { createGameStore } from "../src/core/state/createGameStore.js";
 import { createInitialGameState, mergeGameStateDefaults } from "../src/core/state/actions.js";
 import { gameConfig } from "../src/config/gameConfig.js";
+import { createLowPressureOnboardingProfile, evaluateAdaptiveTier, selectSkillTier } from "../src/systems/curriculum/adaptiveDifficulty.js";
 import { DIFFICULTY_TIER_IDS, difficultyTierDefinitions, getDifficultyTier } from "../src/systems/curriculum/difficultyTiers.js";
 import { skillDefinitions, skillRegistry, getSkillDefinition } from "../src/systems/curriculum/skillRegistry.js";
 import { createActivityDefinition, createActivityRegistry, validateActivityDefinition } from "../src/systems/curriculum/activityDefinitions.js";
@@ -229,6 +230,121 @@ test("legacy save normalization restores defaults without carrying forward progr
 
   store.dispatch({ type: "curriculum/evidence-recorded", payload: evidencePayload });
   assert.equal(selectSkillProgress(store.getState(), "math.multiplication").totalResponses, 1);
+  store.destroy();
+});
+
+test("onboarding starts at Core without requiring a placement assessment", () => {
+  const onboarding = createLowPressureOnboardingProfile();
+  const progress = createInitialCurriculumProgress();
+  assert.equal(onboarding.mode, "guided-discovery");
+  assert.equal(onboarding.placementTestRequired, false);
+  assert.equal(onboarding.initialTier, "core");
+  assert.match(onboarding.startingGuidance, /third-grade range/i);
+  assert.equal(progress.onboarding.placementTestRequired, false);
+  assert.equal(progress.onboarding.initialTier, gameConfig.curriculum.defaultTier);
+  assert.equal(selectSkillTier({ curriculum: progress }, "math.multiplication"), "core");
+});
+
+test("adaptive tier policy waits for a complete rolling window and promotes on independent success", () => {
+  const shortWindow = evaluateAdaptiveTier({
+    currentTier: "core",
+    evidence: [
+      { correct: true, hintLevel: 0 },
+      { correct: true, hintLevel: 0 },
+      { correct: true, hintLevel: 0 },
+      { correct: true, hintLevel: 0 }
+    ]
+  });
+  assert.equal(shortWindow.changed, false);
+  assert.equal(shortWindow.reason, "gathering-evidence");
+
+  const promote = evaluateAdaptiveTier({
+    currentTier: "core",
+    evidence: [
+      { correct: true, hintLevel: 0 },
+      { correct: true, hintLevel: 0 },
+      { correct: true, hintLevel: 0 },
+      { correct: true, hintLevel: 0 },
+      { correct: false, hintLevel: 0 }
+    ]
+  });
+  assert.equal(promote.nextTier, "stretch");
+  assert.equal(promote.direction, "increase");
+  assert.equal(promote.independentCorrect, 4);
+  assert.equal(Object.hasOwn(promote, "responseTime"), false);
+});
+
+test("adaptive tier policy offers more support after sustained difficulty", () => {
+  const decision = evaluateAdaptiveTier({
+    currentTier: "core",
+    evidence: [
+      { correct: false, hintLevel: 0 },
+      { correct: false, hintLevel: 0 },
+      { correct: false, hintLevel: 1 },
+      { correct: false, hintLevel: 2 },
+      { correct: true, hintLevel: 0 }
+    ]
+  });
+  assert.equal(decision.nextTier, "foundation");
+  assert.equal(decision.direction, "decrease");
+  assert.equal(decision.reason, "more-supported-practice");
+});
+
+test("adaptive tiers are bounded at Foundation and Stretch", () => {
+  const foundation = evaluateAdaptiveTier({
+    currentTier: "foundation",
+    evidence: Array.from({ length: 5 }, () => ({ correct: false, hintLevel: 0 }))
+  });
+  const stretch = evaluateAdaptiveTier({
+    currentTier: "stretch",
+    evidence: Array.from({ length: 5 }, () => ({ correct: true, hintLevel: 0 }))
+  });
+  assert.equal(foundation.nextTier, "foundation");
+  assert.equal(foundation.reason, "foundation-support-retained");
+  assert.equal(stretch.nextTier, "stretch");
+  assert.equal(stretch.reason, "top-tier-demonstrated");
+});
+
+test("skill tiers adapt independently and reset their tier evidence after a change", () => {
+  const store = createStore();
+  const base = {
+    activityId: "chapter-01.multiplication-practice",
+    tier: "core",
+    correct: true,
+    hintLevel: 0,
+    attempts: 1
+  };
+  for (let index = 0; index < gameConfig.curriculum.adaptiveWindowSize; index += 1) {
+    store.dispatch({
+      type: "curriculum/evidence-recorded",
+      payload: { ...base, skillId: "math.multiplication" }
+    });
+  }
+  const progress = store.getState();
+  assert.equal(selectSkillTier(progress, "math.multiplication"), "stretch");
+  assert.equal(selectSkillTier(progress, "math.division"), "core");
+  assert.equal(progress.curriculum.skills["math.multiplication"].tierChanges, 1);
+  assert.deepEqual(progress.curriculum.skills["math.multiplication"].tierEvidence, []);
+  store.destroy();
+});
+
+test("difficulty adjustment uses only evidence for its skill's current tier", () => {
+  const store = createStore();
+  for (let index = 0; index < gameConfig.curriculum.adaptiveWindowSize; index += 1) {
+    store.dispatch({
+      type: "curriculum/evidence-recorded",
+      payload: {
+        skillId: "math.multiplication",
+        activityId: "chapter-01.multiplication-practice",
+        tier: "core",
+        correct: false,
+        hintLevel: 0,
+        attempts: 1
+      }
+    });
+  }
+  assert.equal(selectSkillTier(store.getState(), "math.multiplication"), "foundation");
+  assert.equal(selectSkillTier(store.getState(), "math.division"), "core");
   store.destroy();
 });
 
