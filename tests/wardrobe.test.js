@@ -176,10 +176,13 @@ test("only owned items can be equipped and each item can occupy only its declare
     type: "wardrobe/equipment-changed",
     payload: { slot: "head", itemId: "wardrobe.academy-tunic" }
   }), /does not belong/);
-  assert.throws(() => harness.store.dispatch({
+  const before = harness.store.getState();
+  const receipt = harness.store.dispatch({
     type: "wardrobe/equipment-changed",
     payload: { slot: "head", itemId: "wardrobe.lavender-crown" }
-  }), /Unknown game action|Unknown/);
+  });
+  assert.equal(receipt.changed, false);
+  assert.equal(harness.store.getState(), before);
   assert.equal(selectEquippedItem(harness.store.getState(), "head"), "wardrobe.starlight-tiara");
 });
 
