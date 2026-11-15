@@ -107,7 +107,7 @@ async function launch() {
   const gymnasticsService = createGymnasticsService({ store, routineCatalog: gymnasticsRoutineCatalog });
   const economyService = createEconomyService({ store, rewardRegistry, shopCatalog });
   const chapterRuntimeService = createChapterRuntimeService({
-    store, chapterCatalog, rewardRegistry, economyService
+    store, chapterCatalog, rewardRegistry, economyService, wardrobeService
   });
   const saveManager = createSaveManager({
     storage: getBrowserStorage(),
