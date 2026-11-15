@@ -113,7 +113,7 @@ const MARKUP = String.raw`<div class="academy-shell" data-text-scale="normal" da
           <div class="gymnastics-canvas-frame">
             <canvas class="gymnastics-canvas" data-gymnastics-canvas width="720" height="360" role="img" aria-label="Trace the glowing ribbon path with your mouse"></canvas>
           </div>
-          <p class="gymnastics-canvas-help">During tracing, drag your mouse along the glowing path. During rhythm, use the button or press Space while it is focused.</p>
+          <p class="gymnastics-canvas-help" data-gymnastics-canvas-help>Preview the glowing ribbon, then trace it with your mouse during practice.</p>
           <div class="gymnastics-practice-actions" data-gymnastics-trace-actions hidden>
             <button class="wardrobe-primary-action" type="button" data-gymnastics-action="finish-trace">Finish tracing and continue</button>
             <span>You may finish whenever you are ready. A skipped trace simply receives its own score.</span>
@@ -360,6 +360,7 @@ export function createAcademyShell({
     gymnasticsPractice: requireElement(root, "[data-gymnastics-practice]"),
     gymnasticsStatus: requireElement(root, "[data-gymnastics-status]"),
     gymnasticsCanvas: requireElement(root, "[data-gymnastics-canvas]"),
+    gymnasticsCanvasHelp: requireElement(root, "[data-gymnastics-canvas-help]"),
     gymnasticsStart: requireElement(root, '[data-gymnastics-action="start"]'),
     gymnasticsTraceActions: requireElement(root, "[data-gymnastics-trace-actions]"),
     gymnasticsRhythmActions: requireElement(root, "[data-gymnastics-rhythm-actions]"),
@@ -868,9 +869,14 @@ export function createAcademyShell({
       ? "Completed practices: " + progress.completedRuns + " · Best combined score: " + progress.personalBest.combinedScore + "% · Best stars: " + "★".repeat(progress.personalBest.starRating) + "☆".repeat(3 - progress.personalBest.starRating)
       : "No practice records yet. Your first try is just for exploring.";
     if (!gymnasticsSession) {
-      panel.gymnasticsPractice.hidden = true;
+      panel.gymnasticsPractice.hidden = false;
       panel.gymnasticsStart.hidden = false;
       panel.gymnasticsStart.textContent = "Begin practice";
+      panel.gymnasticsTraceActions.hidden = true;
+      panel.gymnasticsRhythmActions.hidden = true;
+      panel.gymnasticsResult.hidden = true;
+      panel.gymnasticsBeat.disabled = true;
+      panel.gymnasticsCanvasHelp.textContent = "Preview the glowing ribbon, then trace it with your mouse during practice. You can skip tracing whenever you like.";
       panel.gymnasticsStatus.textContent = statusMessage ?? gymnasticsStatusMessage;
       drawGymnasticsCanvas(null);
       return;
@@ -883,6 +889,9 @@ export function createAcademyShell({
     panel.gymnasticsRhythmActions.hidden = snapshot.stage !== "rhythm";
     panel.gymnasticsResult.hidden = snapshot.stage !== "completed";
     panel.gymnasticsBeat.disabled = snapshot.stage !== "rhythm";
+    panel.gymnasticsCanvasHelp.textContent = snapshot.stage === "rhythm"
+      ? "Listen for the soft tick and tap the star. You can use the button or press Space when it is focused."
+      : "During tracing, drag your mouse along the glowing ribbon, then continue to the rhythm.";
     panel.gymnasticsStatus.textContent = statusMessage ?? (
       snapshot.stage === "count-in" ? "Get ready! Count-in: " + snapshot.countInBeat
         : snapshot.stage === "tracing" ? "Trace the glowing ribbon. Move along the path, then choose Continue when you are ready."
