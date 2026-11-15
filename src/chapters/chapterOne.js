@@ -112,7 +112,7 @@ export const chapterOneHintDefinitions = Object.freeze([
 export const chapterOneReward = createRewardDefinition({
   id: "reward.chapter-01-starfall-circlet",
   sourceId: "chapter-01",
-  title: "Starfall Circlet",
+  title: "Starlight Keepsake",
   starGems: 40,
   starlightSparkles: 2,
   replayPolicy: { type: "once" }
