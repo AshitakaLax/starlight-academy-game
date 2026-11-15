@@ -8,7 +8,7 @@ A chapter defines its own ordered `activities`. Each activity has a stable chapt
 
 ## Runtime behavior
 
-- Starting an available chapter begins a new run or resumes the current saved checkpoint.
+- Only one live chapter session can advance shared saved progress at a time. Starting an available chapter begins a new run or resumes the current saved checkpoint.
 - Completing or skipping an activity writes an ordered checkpoint. A checkpoint cannot remove earlier activity results.
 - Finishing the final activity records the chapter run and claims its catalog-defined major rewards through the economy service.
 - Major chapter rewards must reference their chapter as the reward source and use a once-only claim policy. Replaying a chapter does not duplicate a major reward.
