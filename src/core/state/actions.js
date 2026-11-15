@@ -16,6 +16,25 @@ function requireUiContainer(state) {
   }
 }
 
+function updateInputRequest(state, requestId, changes = {}) {
+  requireUiContainer(state);
+  const currentInput = isPlainObject(state.ui.input) ? state.ui.input : {};
+  const nextRequestId = Number.isSafeInteger(currentInput[requestId])
+    ? currentInput[requestId] + 1
+    : 1;
+  return {
+    ...state,
+    ui: {
+      ...state.ui,
+      input: {
+        ...currentInput,
+        ...changes,
+        [requestId]: nextRequestId
+      }
+    }
+  };
+}
+
 /** Minimal serializable state shape; feature systems add their own domains later. */
 export function createInitialGameState() {
   return {
@@ -51,6 +70,57 @@ export const coreActionDefinitions = Object.freeze({
     },
     reduce(_state, payload) {
       return payload.state;
+    }
+  }),
+  "hub/dock-selected": Object.freeze({
+    validate(payload) {
+      return isPlainObject(payload)
+        && hasOnlyKeys(payload, ["dockId"])
+        && typeof payload.dockId === "string"
+        && payload.dockId.trim().length > 0
+        ? true
+        : 'hub/dock-selected expects { dockId: non-empty string }.';
+    },
+    reduce(state, payload) {
+      requireScreenContainer(state);
+      if (state.app.activeDockId === payload.dockId) return state;
+      return { ...state, app: { ...state.app, activeDockId: payload.dockId } };
+    }
+  }),
+  "activity/answer-selected": Object.freeze({
+    validate(payload) {
+      return isPlainObject(payload)
+        && hasOnlyKeys(payload, ["choiceIndex"])
+        && Number.isInteger(payload.choiceIndex)
+        && payload.choiceIndex >= 0
+        && payload.choiceIndex <= 3
+        ? true
+        : 'activity/answer-selected expects { choiceIndex: integer from 0 to 3 }.';
+    },
+    reduce(state, payload) {
+      return updateInputRequest(state, "answerRequestId", {
+        lastAnswerChoiceIndex: payload.choiceIndex
+      });
+    }
+  }),
+  "hints/requested": Object.freeze({
+    validate(payload) {
+      return payload === undefined
+        ? true
+        : "hints/requested does not accept a payload.";
+    },
+    reduce(state) {
+      return updateInputRequest(state, "hintRequestId");
+    }
+  }),
+  "dialogue/advance-requested": Object.freeze({
+    validate(payload) {
+      return payload === undefined
+        ? true
+        : "dialogue/advance-requested does not accept a payload.";
+    },
+    reduce(state) {
+      return updateInputRequest(state, "dialogueAdvanceRequestId");
     }
   }),
   "ui/overlay-opened": Object.freeze({
