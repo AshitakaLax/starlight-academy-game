@@ -61,3 +61,5 @@ export { createChapterCatalog, createChapterDefinition, validateChapterDefinitio
 export { createInitialChapterRuntimeState, selectChapterRuntimeProgress } from "./gameplay/chapter-runtime/chapterRuntimeState.js";
 export { createChapterRuntimeActionDefinitions } from "./gameplay/chapter-runtime/chapterRuntimeActions.js";
 export { createChapterRuntimeService } from "./gameplay/chapter-runtime/createChapterRuntimeService.js";
+
+export { chapterOneActivityDefinitions, chapterOneHintDefinitions, chapterOneReward, chapterOneDefinition } from "./chapters/chapterOne.js";
