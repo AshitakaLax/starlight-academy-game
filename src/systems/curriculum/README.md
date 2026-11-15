@@ -8,6 +8,7 @@ The curriculum layer is data-driven and independent of DOM, rendering, and chapt
 - `questionGenerators.js` provides a seeded PRNG, built-in multiplication/addition/skip-counting generators, and isolated custom generator registries. Reusing the same activity, seed, and tier yields the same question.
 - `answerRules.js` evaluates numeric, exact-text, choice, and sequence responses.
 - `curriculumProgress.js` records per-skill evidence, hint use, attempts, recent outcomes, and mastery status. Evidence is bounded and sequence-numbered.
+- `adaptiveDifficulty.js` starts without a placement quiz at Core, evaluates five responses independently for each skill, promotes after at least four unassisted correct responses, and offers one tier of support after at most one correct response. It never uses response speed and resolves activity-specific supported tiers without changing the skill's saved tier.
 
 Mastery is recorded only after a complete evidence window meets the configured unassisted-correct threshold. Once demonstrated, the mastery milestone is retained; recent evidence remains available for future adaptive decisions. No response-time measurement is used.
 
