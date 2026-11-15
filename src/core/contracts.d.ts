@@ -352,3 +352,55 @@ export interface WardrobeService {
   equipItem(itemId: string): Readonly<{ equipped: boolean; reason: string; itemId: string; slot?: WardrobeEquipmentSlot }>;
   unequipSlot(slot: WardrobeEquipmentSlot): Readonly<{ changed: boolean; slot: WardrobeEquipmentSlot; itemId: null }>;
 }
+
+
+export interface GarmentTemplate {
+  readonly id: string;
+  readonly title: string;
+  readonly description: string;
+  readonly points: readonly (readonly [number, number])[];
+  readonly accentLines: readonly (readonly (readonly [number, number])[])[];
+  readonly baseColor: string;
+}
+
+export interface EncodedColorTexture {
+  readonly version: 1;
+  readonly width: 64;
+  readonly height: 80;
+  readonly palette: readonly string[];
+  readonly runs: string;
+}
+
+export interface ColoringState {
+  readonly activeTemplateId: string;
+  readonly designs: Readonly<Record<string, Readonly<{ texture: EncodedColorTexture }>>>;
+}
+
+export interface ColoringSnapshot {
+  readonly template: GarmentTemplate;
+  readonly pixels: Uint8Array;
+  readonly palette: readonly string[];
+  readonly selectedColor: string;
+  readonly selectedTool: "brush" | "eraser";
+  readonly brushSize: number;
+  readonly canUndo: boolean;
+  readonly canRedo: boolean;
+}
+
+export interface ColoringService {
+  getSnapshot(): ColoringSnapshot;
+  getTexture(): EncodedColorTexture;
+  selectTemplate(templateId: string): ColoringSnapshot;
+  setColor(color: string): string;
+  setTool(tool: "brush" | "eraser"): string;
+  setBrushSize(size: number): number;
+  beginStroke(point: Readonly<{ x: number; y: number }>): boolean;
+  continueStroke(point: Readonly<{ x: number; y: number }>): boolean;
+  endStroke(): Readonly<{ changed: boolean; texture: EncodedColorTexture }>;
+  addStamp(stampId: "star" | "heart" | "flower", x: number, y: number, scale?: number): Readonly<{ changed: boolean; texture: EncodedColorTexture }>;
+  undo(): Readonly<{ changed: boolean; texture?: EncodedColorTexture }>;
+  redo(): Readonly<{ changed: boolean; texture?: EncodedColorTexture }>;
+  resetDesign(options?: { confirmed?: boolean }): Readonly<{ reset: boolean; requiresConfirmation: boolean; texture?: EncodedColorTexture }>;
+  restoreFromStore(): void;
+  dispose(): void;
+}
