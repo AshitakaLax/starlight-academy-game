@@ -54,8 +54,10 @@ function updateSkillProgress(current, record) {
   const recentEvidence = [...(Array.isArray(prior.recentEvidence) ? prior.recentEvidence : []), record]
     .slice(-gameConfig.curriculum.masteryWindowSize);
   const independentCorrect = recentEvidence.filter((item) => item.correct && item.hintLevel === 0).length;
-  const masteryStatus = recentEvidence.length >= gameConfig.curriculum.masteryWindowSize
-      && independentCorrect >= gameConfig.curriculum.masteryRequiredIndependentCorrect
+  const alreadyDemonstrated = prior.masteryStatus === "demonstrated";
+  const masteryStatus = alreadyDemonstrated
+      || (recentEvidence.length >= gameConfig.curriculum.masteryWindowSize
+        && independentCorrect >= gameConfig.curriculum.masteryRequiredIndependentCorrect)
     ? "demonstrated"
     : "in-progress";
 
