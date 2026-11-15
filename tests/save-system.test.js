@@ -314,6 +314,38 @@ test("save service restores before subscribing and autosaves state transitions",
   assert.equal(service.started, false);
 });
 
+test("save service normalizes legacy loads and imports before replacing runtime state", async () => {
+  const storage = new MemoryStorage([["starlight-academy.save", envelope(makeState("pets"))]]);
+  const manager = createSaveManager({ storage });
+  const defaults = {
+    ...makeState(),
+    curriculum: { skills: { "math.multiplication": { masteryStatus: "not-started" } }, evidence: [] }
+  };
+  const store = createGameStore({ initialState: defaults });
+  const normalizeRestoredState = (restored) => ({
+    ...defaults,
+    ...restored,
+    curriculum: restored.curriculum ?? defaults.curriculum
+  });
+  const service = createSaveService({ store, saveManager: manager, normalizeRestoredState });
+
+  await service.start();
+  assert.deepEqual(store.getState(), {
+    ...defaults,
+    ...makeState("pets"),
+    curriculum: defaults.curriculum
+  });
+
+  const legacyImport = makeState("wardrobe", { imported: true });
+  const imported = service.import(envelope(legacyImport), { confirmReplace: true });
+  assert.deepEqual(imported, {
+    ...defaults,
+    ...legacyImport,
+    curriculum: defaults.curriculum
+  });
+  await service.stop();
+});
+
 test("save service supports checkpoints and confirmed imports", async () => {
   const storage = new MemoryStorage();
   const manager = createSaveManager({ storage });
