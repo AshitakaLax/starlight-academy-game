@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Modular source project for the offline Starlight Academy game.",
   "scripts": {
-    "check": "node --check src/index.js && node --check src/browser-entry.js && node --check src/app/createGameApp.js && node --check src/chapters/registry.js && node --check src/side-quests/registry.js && node --check src/config/gameConfig.js && node --check src/core/state/stateUtils.js && node --check src/core/state/actions.js && node --check src/core/state/selectors.js && node --check src/core/state/createGameStore.js && node --check src/core/save/createSaveManager.js && node --check src/core/save/createSaveService.js && node --check tests/state-store.test.js && node --check tests/save-system.test.js && node --check build/build.mjs",
+    "check": "node --check src/index.js && node --check src/browser-entry.js && node --check src/app/createGameApp.js && node --check src/chapters/registry.js && node --check src/side-quests/registry.js && node --check src/config/gameConfig.js && node --check src/core/state/stateUtils.js && node --check src/core/state/actions.js && node --check src/core/state/selectors.js && node --check src/core/state/createGameStore.js && node --check src/core/save/createSaveManager.js && node --check src/core/save/createSaveService.js && node --check src/core/input/createInputRouter.js && node --check src/core/input/standardContexts.js && node --check tests/state-store.test.js && node --check tests/save-system.test.js && node --check tests/input-router.test.js && node --check build/build.mjs",
     "test": "node --test",
     "build": "node build/build.mjs"
   },
