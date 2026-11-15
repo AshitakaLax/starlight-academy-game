@@ -54,7 +54,7 @@ test("wardrobe item definitions reject invalid slots, IDs, symbols, themes, and 
   assert.throws(() => createWardrobeItem({ ...defaultWardrobeItems[0], symbol: "ABCDE" }), /1 to 4/);
   assert.throws(() => createWardrobeItem({ ...defaultWardrobeItems[0], theme: "Lavender Glow" }), /lowercase token/);
   assert.throws(() => createWardrobeItem({ ...defaultWardrobeItems[0], acquisition: { type: "purchase", priceStarGems: 0 } }), /positive safe-integer/);
-  assert.throws(() => createWardrobeItem({ ...defaultWardrobeItems[0], acquisition: { type: "chapter", sourceId: "Chapter 02" } }), /source ID/);
+  assert.throws(() => createWardrobeItem({ ...defaultWardrobeItems[0], acquisition: { type: "chapter", sourceId: "Chapter 02" } }), /sourceId/);
 });
 
 test("new wardrobe state grants and equips one starter item in every equipment slot", () => {
