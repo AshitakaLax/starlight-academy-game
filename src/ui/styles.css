@@ -342,3 +342,15 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   .coloring-reset-confirm { grid-template-columns: 1fr 1fr; }
   .coloring-reset-confirm p { grid-column: 1 / -1; }
 }
+
+.pet-collection-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 22px 0; }
+.pet-collection-card { display: grid; justify-items: center; gap: 9px; padding: 20px 16px; border: 1px solid #e8deef; border-radius: 15px; background: #fff; text-align: center; }
+.pet-collection-card[data-pet-state="active"] { border-color: #a98bc2; background: #fbf7ff; box-shadow: 0 0 0 2px #f0e8f7; }
+.pet-collection-card[data-pet-state="locked"] { opacity: .72; background: #f7f5f8; }
+.pet-collection-symbol { display: grid; place-items: center; width: 76px; height: 76px; border-radius: 50%; background: #f2eafa; font-size: 2.5rem; }
+.pet-collection-card h3 { margin: 0; color: #57446b; font-size: 1rem; }
+.pet-collection-card p { margin: 0; color: #766d80; font-size: .78rem; line-height: 1.5; }
+.pet-collection-detail { font-weight: 700; }
+.pet-appearance-choice { display: grid; width: 100%; gap: 5px; color: #675675; font-size: .72rem; font-weight: 700; text-align: left; }
+.pet-appearance-choice select { width: 100%; min-height: 38px; padding: 6px 9px; border: 1px solid #e4d8ec; border-radius: 8px; background: #fff; color: #59486a; font: inherit; }
+@media (max-width: 850px) { .pet-collection-grid { grid-template-columns: 1fr; } }
