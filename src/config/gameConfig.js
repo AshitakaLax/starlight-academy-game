@@ -18,5 +18,11 @@ export const gameConfig = Object.freeze({
   progression: Object.freeze({
     spendableCurrency: "starGems",
     masteryCurrency: "starlightSparkles"
+  }),
+  persistence: Object.freeze({
+    storageKey: "starlight-academy.save",
+    schemaVersion: 1,
+    autosaveDelayMs: 700,
+    maxImportBytes: 10 * 1024 * 1024
   })
 });
