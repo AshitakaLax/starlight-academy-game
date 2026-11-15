@@ -49,3 +49,4 @@ export { createPetDefinition, validatePetDefinition, createPetCatalog, defaultPe
 export { createInitialPetCollectionState, selectPetCollection, selectPet, CARE_TRACKS, CARE_PROGRESS_MAX } from "./gameplay/pets/petCollectionState.js";
 export { createPetActionDefinitions } from "./gameplay/pets/petActions.js";
 export { createPetCollectionService } from "./gameplay/pets/createPetCollectionService.js";
+export { getPetAbilityDefinition, selectActivePetAbility, selectPetAbilityCareBonus } from "./gameplay/pets/petAbilities.js";
