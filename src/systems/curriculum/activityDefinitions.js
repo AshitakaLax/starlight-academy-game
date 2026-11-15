@@ -56,6 +56,7 @@ export function validateActivityDefinition(input) {
     return !skill || !input.supportedTiers.every((tier) => skill.supportedTiers.includes(tier));
   })) {
     return "Activity tiers must be supported by every linked skill.";
+  }
   if (!isPlainObject(input.answerRules) || !ANSWER_RULE_TYPES.includes(input.answerRules.type)) {
     return "Activity answerRules.type must be numeric, exact, choice, or sequence.";
   }
