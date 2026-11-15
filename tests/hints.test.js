@@ -235,6 +235,8 @@ test("completion is always available, even without requesting or reaching a hint
   assert.equal(completed.canComplete, true);
   assert.equal(completed.lastHintStage, 1);
   assert.equal(harness.service.recordIncorrect(harness.question).reason, "question-already-completed");
+  assert.throws(() => harness.service.retry(harness.question.id), /completed/);
+  assert.throws(() => harness.service.solveParallel(harness.question.id), /completed/);
 });
 
 test("missing activity hint content is graceful and never blocks parallel solving or completion", () => {
