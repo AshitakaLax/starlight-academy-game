@@ -92,6 +92,28 @@ const MARKUP = String.raw`<div class="academy-shell" data-text-scale="normal" da
           <button class="path-card path-wardrobe" type="button" data-game-action="hub/dock-selected" data-game-payload='{"dockId":"wardrobe"}'><span class="path-card-icon" aria-hidden="true">❀</span><span class="path-card-title">Creative wardrobe</span><span class="path-card-note">Style &amp; imagination</span><span class="path-card-arrow" aria-hidden="true">↗</span></button>
         </div>
       </section>
+      <section class="chapter-path-panel" data-chapter-path-panel aria-labelledby="chapter-path-title">
+        <div class="chapter-path-heading"><div><p class="academy-overline">YOUR LEARNING JOURNEY</p><h2 id="chapter-path-title">Chapter Adventures</h2>
+          <p>Each chapter creates its own path through stories, learning activities, creative challenges, and movement.</p></div><span aria-hidden="true">✦</span></div>
+        <div class="chapter-path-list" data-chapter-path-list></div>
+        <section class="chapter-session-panel" data-chapter-session hidden aria-label="Active chapter">
+          <p class="chapter-session-status" data-chapter-session-status role="status" aria-live="polite">Your adventure is ready.</p>
+          <p class="academy-overline" data-chapter-session-progress>ACTIVITY 1</p>
+          <h3 data-chapter-session-title>Chapter activity</h3>
+          <p data-chapter-session-description>Activity instructions will appear here.</p>
+          <p class="chapter-session-type" data-chapter-session-type></p>
+          <div class="chapter-session-actions" data-chapter-session-actions>
+            <button class="wardrobe-primary-action" type="button" data-chapter-action="complete-activity">Complete activity</button>
+            <button class="wardrobe-secondary-action" type="button" data-chapter-action="skip-activity">Skip this activity</button>
+            <button class="wardrobe-secondary-action" type="button" data-chapter-action="exit">Save &amp; exit</button>
+          </div>
+          <section class="chapter-session-completion" data-chapter-session-completion hidden>
+            <h4>Chapter complete!</h4>
+            <p data-chapter-session-reward>Wonderful work. Your chapter reward has been recorded.</p>
+            <button class="wardrobe-primary-action" type="button" data-chapter-action="exit">Back to chapter path</button>
+          </section>
+        </section>
+      </section>
       <section class="gymnastics-panel" data-gymnastics-panel hidden aria-labelledby="gymnastics-panel-title">
         <div class="gymnastics-panel-heading">
           <div><p class="academy-overline">MOVEMENT &amp; MUSIC</p><h2 id="gymnastics-panel-title">Gymnastics Studio</h2>
@@ -303,7 +325,7 @@ export function createAcademyShell({
   root, store, saveService, saveStatusElement = null, audioStatusElement = null, narrationService = null,
   narrationStatusElement = null, narrationTextElement = null, wardrobeService = null,
   coloringService = null, garmentTemplateRegistry = null, petCollectionService = null, petCatalog = null,
-  gymnasticsService = null, audioService = null, emblemSvg = "",
+  gymnasticsService = null, chapterRuntimeService = null, audioService = null, emblemSvg = "",
   documentRef = globalThis.document, windowRef = globalThis.window
 } = {}) {
   if (!root || typeof root.querySelector !== "function" || typeof root.addEventListener !== "function") {
@@ -353,6 +375,17 @@ export function createAcademyShell({
     heroButton: requireElement(root, "[data-hero-button]"),
     hero: requireElement(root, ".academy-hero"),
     quickPaths: requireElement(root, ".quick-paths"),
+    chapterPathPanel: requireElement(root, "[data-chapter-path-panel]"),
+    chapterPathList: requireElement(root, "[data-chapter-path-list]"),
+    chapterSession: requireElement(root, "[data-chapter-session]"),
+    chapterSessionStatus: requireElement(root, "[data-chapter-session-status]"),
+    chapterSessionProgress: requireElement(root, "[data-chapter-session-progress]"),
+    chapterSessionTitle: requireElement(root, "[data-chapter-session-title]"),
+    chapterSessionDescription: requireElement(root, "[data-chapter-session-description]"),
+    chapterSessionType: requireElement(root, "[data-chapter-session-type]"),
+    chapterSessionActions: requireElement(root, "[data-chapter-session-actions]"),
+    chapterSessionCompletion: requireElement(root, "[data-chapter-session-completion]"),
+    chapterSessionReward: requireElement(root, "[data-chapter-session-reward]"),
     gymnasticsPanel: requireElement(root, "[data-gymnastics-panel]"),
     gymnasticsRoutineTitle: requireElement(root, "[data-gymnastics-routine-title]"),
     gymnasticsRoutineDescription: requireElement(root, "[data-gymnastics-routine-description]"),
@@ -387,6 +420,11 @@ export function createAcademyShell({
   };
   if (petCollectionService !== null && typeof petCollectionService.getSnapshot !== "function") {
     throw new TypeError("petCollectionService must expose getSnapshot().");
+  }
+  if (chapterRuntimeService !== null
+      && (typeof chapterRuntimeService.getSnapshot !== "function"
+        || typeof chapterRuntimeService.createSession !== "function")) {
+    throw new TypeError("chapterRuntimeService must expose chapter snapshots and session creation.");
   }
   if (gymnasticsService !== null
       && (typeof gymnasticsService.getSnapshot !== "function"
@@ -427,6 +465,8 @@ export function createAcademyShell({
   let selectedStamp = null;
   let activePointerId = null;
   let coloringStatusMessage = "Your design saves automatically as you paint.";
+  let activeChapterSession = null;
+  let activeChapterId = null;
   let gymnasticsSession = null;
   let gymnasticsClock = null;
   let gymnasticsPointerActive = false;
@@ -759,6 +799,122 @@ export function createAcademyShell({
     panel.coloringStatus.textContent = selectedStamp
       ? "Click or tap the garment to place your " + selectedStamp + " stamp."
       : coloringStatusMessage;
+  }
+
+  function renderChapters() {
+    if (!chapterRuntimeService) {
+      panel.chapterPathList.textContent = "The chapter runtime is not connected.";
+      panel.chapterSession.hidden = true;
+      return;
+    }
+    const chapters = chapterRuntimeService.getSnapshot().chapters;
+    if (!activeChapterSession) {
+      panel.chapterSession.hidden = true;
+      panel.chapterPathList.hidden = false;
+      if (chapters.length === 0) {
+        const empty = documentRef.createElement("article");
+        empty.className = "chapter-path-empty";
+        const title = documentRef.createElement("h3");
+        title.textContent = "The academy stories are being prepared";
+        const description = documentRef.createElement("p");
+        description.textContent = "Your chapter runtime is ready. The first complete adventure, with its own story and activities, arrives in the next implementation step.";
+        empty.append(title, description);
+        panel.chapterPathList.replaceChildren(empty);
+        return;
+      }
+      const fragment = documentRef.createDocumentFragment();
+      for (const chapter of chapters) {
+        const card = documentRef.createElement("article");
+        card.className = "chapter-path-card";
+        card.dataset.chapterState = chapter.progress.status;
+        const number = documentRef.createElement("span");
+        number.className = "chapter-path-number";
+        number.textContent = chapter.id.replace("chapter-", "CHAPTER ");
+        const title = documentRef.createElement("h3");
+        title.textContent = chapter.title;
+        const description = documentRef.createElement("p");
+        description.textContent = chapter.description;
+        const objectives = documentRef.createElement("p");
+        objectives.className = "chapter-path-objectives";
+        objectives.textContent = "Goals: " + chapter.objectives.join(" · ");
+        const details = documentRef.createElement("p");
+        details.className = "chapter-path-details";
+        details.textContent = chapter.activities.length + " activities · "
+          + (chapter.progress.status === "completed"
+            ? "Completed " + chapter.progress.completedRuns + (chapter.progress.completedRuns === 1 ? " time" : " times")
+            : chapter.progress.status === "in-progress"
+              ? "Step " + (chapter.progress.currentActivityIndex + 1) + " of " + chapter.activities.length
+              : "Ready to explore");
+        const action = documentRef.createElement("button");
+        action.type = "button";
+        action.className = "wardrobe-primary-action";
+        action.dataset.chapterAction = "start";
+        action.dataset.chapterId = chapter.id;
+        action.disabled = !chapter.prerequisitesMet;
+        action.textContent = !chapter.prerequisitesMet ? "Complete earlier chapters first"
+          : chapter.progress.status === "completed" ? "Replay chapter"
+            : chapter.progress.status === "in-progress" ? "Continue adventure" : "Begin adventure";
+        card.append(number, title, description, objectives, details, action);
+        fragment.append(card);
+      }
+      panel.chapterPathList.replaceChildren(fragment);
+      return;
+    }
+
+    panel.chapterPathList.hidden = true;
+    panel.chapterSession.hidden = false;
+    const snapshot = activeChapterSession.getSnapshot();
+    const activity = snapshot.currentActivity;
+    if (snapshot.isComplete) {
+      panel.chapterSessionStatus.textContent = "Chapter complete! You finished all " + snapshot.activityCount + " activities.";
+      panel.chapterSessionProgress.textContent = "ADVENTURE COMPLETE";
+      panel.chapterSessionTitle.textContent = snapshot.title;
+      panel.chapterSessionDescription.textContent = snapshot.description;
+      panel.chapterSessionType.textContent = snapshot.completedActivityCount + " completed · "
+        + snapshot.skippedActivityCount + " skipped · " + (snapshot.completionReceipt?.rewards?.filter((reward) => reward.granted).length ?? 0) + " new rewards";
+      panel.chapterSessionActions.hidden = true;
+      panel.chapterSessionCompletion.hidden = false;
+      const granted = snapshot.completionReceipt?.rewards?.filter((reward) => reward.granted).length ?? 0;
+      panel.chapterSessionReward.textContent = granted > 0
+        ? "Your major chapter reward has been added to your academy progress. Replay is always welcome, but rewards are one-time."
+        : "Wonderful work. This replay kept your progress and did not duplicate any one-time rewards.";
+      return;
+    }
+    panel.chapterSessionStatus.textContent = "Your place is saved automatically after each activity. You can safely exit at any time.";
+    panel.chapterSessionProgress.textContent = "ACTIVITY " + (snapshot.currentActivityIndex + 1) + " OF " + snapshot.activityCount;
+    panel.chapterSessionTitle.textContent = activity?.title ?? snapshot.title;
+    panel.chapterSessionDescription.textContent = activity?.description ?? snapshot.description;
+    panel.chapterSessionType.textContent = activity
+      ? activity.type.toUpperCase().replaceAll("-", " ") + " · " + snapshot.completedActivityCount + " completed · " + snapshot.skippedActivityCount + " skipped"
+      : "Ready to begin";
+    panel.chapterSessionActions.hidden = !activity;
+    panel.chapterSessionCompletion.hidden = true;
+  }
+
+  function handleChapterAction(event) {
+    const control = event.target?.closest?.("[data-chapter-action]");
+    if (!control || !root.contains(control) || !chapterRuntimeService) return false;
+    const action = control.dataset.chapterAction;
+    try {
+      if (action === "start") {
+        activeChapterId = control.dataset.chapterId;
+        activeChapterSession = chapterRuntimeService.createSession(activeChapterId);
+        activeChapterSession.start();
+      } else if (action === "complete-activity" && activeChapterSession) {
+        activeChapterSession.completeActivity();
+      } else if (action === "skip-activity" && activeChapterSession) {
+        activeChapterSession.skipActivity();
+      } else if (action === "exit" && activeChapterSession) {
+        activeChapterSession.exit();
+        activeChapterSession = null;
+        activeChapterId = null;
+      }
+      renderChapters();
+    } catch (error) {
+      panel.chapterSession.hidden = false;
+      panel.chapterSessionStatus.textContent = error?.message || "The chapter action could not be completed.";
+    }
+    return true;
   }
 
   function gymnasticsNow() {
@@ -1241,6 +1397,14 @@ export function createAcademyShell({
     panel.heroTitle.textContent = destination.heroTitle;
     panel.heroDescription.textContent = destination.heroDescription;
     panel.heroButton.textContent = destination.button;
+    const chaptersMode = dockId === "chapters";
+    panel.chapterPathPanel.hidden = !chaptersMode;
+    if (chaptersMode) renderChapters();
+    else if (activeChapterSession) {
+      activeChapterSession.exit();
+      activeChapterSession = null;
+      activeChapterId = null;
+    }
     const petsMode = dockId === "pets";
     panel.petCollectionPanel.hidden = !petsMode;
     if (petsMode) renderPetCollection();
@@ -1328,6 +1492,7 @@ export function createAcademyShell({
   }
 
   function handleClick(event) {
+    if (handleChapterAction(event)) return;
     if (handleGymnasticsAction(event)) return;
     if (handleColoringAction(event)) return;
     if (handlePetAction(event)) return;
