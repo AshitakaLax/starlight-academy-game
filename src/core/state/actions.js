@@ -17,12 +17,12 @@ function requireUiContainer(state) {
   }
 }
 
-function mergeWithStateDefaults(defaults, restored) {
+export function mergeGameStateDefaults(defaults, restored) {
   if (!isPlainObject(defaults) || !isPlainObject(restored)) return restored;
   const merged = { ...defaults };
   for (const [key, value] of Object.entries(restored)) {
     merged[key] = isPlainObject(defaults[key]) && isPlainObject(value)
-      ? mergeWithStateDefaults(defaults[key], value)
+      ? mergeGameStateDefaults(defaults[key], value)
       : value;
   }
   return merged;
@@ -82,7 +82,7 @@ export const coreActionDefinitions = Object.freeze({
       return isPlainObject(payload) && hasOnlyKeys(payload, ["state"]) && isPlainObject(payload.state)
         ? true : 'app/state-restored expects { state: plain object }.';
     },
-    reduce(state, payload) { return mergeWithStateDefaults(state, payload.state); }
+    reduce(_state, payload) { return payload.state; }
   }),
   "hub/dock-selected": Object.freeze({
     validate(payload) {
