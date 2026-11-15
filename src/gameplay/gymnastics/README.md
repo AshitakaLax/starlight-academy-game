@@ -17,7 +17,7 @@ The Gymnastics Studio now has a complete first routine, **Starlight Ribbon Waltz
 - Trace coverage and rhythm precision are measured independently. A missed beat never changes the trace score.
 - Every completed session is recorded once. Personal bests are maintained independently for tracing, rhythm, combined score, and stars; the most recent ten runs are retained.
 - Progress is part of the ordinary game save and is restored through the existing save-default merge process.
-- The rhythm button works with mouse, touch, Enter, or Space when focused. Sound feedback is optional and uses the existing audio service.
+- A soft synthesized tick marks each count-in beat and routine checkpoint when audio is enabled. Rhythm taps work with mouse, touch, Enter, or Space when focused. Sound remains optional and unavailable audio never blocks completion.
 - No score, number of stars, or missed cue blocks a player from continuing to the next chapter.
 
 ## Module responsibilities
