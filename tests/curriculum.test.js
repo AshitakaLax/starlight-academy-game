@@ -261,7 +261,7 @@ test("curriculum evidence is recorded per skill and mastery uses a rolling indep
 
   record({ correct: false, hintLevel: 0, attempts: 2 });
   progress = selectSkillProgress(store.getState(), "math.multiplication");
-  assert.equal(progress.totalAttempts, 6);
+  assert.equal(progress.totalAttempts, 7);
   assert.equal(progress.recentEvidence.length, gameConfig.curriculum.masteryWindowSize);
   assert.equal(progress.masteryStatus, "demonstrated");
   store.destroy();
