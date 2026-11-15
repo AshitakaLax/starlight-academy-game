@@ -46,6 +46,7 @@ export function createAudioEngine({
   let available = typeof AudioContextCtor === "function";
   let destroyed = false;
   let activeTrack = null;
+  let musicDuck = 1;
   let createdEffectCount = 0;
 
   function report(state, message) {
@@ -55,7 +56,7 @@ export function createAudioEngine({
   function applySettings() {
     if (!masterBus) return;
     masterBus.gain.value = settings.muted ? 0 : settings.masterVolume / 100;
-    musicBus.gain.value = settings.musicVolume / 100;
+    musicBus.gain.value = settings.musicVolume / 100 * musicDuck;
     sfxBus.gain.value = settings.sfxVolume / 100;
   }
 
@@ -165,6 +166,12 @@ export function createAudioEngine({
     }
   }
 
+  function setMusicDuck(factor = 1) {
+    musicDuck = Number.isFinite(factor) ? Math.min(1, Math.max(0, factor)) : 1;
+    if (musicBus) musicBus.gain.value = settings.musicVolume / 100 * musicDuck;
+    return musicDuck;
+  }
+
   function setSettings(nextSettings = {}) {
     if (destroyed) return settings;
     settings = normalizeSettings({ ...settings, ...nextSettings });
@@ -188,12 +195,13 @@ export function createAudioEngine({
   }
 
   return Object.freeze({
-    unlock, startMusic, stopMusic, playSfx, setSettings, destroy,
+    unlock, startMusic, stopMusic, playSfx, setSettings, setMusicDuck, destroy,
     getSettings: () => settings,
     getDiagnostics: () => Object.freeze({
       available, unlocked, destroyed, activeTrack,
       activeMusicVoices: musicVoices.length,
       createdEffectCount,
+      musicDuck,
       settings
     })
   });
