@@ -548,3 +548,82 @@ export interface GymnasticsRoutineRecord {
   readonly lastRun: GymnasticsRoutineResult | null;
   readonly recentRuns: readonly GymnasticsRoutineResult[];
 }
+
+
+export type ChapterActivityType = "story" | "learning" | "challenge" | "gymnastics" | "reflection" | "custom";
+
+export interface ChapterActivityDefinition {
+  readonly id: string;
+  readonly title: string;
+  readonly type: ChapterActivityType;
+  readonly description: string;
+  readonly activityId?: string;
+  readonly skillIds?: readonly string[];
+  readonly metadata: Readonly<Record<string, unknown>>;
+}
+
+export interface ChapterDefinition {
+  readonly id: string;
+  readonly title: string;
+  readonly description: string;
+  readonly objectives: readonly string[];
+  readonly activities: readonly ChapterActivityDefinition[];
+  readonly majorRewardIds: readonly string[];
+  readonly prerequisiteChapterIds: readonly string[];
+}
+
+export interface ChapterActivityResult {
+  readonly activityId: string;
+  readonly status: "completed" | "skipped";
+}
+
+export interface ChapterRunRecord {
+  readonly completedActivityCount: number;
+  readonly skippedActivityCount: number;
+  readonly activityResults: readonly ChapterActivityResult[];
+}
+
+export interface ChapterRuntimeProgress {
+  readonly status: "not-started" | "in-progress" | "completed";
+  readonly currentActivityIndex: number;
+  readonly activityResults: readonly ChapterActivityResult[];
+  readonly completedRuns: number;
+  readonly lastRun: ChapterRunRecord | null;
+  readonly recentRuns: readonly ChapterRunRecord[];
+  readonly lastExitActivityIndex: number | null;
+}
+
+export interface ChapterRuntimeSessionSnapshot {
+  readonly chapterId: string;
+  readonly title: string;
+  readonly description: string;
+  readonly status: "not-started" | "in-progress" | "completed" | "exited";
+  readonly currentActivityIndex: number;
+  readonly activityCount: number;
+  readonly currentActivity: ChapterActivityDefinition | null;
+  readonly activityResults: readonly ChapterActivityResult[];
+  readonly completedActivityCount: number;
+  readonly skippedActivityCount: number;
+  readonly isComplete: boolean;
+  readonly prerequisitesMet: boolean;
+  readonly completionReceipt: Readonly<Record<string, unknown>> | null;
+}
+
+export interface ChapterRuntimeSession {
+  start(): ChapterRuntimeSessionSnapshot;
+  completeActivity(): ChapterRuntimeSessionSnapshot;
+  skipActivity(): ChapterRuntimeSessionSnapshot;
+  saveCheckpoint(): ChapterRuntimeSessionSnapshot;
+  exit(): ChapterRuntimeSessionSnapshot;
+  getSnapshot(): ChapterRuntimeSessionSnapshot;
+}
+
+export interface ChapterRuntimeService {
+  getSnapshot(): Readonly<{ chapters: readonly Readonly<ChapterDefinition & {
+    progress: ChapterRuntimeProgress;
+    prerequisitesMet: boolean;
+  }>[] }>;
+  getProgress(): Readonly<{ chapters: Readonly<Record<string, ChapterRuntimeProgress>> }>;
+  createSession(chapterId: string): ChapterRuntimeSession;
+  isSession(session: ChapterRuntimeSession): boolean;
+}
