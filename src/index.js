@@ -7,6 +7,8 @@ export { createInputRouter, HUB_DOCK_IDS } from "./core/input/createInputRouter.
 export { registerStandardInputContexts } from "./core/input/standardContexts.js";
 export { createInitialGameState, coreActionDefinitions } from "./core/state/actions.js";
 export { createSelector, selectActiveOverlayId, selectAtPath, selectCurrentScreen } from "./core/state/selectors.js";
+export { createAcademyShell } from "./ui/createAcademyShell.js";
+export { DEFAULT_UI_PREFERENCES, selectUiPreferences } from "./ui/uiPreferences.js";
 export { gameConfig } from "./config/gameConfig.js";
 export { chapterDefinitions, getChapterDefinition } from "./chapters/registry.js";
 export { sideQuestDefinitions, getSideQuestDefinition } from "./side-quests/registry.js";

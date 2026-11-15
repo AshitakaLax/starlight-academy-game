@@ -8,9 +8,10 @@ This repository is a modular JavaScript ES-module source project. The player-fac
 - [~] STEP-02 — Build pipeline implemented; npm install/check/test/build pass per user; manual local launch in Chrome and Edge remains to be confirmed
 - [x] STEP-03 — Centralized immutable event-driven state store, validated actions, selectors, and scoped subscriptions
 - [x] STEP-04 — Versioned save manager, autosave/checkpoints, JSON backup/restore, migrations, and recovery status (npm check/test/build confirmed passing by user)
-- [~] STEP-05 — Context-aware keyboard shortcuts and delegated mouse-action routing implemented; verification pending
+- [x] STEP-05 — Context-aware keyboard shortcuts and delegated mouse-action routing (user confirmed npm check/test/build pass)
+- [~] STEP-06 — Responsive academy hub, accessible settings, text scaling, reduced motion, and save backup controls implemented; verification pending
 
-The current HTML is an offline launch shell demonstrating the packaged project foundation, state store, local save health, and contextual input routing. Game screens and playable systems are added in their later ledger steps; the shell is not yet the completed game.
+The current HTML includes the academy hub visual shell, five navigation destinations, accessible settings, text scaling, reduced motion, and local save backup controls. Chapter activities, gymnastics routines, pet interactions, wardrobe customization, and other playable systems are added in later ledger steps; the shell is not yet the completed game.
 
 ## Source layout
 

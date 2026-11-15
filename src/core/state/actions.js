@@ -12,25 +12,19 @@ function requireScreenContainer(state) {
 
 function requireUiContainer(state) {
   if (!isPlainObject(state.ui)) {
-    throw new TypeError('The state must contain a "ui" object to change overlays.');
+    throw new TypeError('The state must contain a "ui" object to change overlays or preferences.');
   }
 }
 
 function updateInputRequest(state, requestId, changes = {}) {
   requireUiContainer(state);
   const currentInput = isPlainObject(state.ui.input) ? state.ui.input : {};
-  const nextRequestId = Number.isSafeInteger(currentInput[requestId])
-    ? currentInput[requestId] + 1
-    : 1;
+  const nextRequestId = Number.isSafeInteger(currentInput[requestId]) ? currentInput[requestId] + 1 : 1;
   return {
     ...state,
     ui: {
       ...state.ui,
-      input: {
-        ...currentInput,
-        ...changes,
-        [requestId]: nextRequestId
-      }
+      input: { ...currentInput, ...changes, [requestId]: nextRequestId }
     }
   };
 }
@@ -39,7 +33,10 @@ function updateInputRequest(state, requestId, changes = {}) {
 export function createInitialGameState() {
   return {
     app: { screenId: "academy" },
-    ui: { activeOverlayId: null }
+    ui: {
+      activeOverlayId: null,
+      preferences: { textScale: "normal", reducedMotion: false }
+    }
   };
 }
 
@@ -47,12 +44,9 @@ export function createInitialGameState() {
 export const coreActionDefinitions = Object.freeze({
   "app/screen-changed": Object.freeze({
     validate(payload) {
-      return isPlainObject(payload)
-        && hasOnlyKeys(payload, ["screenId"])
-        && typeof payload.screenId === "string"
-        && payload.screenId.trim().length > 0
-        ? true
-        : 'app/screen-changed expects { screenId: non-empty string }.';
+      return isPlainObject(payload) && hasOnlyKeys(payload, ["screenId"])
+        && typeof payload.screenId === "string" && payload.screenId.trim().length > 0
+        ? true : 'app/screen-changed expects { screenId: non-empty string }.';
     },
     reduce(state, payload) {
       requireScreenContainer(state);
@@ -62,24 +56,16 @@ export const coreActionDefinitions = Object.freeze({
   }),
   "app/state-restored": Object.freeze({
     validate(payload) {
-      return isPlainObject(payload)
-        && hasOnlyKeys(payload, ["state"])
-        && isPlainObject(payload.state)
-        ? true
-        : 'app/state-restored expects { state: plain object }.';
+      return isPlainObject(payload) && hasOnlyKeys(payload, ["state"]) && isPlainObject(payload.state)
+        ? true : 'app/state-restored expects { state: plain object }.';
     },
-    reduce(_state, payload) {
-      return payload.state;
-    }
+    reduce(_state, payload) { return payload.state; }
   }),
   "hub/dock-selected": Object.freeze({
     validate(payload) {
-      return isPlainObject(payload)
-        && hasOnlyKeys(payload, ["dockId"])
-        && typeof payload.dockId === "string"
-        && payload.dockId.trim().length > 0
-        ? true
-        : 'hub/dock-selected expects { dockId: non-empty string }.';
+      return isPlainObject(payload) && hasOnlyKeys(payload, ["dockId"])
+        && ["chapters", "gymnastics", "pets", "wardrobe", "quests"].includes(payload.dockId)
+        ? true : "hub/dock-selected expects a recognized academy dock ID.";
     },
     reduce(state, payload) {
       requireScreenContainer(state);
@@ -89,48 +75,27 @@ export const coreActionDefinitions = Object.freeze({
   }),
   "activity/answer-selected": Object.freeze({
     validate(payload) {
-      return isPlainObject(payload)
-        && hasOnlyKeys(payload, ["choiceIndex"])
-        && Number.isInteger(payload.choiceIndex)
-        && payload.choiceIndex >= 0
-        && payload.choiceIndex <= 3
-        ? true
-        : 'activity/answer-selected expects { choiceIndex: integer from 0 to 3 }.';
+      return isPlainObject(payload) && hasOnlyKeys(payload, ["choiceIndex"])
+        && Number.isInteger(payload.choiceIndex) && payload.choiceIndex >= 0 && payload.choiceIndex <= 3
+        ? true : "activity/answer-selected expects { choiceIndex: integer from 0 to 3 }.";
     },
     reduce(state, payload) {
-      return updateInputRequest(state, "answerRequestId", {
-        lastAnswerChoiceIndex: payload.choiceIndex
-      });
+      return updateInputRequest(state, "answerRequestId", { lastAnswerChoiceIndex: payload.choiceIndex });
     }
   }),
   "hints/requested": Object.freeze({
-    validate(payload) {
-      return payload === undefined
-        ? true
-        : "hints/requested does not accept a payload.";
-    },
-    reduce(state) {
-      return updateInputRequest(state, "hintRequestId");
-    }
+    validate(payload) { return payload === undefined ? true : "hints/requested does not accept a payload."; },
+    reduce(state) { return updateInputRequest(state, "hintRequestId"); }
   }),
   "dialogue/advance-requested": Object.freeze({
-    validate(payload) {
-      return payload === undefined
-        ? true
-        : "dialogue/advance-requested does not accept a payload.";
-    },
-    reduce(state) {
-      return updateInputRequest(state, "dialogueAdvanceRequestId");
-    }
+    validate(payload) { return payload === undefined ? true : "dialogue/advance-requested does not accept a payload."; },
+    reduce(state) { return updateInputRequest(state, "dialogueAdvanceRequestId"); }
   }),
   "ui/overlay-opened": Object.freeze({
     validate(payload) {
-      return isPlainObject(payload)
-        && hasOnlyKeys(payload, ["overlayId"])
-        && typeof payload.overlayId === "string"
-        && payload.overlayId.trim().length > 0
-        ? true
-        : 'ui/overlay-opened expects { overlayId: non-empty string }.';
+      return isPlainObject(payload) && hasOnlyKeys(payload, ["overlayId"])
+        && typeof payload.overlayId === "string" && payload.overlayId.trim().length > 0
+        ? true : 'ui/overlay-opened expects { overlayId: non-empty string }.';
     },
     reduce(state, payload) {
       requireUiContainer(state);
@@ -140,19 +105,38 @@ export const coreActionDefinitions = Object.freeze({
   }),
   "ui/overlay-closed": Object.freeze({
     validate(payload) {
-      return payload === undefined
-        || (isPlainObject(payload)
-          && hasOnlyKeys(payload, ["overlayId"])
-          && (!Object.hasOwn(payload, "overlayId")
-            || (typeof payload.overlayId === "string" && payload.overlayId.trim().length > 0)))
-        ? true
-        : 'ui/overlay-closed expects no payload or { overlayId?: non-empty string }.';
+      return payload === undefined || (isPlainObject(payload) && hasOnlyKeys(payload, ["overlayId"])
+        && (!Object.hasOwn(payload, "overlayId")
+          || (typeof payload.overlayId === "string" && payload.overlayId.trim().length > 0)))
+        ? true : "ui/overlay-closed expects no payload or { overlayId?: non-empty string }.";
     },
     reduce(state, payload = {}) {
       requireUiContainer(state);
       if (payload.overlayId && state.ui.activeOverlayId !== payload.overlayId) return state;
       if (state.ui.activeOverlayId === null) return state;
       return { ...state, ui: { ...state.ui, activeOverlayId: null } };
+    }
+  }),
+  "settings/preferences-updated": Object.freeze({
+    validate(payload) {
+      if (!isPlainObject(payload) || Object.keys(payload).length === 0
+          || !hasOnlyKeys(payload, ["textScale", "reducedMotion"])) {
+        return "settings/preferences-updated expects textScale and/or reducedMotion.";
+      }
+      if (Object.hasOwn(payload, "textScale") && !["small", "normal", "large"].includes(payload.textScale)) {
+        return 'textScale must be "small", "normal", or "large".';
+      }
+      if (Object.hasOwn(payload, "reducedMotion") && typeof payload.reducedMotion !== "boolean") {
+        return "reducedMotion must be a boolean.";
+      }
+      return true;
+    },
+    reduce(state, payload) {
+      requireUiContainer(state);
+      const current = isPlainObject(state.ui.preferences) ? state.ui.preferences : {};
+      const preferences = { textScale: "normal", reducedMotion: false, ...current, ...payload };
+      if (preferences.textScale === current.textScale && preferences.reducedMotion === current.reducedMotion) return state;
+      return { ...state, ui: { ...state.ui, preferences } };
     }
   })
 });

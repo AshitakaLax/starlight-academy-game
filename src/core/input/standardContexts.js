@@ -6,7 +6,6 @@ export function registerStandardInputContexts(router) {
   if (!router || typeof router.registerContext !== "function") {
     throw new TypeError("registerStandardInputContexts requires an input router.");
   }
-
   const unregister = [];
 
   unregister.push(router.registerContext("hub", {
@@ -19,7 +18,11 @@ export function registerStandardInputContexts(router) {
       "5": { type: "hub/dock-selected", payload: { dockId: "quests" } }
     }
   }));
-
+  unregister.push(router.registerContext("settings", {
+    screenId: "academy",
+    overlayId: "settings",
+    keys: {}
+  }));
   unregister.push(router.registerContext("activity-answers", {
     screenId: "activity",
     enabledWhen: (state) => state?.activity?.inputMode === "multiple-choice",
@@ -30,15 +33,11 @@ export function registerStandardInputContexts(router) {
       "4": { type: "activity/answer-selected", payload: { choiceIndex: 3 } }
     }
   }));
-
   unregister.push(router.registerContext("activity-hints", {
     screenId: "activity",
     enabledWhen: (state) => state?.activity?.supportsHints === true,
-    keys: {
-      h: { type: "hints/requested" }
-    }
+    keys: { h: { type: "hints/requested" } }
   }));
-
   unregister.push(router.registerContext("dialogue", {
     screenId: "dialogue",
     keys: {
@@ -46,7 +45,6 @@ export function registerStandardInputContexts(router) {
       Space: { type: "dialogue/advance-requested" }
     }
   }));
-
   return () => {
     for (const unregisterContext of unregister.reverse()) unregisterContext();
   };
