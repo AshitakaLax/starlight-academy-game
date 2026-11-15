@@ -11,8 +11,9 @@ This repository is a modular JavaScript ES-module source project. The player-fac
 - [x] STEP-05 — Context-aware keyboard shortcuts and delegated mouse-action routing (user confirmed npm check/test/build pass)
 - [~] STEP-06 — Responsive academy hub, accessible settings, text scaling, reduced motion, and save backup controls implemented; verification pending
 - [~] STEP-07 — Layered canvas renderer, student and Pegasus scene, high-DPI resize, visibility lifecycle, reduced motion, and masked offscreen texture utility implemented; verification pending
+- [~] STEP-08 — User-gesture Web Audio activation, synthesized scene music/effects, separate mixer buses, saved volume/mute settings, and silent fallback implemented; verification pending
 
-The current HTML includes the academy hub visual shell, five navigation destinations, accessible settings, text scaling, reduced motion, and local save backup controls. Chapter activities, gymnastics routines, pet interactions, wardrobe customization, and other playable systems are added in later ledger steps; the shell is not yet the completed game.
+The current HTML includes the academy hub visual shell, five navigation destinations, accessible settings, text scaling, reduced motion, a layered student/Pegasus scene, synthesized audio, mixer controls, and local save backup controls. Chapter activities, gymnastics routines, pet interactions, wardrobe customization, and other playable systems are added in later ledger steps; the shell is not yet the completed game.
 
 ## Source layout
 
@@ -116,7 +117,7 @@ Open that file locally in desktop Chrome or Edge. The packaging validator reject
 - Project CSS is minified and embedded in one inline style element.
 - Imported SVG files are embedded as JavaScript text and inserted as inline vector markup.
 - Imported JSON data is bundled into the JavaScript output.
-- Runtime modules reachable from the browser entry are bundled automatically; synthesized audio/narration code will be included when those systems are implemented and connected in their later ledger steps.
+- Runtime modules reachable from the browser entry are bundled automatically, including the synthesized Web Audio engine. Narration code will be included when that system is implemented and connected in STEP-09.
 - No runtime network requests, CDN dependencies, external fonts, or external asset files are permitted.
 
 The empty chapter and side-quest registries are intentional scaffolding. Content is added in the corresponding chapter and side-quest ledger steps.

@@ -12,6 +12,9 @@ export { DEFAULT_UI_PREFERENCES, selectUiPreferences } from "./ui/uiPreferences.
 export { createCanvasRenderer } from "./rendering/canvas/createCanvasRenderer.js";
 export { createMaskedTexture } from "./rendering/canvas/createMaskedTexture.js";
 export { createAcademyScene } from "./rendering/scenes/createAcademyScene.js";
+export { createAudioEngine } from "./systems/audio/createAudioEngine.js";
+export { createAudioService } from "./systems/audio/createAudioService.js";
+export { DEFAULT_AUDIO_SETTINGS, selectAudioSettings } from "./systems/audio/audioSettings.js";
 export { gameConfig } from "./config/gameConfig.js";
 export { chapterDefinitions, getChapterDefinition } from "./chapters/registry.js";
 export { sideQuestDefinitions, getSideQuestDefinition } from "./side-quests/registry.js";

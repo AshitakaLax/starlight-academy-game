@@ -1,4 +1,5 @@
 import { selectUiPreferences } from "./uiPreferences.js";
+import { selectAudioSettings } from "../systems/audio/audioSettings.js";
 import { createAcademyScene } from "../rendering/scenes/createAcademyScene.js";
 
 const DESTINATIONS = Object.freeze({
@@ -121,6 +122,16 @@ const MARKUP = String.raw`<div class="academy-shell" data-text-scale="normal" da
       <section class="setting-card" aria-labelledby="motion-heading"><div><h3 id="motion-heading">Reduced motion</h3><p>Use gentler transitions and fewer decorative movements.</p></div>
         <button class="toggle-setting" type="button" data-motion-toggle data-game-context="settings" data-game-action="settings/preferences-updated" data-game-payload='{"reducedMotion":true}' aria-pressed="false">Off</button>
       </section>
+      <section class="setting-card audio-settings" aria-labelledby="audio-heading">
+        <div class="audio-settings-heading"><h3 id="audio-heading">Sounds &amp; music</h3><p>Choose how much music and magic you hear.</p></div>
+        <div class="audio-mixer">
+          <label class="audio-level"><span>Master volume</span><output data-audio-value="masterVolume">70%</output><input type="range" min="0" max="100" step="1" value="70" data-audio-slider="masterVolume" aria-label="Master volume"></label>
+          <label class="audio-level"><span>Background music</span><output data-audio-value="musicVolume">24%</output><input type="range" min="0" max="100" step="1" value="24" data-audio-slider="musicVolume" aria-label="Background music volume"></label>
+          <label class="audio-level"><span>Sound effects</span><output data-audio-value="sfxVolume">55%</output><input type="range" min="0" max="100" step="1" value="55" data-audio-slider="sfxVolume" aria-label="Sound effects volume"></label>
+          <button class="toggle-setting audio-mute" type="button" data-ui-action="toggle-audio-mute" data-audio-mute aria-pressed="false">Mute sound</button>
+        </div>
+        <p class="audio-status" data-audio-status-slot role="status" aria-live="polite">Audio begins after your first interaction.</p>
+      </section>
       <section class="setting-card save-tools" aria-labelledby="save-tools-heading"><div><h3 id="save-tools-heading">Progress &amp; backups</h3><p>Keep a backup of your academy progress or restore one from a JSON save file.</p></div>
         <div class="save-tool-actions"><button type="button" data-ui-action="export-save">Export progress</button><button type="button" data-ui-action="choose-import">Choose import file</button>
           <input type="file" accept=".json,application/json" data-save-import-input hidden aria-label="Choose a Starlight Academy save file">
@@ -142,7 +153,7 @@ function requireElement(root, selector) {
 
 /** Compose the semantic academy hub and accessible settings dialog. */
 export function createAcademyShell({
-  root, store, saveService, saveStatusElement = null, emblemSvg = "",
+  root, store, saveService, saveStatusElement = null, audioStatusElement = null, emblemSvg = "",
   documentRef = globalThis.document, windowRef = globalThis.window
 } = {}) {
   if (!root || typeof root.querySelector !== "function" || typeof root.addEventListener !== "function") {
@@ -173,6 +184,8 @@ export function createAcademyShell({
     requireElement(root, "[data-hero-crest]").innerHTML = emblemSvg;
   }
   if (saveStatusElement) saveHealthSlot.append(saveStatusElement);
+  const audioStatusSlot = requireElement(root, "[data-audio-status-slot]");
+  if (audioStatusElement) audioStatusSlot.replaceWith(audioStatusElement);
 
   const panel = {
     kicker: requireElement(root, "[data-screen-kicker]"),
@@ -232,6 +245,19 @@ export function createAcademyShell({
     motionToggle.textContent = preferences.reducedMotion ? "On" : "Off";
     motionToggle.dataset.gamePayload = JSON.stringify({ reducedMotion: !preferences.reducedMotion });
 
+    const audio = selectAudioSettings(state);
+    for (const slider of root.querySelectorAll("[data-audio-slider]")) {
+      const key = slider.dataset.audioSlider;
+      if (["masterVolume", "musicVolume", "sfxVolume"].includes(key)) {
+        slider.value = String(audio[key]);
+        const output = root.querySelector('[data-audio-value="' + key + '"]');
+        if (output) output.textContent = String(audio[key]) + "%";
+      }
+    }
+    const muteButton = requireElement(root, "[data-audio-mute]");
+    muteButton.setAttribute("aria-pressed", String(audio.muted));
+    muteButton.textContent = audio.muted ? "Unmute sound" : "Mute sound";
+
     const overlayId = state?.ui?.activeOverlayId ?? null;
     const settingsOpen = overlayId === "settings";
     academyScene.setActive(state?.app?.screenId === "academy" && overlayId === null);
@@ -262,6 +288,10 @@ export function createAcademyShell({
     const actionElement = event.target?.closest?.("[data-ui-action]");
     if (!actionElement || !root.contains(actionElement)) return;
     const action = actionElement.dataset.uiAction;
+    if (action === "toggle-audio-mute") {
+      store.dispatch({ type: "audio/settings-updated", payload: { muted: !selectAudioSettings(store.getState()).muted } });
+      return;
+    }
     if (action === "choose-import") {
       importInput.click();
       return;
@@ -297,6 +327,16 @@ export function createAcademyShell({
         setSettingsMessage(error?.message || "The backup could not be imported.", "error");
       }
     }
+  }
+
+  function handleInput(event) {
+    const slider = event.target?.closest?.("[data-audio-slider]");
+    if (!slider || !root.contains(slider)) return;
+    const key = slider.dataset.audioSlider;
+    if (!["masterVolume", "musicVolume", "sfxVolume"].includes(key)) return;
+    const value = Number(slider.value);
+    if (!Number.isFinite(value)) return;
+    store.dispatch({ type: "audio/settings-updated", payload: { [key]: value } });
   }
 
   async function handleFileChange() {
@@ -341,6 +381,7 @@ export function createAcademyShell({
   }
 
   root.addEventListener("click", handleClick);
+  root.addEventListener("input", handleInput);
   root.addEventListener("keydown", handleDialogKeydown);
   importInput.addEventListener("change", handleFileChange);
   const unsubscribe = store.subscribe(render);
@@ -354,6 +395,7 @@ export function createAcademyShell({
       academyScene.destroy();
       unsubscribe();
       root.removeEventListener("click", handleClick);
+      root.removeEventListener("input", handleInput);
       root.removeEventListener("keydown", handleDialogKeydown);
       importInput.removeEventListener("change", handleFileChange);
     },

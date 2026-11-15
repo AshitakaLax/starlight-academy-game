@@ -6,6 +6,8 @@ import { createInputRouter } from "./core/input/createInputRouter.js";
 import { registerStandardInputContexts } from "./core/input/standardContexts.js";
 import { gameConfig } from "./config/gameConfig.js";
 import { createAcademyShell } from "./ui/createAcademyShell.js";
+import { createAudioEngine } from "./systems/audio/createAudioEngine.js";
+import { createAudioService } from "./systems/audio/createAudioService.js";
 import academyEmblem from "./assets/academy-emblem.svg";
 import releaseManifest from "./data/release-manifest.json";
 
@@ -18,6 +20,12 @@ async function launch() {
   saveHealth.setAttribute("role", "status");
   saveHealth.setAttribute("aria-live", "polite");
   saveHealth.textContent = "Checking saved progress…";
+
+  const audioStatus = document.createElement("p");
+  audioStatus.className = "audio-status";
+  audioStatus.setAttribute("role", "status");
+  audioStatus.setAttribute("aria-live", "polite");
+  audioStatus.textContent = "Audio begins after your first interaction.";
 
   const store = createGameStore();
   const saveManager = createSaveManager({
@@ -42,6 +50,23 @@ async function launch() {
     }
   });
 
+  const audioEngine = createAudioEngine({
+    onStatus(status) {
+      audioStatus.textContent = status.message;
+      audioStatus.dataset.kind = status.state;
+    }
+  });
+  const audioService = createAudioService({
+    engine: audioEngine,
+    store,
+    gestureTarget: document,
+    root,
+    onStatus(status) {
+      audioStatus.textContent = status.message;
+      audioStatus.dataset.kind = status.kind;
+    }
+  });
+
   const inputRouter = createInputRouter({
     store, target: window, documentRef: document, root,
     onError(error, context) {
@@ -55,11 +80,11 @@ async function launch() {
     stop() { inputRouter.stop(); unregisterInputContexts(); }
   };
 
-  const app = createGameApp({ services: [saveService, inputService] });
+  const app = createGameApp({ services: [saveService, audioService, inputService] });
   await app.start();
 
   const academyShell = createAcademyShell({
-    root, store, saveService, saveStatusElement: saveHealth,
+    root, store, saveService, saveStatusElement: saveHealth, audioStatusElement: audioStatus,
     emblemSvg: academyEmblem, documentRef: document, windowRef: window
   });
   document.documentElement.dataset.appStatus = app.status;

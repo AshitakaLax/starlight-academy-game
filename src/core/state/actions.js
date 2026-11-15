@@ -37,6 +37,12 @@ export function createInitialGameState() {
     ui: {
       activeOverlayId: null,
       preferences: { textScale: gameConfig.ui.defaultTextScale, reducedMotion: gameConfig.ui.defaultReducedMotion }
+    },
+    audio: {
+      masterVolume: gameConfig.audio.defaultMasterVolume,
+      musicVolume: gameConfig.audio.defaultMusicVolume,
+      sfxVolume: gameConfig.audio.defaultSfxVolume,
+      muted: gameConfig.audio.defaultMuted
     }
   };
 }
@@ -138,6 +144,38 @@ export const coreActionDefinitions = Object.freeze({
       const preferences = { textScale: gameConfig.ui.defaultTextScale, reducedMotion: gameConfig.ui.defaultReducedMotion, ...current, ...payload };
       if (preferences.textScale === current.textScale && preferences.reducedMotion === current.reducedMotion) return state;
       return { ...state, ui: { ...state.ui, preferences } };
+    }
+  })
+  "audio/settings-updated": Object.freeze({
+    validate(payload) {
+      if (!isPlainObject(payload) || Object.keys(payload).length === 0
+          || !hasOnlyKeys(payload, ["masterVolume", "musicVolume", "sfxVolume", "muted"])) {
+        return "audio/settings-updated expects at least one audio setting.";
+      }
+      for (const key of ["masterVolume", "musicVolume", "sfxVolume"]) {
+        if (Object.hasOwn(payload, key)
+            && (!Number.isFinite(payload[key]) || payload[key] < 0 || payload[key] > 100)) {
+          return key + " must be a number from 0 to 100.";
+        }
+      }
+      if (Object.hasOwn(payload, "muted") && typeof payload.muted !== "boolean") {
+        return "muted must be a boolean.";
+      }
+      return true;
+    },
+    reduce(state, payload) {
+      const current = isPlainObject(state.audio) ? state.audio : {
+        masterVolume: gameConfig.audio.defaultMasterVolume,
+        musicVolume: gameConfig.audio.defaultMusicVolume,
+        sfxVolume: gameConfig.audio.defaultSfxVolume,
+        muted: gameConfig.audio.defaultMuted
+      };
+      const audio = { ...current, ...payload };
+      if (audio.masterVolume === current.masterVolume
+          && audio.musicVolume === current.musicVolume
+          && audio.sfxVolume === current.sfxVolume
+          && audio.muted === current.muted) return state;
+      return { ...state, audio };
     }
   })
 });
