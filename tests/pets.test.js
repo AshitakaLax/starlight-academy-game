@@ -233,18 +233,15 @@ test("each species has one distinct centrally configured care ability", async ()
 });
 
 test("Pegasus ability adds a grooming bonus only while Pegasus is active", async () => {
-  const { service } = harness();
+  const { catalog, store, service } = harness();
   const { selectPetAbilityCareBonus, selectActivePetAbility } = await import("../src/gameplay/pets/petAbilities.js");
-  assert.equal(selectActivePetAbility(service.getPet("pet.pegasus") ? { petCollection: service.getSnapshot() } : {}, { has: () => true }), null);
-  const state = () => ({ petCollection: originalStoreState });
-  const { store } = harness();
-  const abilityService = createPetCollectionService({ store, petCatalog: createPetCatalog(defaultPetDefinitions) });
-  const active = abilityService.getSnapshot().activeAbility;
+  const active = selectActivePetAbility(store.getState(), catalog);
   assert.equal(active.id, "ability.skyward-shine");
-  assert.equal(selectPetAbilityCareBonus(store.getState(), createPetCatalog(defaultPetDefinitions), "pet.pegasus", "grooming"), 10);
-  assert.equal(selectPetAbilityCareBonus(store.getState(), createPetCatalog(defaultPetDefinitions), "pet.pegasus", "feeding"), 0);
-  assert.equal(abilityService.performCare("pet.pegasus", "grooming").progressAfter, 35);
-  assert.equal(abilityService.performCare("pet.pegasus", "feeding").progressAfter, 25);
+  assert.equal(active.petId, "pet.pegasus");
+  assert.equal(selectPetAbilityCareBonus(store.getState(), catalog, "pet.pegasus", "grooming"), 10);
+  assert.equal(selectPetAbilityCareBonus(store.getState(), catalog, "pet.pegasus", "feeding"), 0);
+  assert.equal(service.performCare("pet.pegasus", "grooming").progressAfter, 35);
+  assert.equal(service.performCare("pet.pegasus", "feeding").progressAfter, 25);
 });
 
 test("switching companions replaces the active ability and prevents ability stacking", async () => {
