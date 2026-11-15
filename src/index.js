@@ -31,6 +31,10 @@ export { createRewardDefinition, createShopItemDefinition, createRewardRegistry,
 export { createInitialEconomyState, selectEconomy, selectOwnedItemCount } from "./systems/economy/economyState.js";
 export { createEconomyActionDefinitions } from "./systems/economy/economyActions.js";
 export { createEconomyService } from "./systems/economy/createEconomyService.js";
+export { WARDROBE_SLOTS, createWardrobeItem, validateWardrobeItem, createWardrobeCatalog, createWardrobeShopCatalog, defaultWardrobeItems } from "./gameplay/wardrobe/wardrobeCatalog.js";
+export { createInitialWardrobeState, selectWardrobe, selectEquippedItem, selectWardrobeOwnership } from "./gameplay/wardrobe/wardrobeState.js";
+export { createWardrobeActionDefinitions } from "./gameplay/wardrobe/wardrobeActions.js";
+export { createWardrobeService } from "./gameplay/wardrobe/createWardrobeService.js";
 export { gameConfig } from "./config/gameConfig.js";
 export { chapterDefinitions, getChapterDefinition } from "./chapters/registry.js";
 export { sideQuestDefinitions, getSideQuestDefinition } from "./side-quests/registry.js";
