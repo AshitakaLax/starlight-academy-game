@@ -1,4 +1,5 @@
 import { cloneSerializable } from "../../core/state/stateUtils.js";
+import { getSkillDefinition } from "../../systems/curriculum/skillRegistry.js";
 
 const CHAPTER_ID_PATTERN = /^chapter-[0-9]{2}$/;
 const CONTENT_ID_PATTERN = /^[a-z][a-z0-9-]*(?:[.-][a-z][a-z0-9-]*)+$/;
@@ -65,9 +66,9 @@ export function validateChapterDefinition(input) {
       return "An optional activityId must be a stable namespaced identifier.";
     }
     if (activity.skillIds !== undefined
-        && (!Array.isArray(activity.skillIds) || activity.skillIds.some((id) => typeof id !== "string")
+        && (!Array.isArray(activity.skillIds) || activity.skillIds.some((id) => !getSkillDefinition(id))
           || new Set(activity.skillIds).size !== activity.skillIds.length)) {
-      return "Activity skillIds must be a unique array of strings when supplied.";
+      return "Activity skillIds must contain unique IDs from the curriculum skill registry.";
     }
     try { cloneMetadata(activity.metadata); } catch (error) { return error.message; }
   }
@@ -111,18 +112,38 @@ export function createChapterDefinition(input) {
 export function createChapterCatalog(initialDefinitions = []) {
   if (!Array.isArray(initialDefinitions)) throw new TypeError("Chapter catalog definitions must be an array.");
   const definitions = new Map();
+  let initializing = true;
+  function validatePrerequisiteGraph() {
+    for (const chapter of definitions.values()) {
+      for (const prerequisiteId of chapter.prerequisiteChapterIds) {
+        if (!definitions.has(prerequisiteId)) throw new Error("Unknown prerequisite chapter: " + prerequisiteId);
+      }
+    }
+    const visiting = new Set();
+    const visited = new Set();
+    function visit(chapterId) {
+      if (visiting.has(chapterId)) throw new Error("Chapter prerequisite cycle detected at " + chapterId);
+      if (visited.has(chapterId)) return;
+      visiting.add(chapterId);
+      for (const prerequisiteId of definitions.get(chapterId).prerequisiteChapterIds) visit(prerequisiteId);
+      visiting.delete(chapterId);
+      visited.add(chapterId);
+    }
+    for (const chapterId of definitions.keys()) visit(chapterId);
+  }
   function register(input) {
     const chapter = createChapterDefinition(input);
     if (definitions.has(chapter.id)) throw new Error("Chapter already registered: " + chapter.id);
     definitions.set(chapter.id, chapter);
+    if (!initializing) {
+      try { validatePrerequisiteGraph(); }
+      catch (error) { definitions.delete(chapter.id); throw error; }
+    }
     return chapter;
   }
   for (const definition of initialDefinitions) register(definition);
-  for (const chapter of definitions.values()) {
-    for (const prerequisiteId of chapter.prerequisiteChapterIds) {
-      if (!definitions.has(prerequisiteId)) throw new Error("Unknown prerequisite chapter: " + prerequisiteId);
-    }
-  }
+  initializing = false;
+  validatePrerequisiteGraph();
   return Object.freeze({
     register,
     get(id) { return definitions.get(id) ?? null; },
