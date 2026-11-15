@@ -39,6 +39,7 @@ export function createChapterRuntimeService({
   }
 
   const sessions = new WeakSet();
+  let activeSession = null;
 
   function getProgress() {
     return selectChapterRuntimeProgress(store.getState(), chapterCatalog);
@@ -93,6 +94,9 @@ export function createChapterRuntimeService({
     function start() {
       if (ended) throw new Error("An exited chapter session cannot be restarted; create a new session to resume.");
       if (started) return sessionSnapshot();
+      if (activeSession && activeSession !== session) {
+        throw new Error("Another chapter session is already active. Exit it safely before starting this chapter.");
+      }
       const progress = readProgress();
       if (!chapter.prerequisiteChapterIds.every((id) => getProgress().chapters[id]?.status === "completed")) {
         throw new Error("This chapter is not available until its prerequisite chapters are completed.");
@@ -100,11 +104,14 @@ export function createChapterRuntimeService({
       store.dispatch({ type: "chapters/session-started", payload: { chapterId } });
       activityResults = readProgress().activityResults.map((entry) => ({ ...entry }));
       started = true;
+      activeSession = session;
       return sessionSnapshot();
     }
 
     function recordActivity(status) {
-      if (!started || ended) throw new Error("Start the chapter session before completing activities.");
+      if (!started || ended || activeSession !== session) {
+        throw new Error("Start the active chapter session before completing activities.");
+      }
       const progress = readProgress();
       if (progress.status === "completed") throw new Error("This chapter run is already complete.");
       const activity = chapter.activities[progress.currentActivityIndex];
@@ -134,6 +141,7 @@ export function createChapterRuntimeService({
           skippedActivityCount: activityResults.filter((entry) => entry.status === "skipped").length,
           rewards: rewardReceipts
         });
+        activeSession = null;
       }
       return sessionSnapshot();
     }
@@ -147,7 +155,9 @@ export function createChapterRuntimeService({
     }
 
     function saveCheckpoint() {
-      if (!started || ended) throw new Error("Only an active chapter session can save a checkpoint.");
+      if (!started || ended || activeSession !== session) {
+        throw new Error("Only the active chapter session can save a checkpoint.");
+      }
       const progress = readProgress();
       store.dispatch({
         type: "chapters/checkpoint-saved",
@@ -158,6 +168,10 @@ export function createChapterRuntimeService({
 
     function exit() {
       if (!started || ended) return sessionSnapshot();
+      if (activeSession !== session) {
+        ended = true;
+        return sessionSnapshot();
+      }
       const progress = readProgress();
       if (progress.status === "in-progress") {
         store.dispatch({
@@ -167,6 +181,7 @@ export function createChapterRuntimeService({
         store.dispatch({ type: "chapters/session-exited", payload: { chapterId } });
       }
       ended = true;
+      if (activeSession === session) activeSession = null;
       return sessionSnapshot();
     }
 
