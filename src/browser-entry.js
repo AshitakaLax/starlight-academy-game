@@ -2,6 +2,9 @@ import { createGameApp } from "./app/createGameApp.js";
 import { createGameStore } from "./core/state/createGameStore.js";
 import { createInitialGameState, mergeGameStateDefaults } from "./core/state/actions.js";
 import { createInitialCurriculumProgress, curriculumActionDefinitions } from "./systems/curriculum/curriculumProgress.js";
+import { createInitialEconomyState } from "./systems/economy/economyState.js";
+import { createRewardRegistry, createShopCatalog } from "./systems/economy/economyCatalogs.js";
+import { createEconomyActionDefinitions } from "./systems/economy/economyActions.js";
 import { createSaveManager, getBrowserStorage } from "./core/save/createSaveManager.js";
 import { createSaveService } from "./core/save/createSaveService.js";
 import { createInputRouter } from "./core/input/createInputRouter.js";
@@ -42,13 +45,17 @@ async function launch() {
   narrationStatus.setAttribute("aria-live", "polite");
   narrationStatus.textContent = "Narration is optional and turned off.";
 
+  const rewardRegistry = createRewardRegistry();
+  const shopCatalog = createShopCatalog();
+  const economyActionDefinitions = createEconomyActionDefinitions({ rewardRegistry, shopCatalog });
   const initialGameState = {
     ...createInitialGameState(),
-    curriculum: createInitialCurriculumProgress()
+    curriculum: createInitialCurriculumProgress(),
+    economy: createInitialEconomyState()
   };
   const store = createGameStore({
     initialState: initialGameState,
-    actions: curriculumActionDefinitions
+    actions: { ...curriculumActionDefinitions, ...economyActionDefinitions }
   });
   const saveManager = createSaveManager({
     storage: getBrowserStorage(),
