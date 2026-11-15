@@ -354,3 +354,13 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .pet-appearance-choice { display: grid; width: 100%; gap: 5px; color: #675675; font-size: .72rem; font-weight: 700; text-align: left; }
 .pet-appearance-choice select { width: 100%; min-height: 38px; padding: 6px 9px; border: 1px solid #e4d8ec; border-radius: 8px; background: #fff; color: #59486a; font: inherit; }
 @media (max-width: 850px) { .pet-collection-grid { grid-template-columns: 1fr; } }
+
+.pet-care-heading { margin: 8px 0 0; color: #5c4b6c; font-size: .8rem; }
+.pet-care-meters { display: grid; width: 100%; gap: 8px; text-align: left; }
+.pet-care-meter { display: grid; gap: 4px; color: #6d5d7a; font-size: .68rem; font-weight: 700; }
+.pet-care-meter progress { width: 100%; height: 10px; accent-color: #9a7db4; }
+.pet-care-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; gap: 6px; }
+.pet-care-action { min-height: 38px; padding: 6px 5px; border: 1px solid #e1d2eb; border-radius: 8px; color: #644b77; background: #f9f4fd; font: inherit; font-size: .65rem; font-weight: 800; cursor: pointer; }
+.pet-care-action:hover { background: #f0e6f8; }
+.pet-bond-summary { color: #735b86 !important; font-weight: 800; }
+@media (max-width: 480px) { .pet-care-actions { grid-template-columns: 1fr; } }
