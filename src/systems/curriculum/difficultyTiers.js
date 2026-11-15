@@ -27,5 +27,5 @@ export const difficultyTierRegistry = Object.freeze(
 );
 
 export function getDifficultyTier(id) {
-  return typeof id === "string" ? difficultyTierRegistry[id] ?? null : null;
+  return typeof id === "string" && Object.hasOwn(difficultyTierRegistry, id) ? difficultyTierRegistry[id] : null;
 }
