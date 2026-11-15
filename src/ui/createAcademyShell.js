@@ -941,6 +941,16 @@ export function createAcademyShell({
   }
 
   function handleChange(event) {
+    const petAppearance = event.target?.closest?.('[data-pet-action="appearance"]');
+    if (petAppearance && root.contains(petAppearance) && petCollectionService) {
+      try {
+        petCollectionService.setAppearancePalette(petAppearance.dataset.petId, petAppearance.value);
+        renderPetCollection("A fresh look! Your companion's appearance has been saved.");
+      } catch (error) {
+        renderPetCollection(error?.message || "That appearance could not be saved.");
+      }
+      return;
+    }
     const templateSelect = event.target?.closest?.("[data-coloring-template]");
     if (templateSelect && root.contains(templateSelect) && coloringService) {
       try {
