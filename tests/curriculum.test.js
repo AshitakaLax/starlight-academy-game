@@ -351,6 +351,48 @@ test("difficulty adjustment uses only evidence for its skill's current tier", ()
   store.destroy();
 });
 
+test("STEP-10 save records receive Core and tier-evidence defaults without losing prior learning evidence", () => {
+  const store = createStore();
+  const defaults = store.getState();
+  const olderEvidence = [{
+    sequence: 3,
+    skillId: "math.multiplication",
+    activityId: "chapter-01.multiplication-practice",
+    tier: "core",
+    correct: true,
+    hintLevel: 0,
+    attempts: 1
+  }];
+  const normalized = mergeGameStateDefaults(defaults, {
+    app: { screenId: "academy" },
+    ui: { activeOverlayId: null },
+    curriculum: {
+      skills: {
+        "math.multiplication": {
+          totalResponses: 3,
+          totalAttempts: 4,
+          correctResponses: 2,
+          unassistedCorrect: 2,
+          hintedResponses: 0,
+          masteryStatus: "in-progress",
+          recentEvidence: olderEvidence
+        }
+      },
+      evidence: olderEvidence,
+      nextEvidenceSequence: 4
+    }
+  });
+  store.dispatch({ type: "app/state-restored", payload: { state: normalized } });
+  const skill = selectSkillProgress(store.getState(), "math.multiplication");
+  assert.equal(skill.currentTier, "core");
+  assert.deepEqual(skill.tierEvidence, []);
+  assert.equal(skill.tierChanges, 0);
+  assert.equal(skill.totalResponses, 3);
+  assert.deepEqual(skill.recentEvidence, olderEvidence);
+  assert.equal(store.getState().curriculum.onboarding.placementTestRequired, false);
+  store.destroy();
+});
+
 test("fresh curriculum progress starts every registered skill independently", () => {
   const progress = createInitialCurriculumProgress();
   assert.equal(Object.keys(progress.skills).length, skillDefinitions.length);
