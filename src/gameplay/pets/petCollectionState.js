@@ -1,4 +1,7 @@
+import { gameConfig } from "../../config/gameConfig.js";
+
 const CARE_TRACKS = Object.freeze(["feeding", "grooming", "play"]);
+const CARE_PROGRESS_MAX = gameConfig.petCare.progressMaximum;
 
 function isPlainObject(value) {
   if (value === null || typeof value !== "object") return false;
@@ -16,6 +19,7 @@ function createPetEntry(definition) {
     unlockSource: definition.starter ? "academy-starter" : null,
     appearance: { paletteId: definition.defaultPaletteId },
     bondExperience: 0,
+    careMoments: 0,
     careProgress: { feeding: 0, grooming: 0, play: 0 }
   };
 }
@@ -28,7 +32,7 @@ function normalizePetEntry(definition, savedEntry) {
   const savedCare = isPlainObject(saved.careProgress) ? saved.careProgress : {};
   const careProgress = Object.fromEntries(CARE_TRACKS.map((track) => [
     track,
-    validCounter(savedCare[track]) ? savedCare[track] : 0
+    validCounter(savedCare[track]) ? Math.min(savedCare[track], CARE_PROGRESS_MAX) : 0
   ]));
   const unlockSource = unlocked
     ? (definition.starter ? "academy-starter"
@@ -42,6 +46,7 @@ function normalizePetEntry(definition, savedEntry) {
       paletteId: paletteIsValid ? appearance.paletteId : definition.defaultPaletteId
     }),
     bondExperience: validCounter(saved.bondExperience) ? saved.bondExperience : 0,
+    careMoments: validCounter(saved.careMoments) ? saved.careMoments : 0,
     careProgress: Object.freeze(careProgress)
   });
 }
@@ -93,4 +98,4 @@ export function selectPet(state, petCatalog, petId) {
   });
 }
 
-export { CARE_TRACKS };
+export { CARE_TRACKS, CARE_PROGRESS_MAX };
