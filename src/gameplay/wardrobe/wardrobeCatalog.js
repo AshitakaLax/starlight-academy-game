@@ -73,12 +73,15 @@ export function createWardrobeCatalog(initialItems = []) {
     return item;
   }
   for (const item of initialItems) register(item);
+  function list() {
+    return [...items.values()].sort((a, b) => a.slot.localeCompare(b.slot) || a.title.localeCompare(b.title));
+  }
   return Object.freeze({
     register,
     get(id) { return items.get(id) ?? null; },
     has(id) { return items.has(id); },
-    list() { return [...items.values()].sort((a, b) => a.slot.localeCompare(b.slot) || a.title.localeCompare(b.title)); },
-    listBySlot(slot) { return this.list().filter((item) => item.slot === slot); }
+    list,
+    listBySlot(slot) { return list().filter((item) => item.slot === slot); }
   });
 }
 
