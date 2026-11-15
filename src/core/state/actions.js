@@ -61,9 +61,10 @@ export const coreActionDefinitions = Object.freeze({
       return payload === undefined
         || (isPlainObject(payload)
           && hasOnlyKeys(payload, ["overlayId"])
-          && (payload.overlayId === undefined || typeof payload.overlayId === "string"))
+          && (!Object.hasOwn(payload, "overlayId")
+            || (typeof payload.overlayId === "string" && payload.overlayId.trim().length > 0)))
         ? true
-        : 'ui/overlay-closed expects no payload or { overlayId?: string }.';
+        : 'ui/overlay-closed expects no payload or { overlayId?: non-empty string }.';
     },
     reduce(state, payload = {}) {
       requireUiContainer(state);
