@@ -165,7 +165,7 @@ test("turning narration off cancels an utterance that is queued but has not star
   const speech = new FakeSpeechSynthesis();
   const store = createGameStore();
   store.dispatch({ type: "narration/settings-updated", payload: { enabled: true } });
-  const service = createNarrationService({ store, speechSynthesis: speech, UtteranceCtor: FakeUtterance });
+  const service = createNarrationService({ store, speechSynthesis: speech, UtteranceCtor: FakeUtterance, textElement: captionElement() });
   service.start();
   service.speak("Waiting for the browser voice.");
   assert.equal(service.getDiagnostics().pending, true);
