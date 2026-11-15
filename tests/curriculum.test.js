@@ -64,6 +64,7 @@ test("difficulty tiers have stable IDs and Core is the configured default", () =
   assert.deepEqual(difficultyTierDefinitions.map((tier) => tier.order), [1, 2, 3]);
   assert.equal(getDifficultyTier("core").label, "Core");
   assert.equal(getDifficultyTier("advanced"), null);
+  assert.equal(getDifficultyTier("__proto__"), null);
 });
 
 test("skill registry contains unique, stable IDs with objectives and tier support", () => {
@@ -77,6 +78,7 @@ test("skill registry contains unique, stable IDs with objectives and tier suppor
   }
   assert.equal(getSkillDefinition("math.multiplication").title, "Multiplication");
   assert.equal(getSkillDefinition("unknown.skill"), null);
+  assert.equal(getSkillDefinition("toString"), null);
 });
 
 test("activity definitions declare skills, objectives, tiers, answer rules, and per-tier generator constraints", () => {
@@ -88,6 +90,7 @@ test("activity definitions declare skills, objectives, tiers, answer rules, and 
   assert.deepEqual(Object.keys(activity.generatorConstraints), DIFFICULTY_TIER_IDS);
   assert.ok(Object.isFrozen(activity));
   assert.ok(Object.isFrozen(activity.generatorConstraints.core));
+  assert.ok(Object.isFrozen(activity.skillIds));
   assert.equal(validateActivityDefinition(activity), true);
   assert.throws(() => createActivityDefinition({
     ...activity, skillIds: ["math.not-in-registry"]
