@@ -2,6 +2,7 @@ import { selectUiPreferences } from "./uiPreferences.js";
 import { selectAudioSettings } from "../systems/audio/audioSettings.js";
 import { selectNarrationSettings } from "../systems/narration/narrationSettings.js";
 import { selectEconomy } from "../systems/economy/economyState.js";
+import { renderColoringCanvas } from "../gameplay/coloring/renderColoringCanvas.js";
 import { createAcademyScene } from "../rendering/scenes/createAcademyScene.js";
 
 const DESTINATIONS = Object.freeze({
@@ -93,11 +94,83 @@ const MARKUP = String.raw`<div class="academy-shell" data-text-scale="normal" da
       <section class="wardrobe-panel" data-wardrobe-panel hidden aria-labelledby="wardrobe-panel-title">
         <div class="wardrobe-panel-heading">
           <div><p class="academy-overline">YOUR PERSONAL STYLE</p><h2 id="wardrobe-panel-title">Your wardrobe</h2><p>Choose an item you own, save your favorite look, or collect a new piece on your adventures.</p></div>
-          <span class="wardrobe-heading-star" aria-hidden="true">✧</span>
+          <div class="wardrobe-heading-actions">
+            <span class="wardrobe-heading-star" aria-hidden="true">✧</span>
+            <button class="wardrobe-primary-action" type="button" data-coloring-action="open">Open Coloring Studio</button>
+          </div>
         </div>
         <div class="wardrobe-equipped-wrap"><h3>Currently wearing</h3><div class="wardrobe-equipped" data-wardrobe-equipped></div></div>
         <div class="wardrobe-inventory-wrap"><div class="wardrobe-items-heading"><div><h3>Clothing &amp; accessories</h3><p>Starter pieces are ready to wear. Chapter rewards and optional shop pieces unlock as you play.</p></div></div><div class="wardrobe-inventory" data-wardrobe-inventory></div></div>
         <p class="wardrobe-status" data-wardrobe-status role="status" aria-live="polite">Your starter outfit is ready.</p>
+      </section>
+      <section class="coloring-panel" data-coloring-panel hidden aria-labelledby="coloring-panel-title">
+        <div class="coloring-panel-heading">
+          <button class="wardrobe-secondary-action" type="button" data-coloring-action="back">← Back to wardrobe</button>
+          <div><p class="academy-overline">YOUR CREATIVE STUDIO</p><h2 id="coloring-panel-title">Coloring Studio</h2><p>Paint inside the garment, add little stamps, and save a look that is wonderfully yours.</p></div>
+        </div>
+        <div class="coloring-studio-layout">
+          <div class="coloring-preview-column">
+            <label class="coloring-template-choice">Garment template
+              <select data-coloring-template aria-label="Choose a garment template"></select>
+            </label>
+            <div class="coloring-canvas-frame">
+              <canvas class="coloring-canvas" data-coloring-canvas width="256" height="320" aria-label="Garment painting canvas" role="img"></canvas>
+            </div>
+            <p class="coloring-canvas-help">Use your mouse to paint. Your color stays inside the garment shape.</p>
+          </div>
+          <div class="coloring-tools">
+            <section class="coloring-tool-group" aria-labelledby="coloring-colors-title">
+              <h3 id="coloring-colors-title">Choose a color</h3>
+              <div class="coloring-palette" data-coloring-palette>
+                <button type="button" data-coloring-color="#b78bd2" aria-label="Lavender" aria-pressed="true" style="--swatch:#b78bd2"></button>
+                <button type="button" data-coloring-color="#e89cbe" aria-label="Rose pink" aria-pressed="false" style="--swatch:#e89cbe"></button>
+                <button type="button" data-coloring-color="#86abc9" aria-label="Sky blue" aria-pressed="false" style="--swatch:#86abc9"></button>
+                <button type="button" data-coloring-color="#8ebca7" aria-label="Sage green" aria-pressed="false" style="--swatch:#8ebca7"></button>
+                <button type="button" data-coloring-color="#e7bd72" aria-label="Golden yellow" aria-pressed="false" style="--swatch:#e7bd72"></button>
+                <button type="button" data-coloring-color="#d98975" aria-label="Coral" aria-pressed="false" style="--swatch:#d98975"></button>
+                <button type="button" data-coloring-color="#8178b6" aria-label="Periwinkle" aria-pressed="false" style="--swatch:#8178b6"></button>
+                <button type="button" data-coloring-color="#4e4560" aria-label="Deep plum" aria-pressed="false" style="--swatch:#4e4560"></button>
+              </div>
+            </section>
+            <section class="coloring-tool-group" aria-labelledby="coloring-tools-title">
+              <h3 id="coloring-tools-title">Tools</h3>
+              <div class="coloring-tool-buttons">
+                <button type="button" data-coloring-tool="brush" aria-pressed="true">✎ Brush</button>
+                <button type="button" data-coloring-tool="eraser" aria-pressed="false">⌫ Eraser</button>
+              </div>
+              <label class="coloring-size-choice">Brush size
+                <select data-coloring-brush-size>
+                  <option value="1">Fine</option>
+                  <option value="3" selected>Medium</option>
+                  <option value="6">Wide</option>
+                  <option value="9">Extra wide</option>
+                </select>
+              </label>
+            </section>
+            <section class="coloring-tool-group" aria-labelledby="coloring-stamps-title">
+              <h3 id="coloring-stamps-title">Stamps</h3>
+              <div class="coloring-stamp-buttons">
+                <button type="button" data-coloring-stamp="star">✦ Star</button>
+                <button type="button" data-coloring-stamp="heart">♡ Heart</button>
+                <button type="button" data-coloring-stamp="flower">✿ Flower</button>
+              </div>
+            </section>
+            <section class="coloring-tool-group" aria-label="Design history">
+              <h3>Make it just right</h3>
+              <div class="coloring-history-buttons">
+                <button type="button" data-coloring-action="undo" disabled>↶ Undo</button>
+                <button type="button" data-coloring-action="redo" disabled>↷ Redo</button>
+                <button type="button" data-coloring-action="reset-request">Reset design</button>
+              </div>
+              <div class="coloring-reset-confirm" data-coloring-reset-confirm hidden role="group" aria-label="Confirm design reset">
+                <p>Clear this design and start again?</p>
+                <button type="button" data-coloring-action="reset-confirm">Yes, reset</button>
+                <button type="button" data-coloring-action="reset-cancel">Keep my design</button>
+              </div>
+            </section>
+            <p class="coloring-status" data-coloring-status role="status" aria-live="polite">Your design saves automatically as you paint.</p>
+          </div>
+        </div>
       </section>
       <p class="narration-caption" data-narration-text-slot hidden role="status" aria-live="polite"></p>
     </div>
@@ -180,7 +253,8 @@ function requireElement(root, selector) {
 /** Compose the semantic academy hub and accessible settings dialog. */
 export function createAcademyShell({
   root, store, saveService, saveStatusElement = null, audioStatusElement = null, narrationService = null,
-  narrationStatusElement = null, narrationTextElement = null, wardrobeService = null, emblemSvg = "",
+  narrationStatusElement = null, narrationTextElement = null, wardrobeService = null,
+  coloringService = null, garmentTemplateRegistry = null, emblemSvg = "",
   documentRef = globalThis.document, windowRef = globalThis.window
 } = {}) {
   if (!root || typeof root.querySelector !== "function" || typeof root.addEventListener !== "function") {
@@ -233,7 +307,14 @@ export function createAcademyShell({
     wardrobePanel: requireElement(root, "[data-wardrobe-panel]"),
     wardrobeEquipped: requireElement(root, "[data-wardrobe-equipped]"),
     wardrobeInventory: requireElement(root, "[data-wardrobe-inventory]"),
-    wardrobeStatus: requireElement(root, "[data-wardrobe-status]")
+    wardrobeStatus: requireElement(root, "[data-wardrobe-status]"),
+    coloringPanel: requireElement(root, "[data-coloring-panel]"),
+    coloringCanvas: requireElement(root, "[data-coloring-canvas]"),
+    coloringTemplate: requireElement(root, "[data-coloring-template]"),
+    coloringPalette: requireElement(root, "[data-coloring-palette]"),
+    coloringBrushSize: requireElement(root, "[data-coloring-brush-size]"),
+    coloringResetConfirm: requireElement(root, "[data-coloring-reset-confirm]"),
+    coloringStatus: requireElement(root, "[data-coloring-status]")
   };
   if (wardrobeService !== null
       && (typeof wardrobeService.getPreview !== "function"
@@ -242,6 +323,21 @@ export function createAcademyShell({
         || typeof wardrobeService.unequipSlot !== "function")) {
     throw new TypeError("wardrobeService must expose wardrobe inventory and equipment operations.");
   }
+  if (coloringService !== null
+      && (typeof coloringService.getSnapshot !== "function"
+        || typeof coloringService.selectTemplate !== "function"
+        || typeof coloringService.beginStroke !== "function"
+        || typeof coloringService.continueStroke !== "function"
+        || typeof coloringService.endStroke !== "function"
+        || typeof coloringService.addStamp !== "function"
+        || typeof coloringService.undo !== "function"
+        || typeof coloringService.redo !== "function"
+        || typeof coloringService.resetDesign !== "function")) {
+    throw new TypeError("coloringService must expose the garment editor operations.");
+  }
+  if (garmentTemplateRegistry !== null && typeof garmentTemplateRegistry.list !== "function") {
+    throw new TypeError("garmentTemplateRegistry must expose list().");
+  }
   const settingsTrigger = requireElement(root, ".settings-trigger");
   const narrationVoiceSelect = requireElement(root, "[data-narration-voice]");
   const academyScene = createAcademyScene({ canvas: requireElement(root, "[data-academy-scene]"), documentRef, windowRef });
@@ -249,6 +345,10 @@ export function createAcademyShell({
   let previousFocus = null;
   let lastOverlayId = store.getState()?.ui?.activeOverlayId ?? null;
   let disposed = false;
+  let coloringOpen = false;
+  let selectedStamp = null;
+  let activePointerId = null;
+  let coloringStatusMessage = "Your design saves automatically as you paint.";
 
   function setSettingsMessage(message, kind = "info") {
     settingsMessage.textContent = message;
