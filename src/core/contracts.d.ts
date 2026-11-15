@@ -320,7 +320,17 @@ export interface WardrobeState {
   readonly equipped: Readonly<Record<WardrobeEquipmentSlot, string | null>>;
 }
 
+export interface WardrobePreview {
+  readonly equipped: readonly Readonly<{
+    slot: WardrobeEquipmentSlot;
+    itemId: string | null;
+    item: WardrobeItemDefinition | null;
+  }>[];
+  readonly inventory: ReturnType<WardrobeService["getInventory"]>;
+}
+
 export interface WardrobeService {
+  getPreview(): WardrobePreview;
   getInventory(): readonly Readonly<WardrobeItemDefinition & {
     ownership: WardrobeOwnership | null;
     owned: boolean;
