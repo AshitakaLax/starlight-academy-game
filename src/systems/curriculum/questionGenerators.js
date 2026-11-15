@@ -173,7 +173,8 @@ export function createQuestionGeneratorRegistry(customGenerators = {}) {
     const generated = generator({ random, constraints, activity, seed, tier });
     if (!generated || typeof generated !== "object"
         || typeof generated.prompt !== "string" || !generated.prompt.trim()
-        || !Object.hasOwn(generated, "correctAnswer")) {
+        || !Object.hasOwn(generated, "correctAnswer")
+        || generated.correctAnswer === null || generated.correctAnswer === undefined) {
       throw new TypeError("Generator " + activity.generatorId + " must return a prompt and correctAnswer.");
     }
     const question = {
@@ -183,7 +184,7 @@ export function createQuestionGeneratorRegistry(customGenerators = {}) {
       skillIds: activity.skillIds.slice(),
       objectives: activity.objectives.slice(),
       seed: typeof seed === "string" ? seed : String(seed),
-      prompt: generated.prompt,
+      prompt: generated.prompt.trim(),
       correctAnswer: generated.correctAnswer,
       answerRules: activity.answerRules,
       ...(Array.isArray(generated.choices) ? { choices: generated.choices.slice() } : {}),
