@@ -320,25 +320,27 @@ export interface WardrobeState {
   readonly equipped: Readonly<Record<WardrobeEquipmentSlot, string | null>>;
 }
 
+export interface WardrobeInventoryItem extends WardrobeItemDefinition {
+  readonly ownership: WardrobeOwnership | null;
+  readonly owned: boolean;
+  readonly equipped: boolean;
+  readonly status: "locked" | "owned" | "equipped";
+  readonly available: boolean;
+  readonly reason: string;
+}
+
 export interface WardrobePreview {
   readonly equipped: readonly Readonly<{
     slot: WardrobeEquipmentSlot;
     itemId: string | null;
     item: WardrobeItemDefinition | null;
   }>[];
-  readonly inventory: ReturnType<WardrobeService["getInventory"]>;
+  readonly inventory: readonly Readonly<WardrobeInventoryItem>[];
 }
 
 export interface WardrobeService {
   getPreview(): WardrobePreview;
-  getInventory(): readonly Readonly<WardrobeItemDefinition & {
-    ownership: WardrobeOwnership | null;
-    owned: boolean;
-    equipped: boolean;
-    status: "locked" | "owned" | "equipped";
-    available: boolean;
-    reason: string;
-  }>[];
+  getInventory(): readonly Readonly<WardrobeInventoryItem>[];
   getEquipped(): readonly Readonly<{
     slot: WardrobeEquipmentSlot;
     itemId: string | null;
