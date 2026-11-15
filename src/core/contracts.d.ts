@@ -459,3 +459,26 @@ export interface PetCollectionService {
   selectActivePet(petId: string): Readonly<{ changed: boolean; activePetId: string; pet: unknown }>;
   setAppearancePalette(petId: string, paletteId: string): Readonly<{ changed: boolean; pet: unknown }>;
 }
+
+export type PetCareType = "feeding" | "grooming" | "play";
+
+export interface PetCareProgressResult {
+  readonly performed: true;
+  readonly changed: boolean;
+  readonly petId: string;
+  readonly careType: PetCareType;
+  readonly progressBefore: number;
+  readonly progressAfter: number;
+  readonly progressIncreased: boolean;
+  readonly meterFull: boolean;
+  readonly bondExperienceBefore: number;
+  readonly bondExperienceAfter: number;
+  readonly bondExperienceGained: number;
+  readonly careMoments: number;
+}
+
+export interface PetCareConfiguration {
+  readonly progressPerInteraction: number;
+  readonly progressMaximum: number;
+  readonly bondExperiencePerInteraction: number;
+}
