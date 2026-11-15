@@ -10,7 +10,7 @@ This repository is a modular JavaScript ES-module source project. The player-fac
 - [x] STEP-04 — Versioned save manager, autosave/checkpoints, JSON backup/restore, migrations, and recovery status (npm check/test/build confirmed passing by user)
 - [~] STEP-05 — Context-aware keyboard shortcuts and delegated mouse-action routing implemented; verification pending
 
-The current HTML is an offline launch shell demonstrating the packaged project foundation, state store, and local save health. Game screens and playable systems are added in their later ledger steps; the shell is not yet the completed game.
+The current HTML is an offline launch shell demonstrating the packaged project foundation, state store, local save health, and contextual input routing. Game screens and playable systems are added in their later ledger steps; the shell is not yet the completed game.
 
 ## Source layout
 
