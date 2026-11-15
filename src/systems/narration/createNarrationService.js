@@ -89,19 +89,22 @@ export function createNarrationService({
       throw new TypeError("speak() expects non-empty visible text.");
     }
     const message = text.trim();
-    showText(message);
 
     if (!settings.enabled) {
+      showText(message);
       status("disabled", "Narration is turned off. The instruction is available here as text.");
       return false;
     }
     if (!available) {
+      showText(message);
       status("unavailable", "Narration is not available in this browser. The instruction remains visible as text.");
       return false;
     }
     if (!interrupt && hasPendingUtterance) return false;
 
+    showText(message);
     cancel();
+    requestId += 1;
     const utteranceId = requestId;
     let utterance;
     try {
