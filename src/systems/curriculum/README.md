@@ -11,4 +11,4 @@ The curriculum layer is data-driven and independent of DOM, rendering, and chapt
 
 Mastery is recorded only after a complete evidence window meets the configured unassisted-correct threshold. Once demonstrated, the mastery milestone is retained; recent evidence remains available for future adaptive decisions. No response-time measurement is used.
 
-Implementation: STEP-10. Adaptive tier selection and rolling difficulty changes are reserved for STEP-11.
+STEP-10 established the reusable evidence contracts; STEP-11 adds no-test Core onboarding and independent per-skill tier movement using rolling response evidence. The policy ignores response speed, promotes after four or more unassisted correct responses in a five-response window, and offers one tier of extra support after four or more incorrect responses. Tier changes are bounded to Foundation, Core, and Stretch.
