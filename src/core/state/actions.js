@@ -17,6 +17,17 @@ function requireUiContainer(state) {
   }
 }
 
+function mergeWithStateDefaults(defaults, restored) {
+  if (!isPlainObject(defaults) || !isPlainObject(restored)) return restored;
+  const merged = { ...defaults };
+  for (const [key, value] of Object.entries(restored)) {
+    merged[key] = isPlainObject(defaults[key]) && isPlainObject(value)
+      ? mergeWithStateDefaults(defaults[key], value)
+      : value;
+  }
+  return merged;
+}
+
 function updateInputRequest(state, requestId, changes = {}) {
   requireUiContainer(state);
   const currentInput = isPlainObject(state.ui.input) ? state.ui.input : {};
@@ -71,7 +82,7 @@ export const coreActionDefinitions = Object.freeze({
       return isPlainObject(payload) && hasOnlyKeys(payload, ["state"]) && isPlainObject(payload.state)
         ? true : 'app/state-restored expects { state: plain object }.';
     },
-    reduce(_state, payload) { return payload.state; }
+    reduce(state, payload) { return mergeWithStateDefaults(state, payload.state); }
   }),
   "hub/dock-selected": Object.freeze({
     validate(payload) {
