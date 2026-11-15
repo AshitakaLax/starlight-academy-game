@@ -10,7 +10,7 @@ function freezeSnapshot(value) {
 
 /** Coordinates ordered chapter activities, safe checkpoints, replays, and one-time rewards. */
 export function createChapterRuntimeService({
-  store, chapterCatalog, rewardRegistry, economyService
+  store, chapterCatalog, rewardRegistry, economyService, wardrobeService = null
 } = {}) {
   if (!store || typeof store.getState !== "function" || typeof store.dispatch !== "function") {
     throw new TypeError("createChapterRuntimeService requires a compatible game store.");
@@ -23,6 +23,9 @@ export function createChapterRuntimeService({
   }
   if (!economyService || typeof economyService.claimReward !== "function") {
     throw new TypeError("createChapterRuntimeService requires the economy reward service.");
+  }
+  if (wardrobeService !== null && typeof wardrobeService.unlockSource !== "function") {
+    throw new TypeError("wardrobeService must expose unlockSource() when supplied.");
   }
 
   for (const chapter of chapterCatalog.list()) {
@@ -134,12 +137,14 @@ export function createChapterRuntimeService({
           throw new Error("The chapter could not be marked complete.");
         }
         const rewardReceipts = chapter.majorRewardIds.map((rewardId) => economyService.claimReward(rewardId));
+        const wardrobeReceipt = wardrobeService?.unlockSource(chapterId) ?? null;
         completionReceipt = freezeSnapshot({
           chapterId,
           completed: true,
           completedActivityCount: activityResults.filter((entry) => entry.status === "completed").length,
           skippedActivityCount: activityResults.filter((entry) => entry.status === "skipped").length,
-          rewards: rewardReceipts
+          rewards: rewardReceipts,
+          wardrobe: wardrobeReceipt
         });
         activeSession = null;
       }
