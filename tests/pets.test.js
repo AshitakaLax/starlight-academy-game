@@ -101,3 +101,121 @@ test("invalid pet IDs, unlock payloads, and palette choices are rejected", () =>
   assert.throws(() => store.dispatch({ type: "pets/pet-unlocked", payload: { petId: "pet.phoenix", sourceId: "" } }), /non-empty sourceId/);
   assert.throws(() => service.setAppearancePalette("pet.pegasus", "not-a-palette"), /not registered/);
 });
+
+
+test("treat feeding, sparkle grooming, and ribbon play increase separate care tracks and bond", () => {
+  const { service } = harness();
+  const feeding = service.performCare("pet.pegasus", "feeding");
+  const grooming = service.performCare("pet.pegasus", "grooming");
+  const play = service.performCare("pet.pegasus", "play");
+  const pet = service.getPet("pet.pegasus");
+  assert.equal(feeding.progressAfter, 25);
+  assert.equal(grooming.progressAfter, 25);
+  assert.equal(play.progressAfter, 25);
+  assert.deepEqual(pet.careProgress, { feeding: 25, grooming: 25, play: 25 });
+  assert.equal(pet.bondExperience, 15);
+  assert.equal(pet.careMoments, 3);
+});
+
+test("care is optional and the unlocked pet can receive any care activity repeatedly", () => {
+  const { service } = harness();
+  const untouched = service.getPet("pet.pegasus");
+  assert.equal(untouched.bondExperience, 0);
+  assert.equal(untouched.careMoments, 0);
+  for (let count = 0; count < 2; count += 1) {
+    service.performCare("pet.pegasus", "feeding");
+    service.performCare("pet.pegasus", "grooming");
+    service.performCare("pet.pegasus", "play");
+  }
+  assert.equal(service.getPet("pet.pegasus").bondExperience, 30);
+  assert.equal(service.getPet("pet.pegasus").careMoments, 6);
+});
+
+test("a full care meter never blocks another care moment or bond growth", () => {
+  const { service } = harness();
+  for (let count = 0; count < 4; count += 1) {
+    service.performCare("pet.pegasus", "feeding");
+  }
+  const fullBefore = service.getPet("pet.pegasus");
+  assert.equal(fullBefore.careProgress.feeding, 100);
+  assert.equal(fullBefore.bondExperience, 20);
+  const repeated = service.performCare("pet.pegasus", "feeding");
+  assert.equal(repeated.performed, true);
+  assert.equal(repeated.meterFull, true);
+  assert.equal(repeated.progressIncreased, false);
+  assert.equal(repeated.progressAfter, 100);
+  assert.equal(repeated.bondExperienceGained, 5);
+  assert.equal(repeated.careMoments, 5);
+  const fullAfter = service.getPet("pet.pegasus");
+  assert.equal(fullAfter.careProgress.feeding, 100);
+  assert.equal(fullAfter.bondExperience, 25);
+});
+
+test("care progress and bond are independent for every unlocked pet", () => {
+  const { service } = harness();
+  service.unlockPet("pet.phoenix", "chapter-02");
+  service.performCare("pet.pegasus", "feeding");
+  service.performCare("pet.phoenix", "play");
+  service.selectActivePet("pet.phoenix");
+  const snapshot = service.getSnapshot();
+  const pegasus = snapshot.pets.find((pet) => pet.id === "pet.pegasus");
+  const phoenix = snapshot.pets.find((pet) => pet.id === "pet.phoenix");
+  assert.deepEqual(pegasus.careProgress, { feeding: 25, grooming: 0, play: 0 });
+  assert.deepEqual(phoenix.careProgress, { feeding: 0, grooming: 0, play: 25 });
+  assert.equal(pegasus.bondExperience, 5);
+  assert.equal(phoenix.bondExperience, 5);
+  assert.equal(pegasus.careMoments, 1);
+  assert.equal(phoenix.careMoments, 1);
+});
+
+test("locked pets and unregistered care types cannot receive care or supply their own reward amounts", () => {
+  const { store, service } = harness();
+  assert.throws(() => service.performCare("pet.phoenix", "feeding"), /locked companion/);
+  assert.throws(() => service.performCare("pet.pegasus", "training"), /registered petId and careType/);
+  assert.throws(() => store.dispatch({
+    type: "pets/care-performed",
+    payload: { petId: "pet.pegasus", careType: "feeding", progressDelta: 100, bondExperience: 1000 }
+  }), /registered petId and careType/);
+});
+
+test("care meters are bounded and malformed saved counters are safely normalized", () => {
+  const { catalog } = harness();
+  const normalized = selectPetCollection({
+    petCollection: {
+      activePetId: "pet.pegasus",
+      pets: {
+        "pet.pegasus": {
+          unlocked: true,
+          bondExperience: -4,
+          careMoments: Number.MAX_SAFE_INTEGER + 1,
+          careProgress: { feeding: 10000, grooming: -5, play: 4 }
+        }
+      }
+    }
+  }, catalog);
+  assert.equal(normalized.pets["pet.pegasus"].careProgress.feeding, 100);
+  assert.equal(normalized.pets["pet.pegasus"].careProgress.grooming, 0);
+  assert.equal(normalized.pets["pet.pegasus"].careProgress.play, 4);
+  assert.equal(normalized.pets["pet.pegasus"].bondExperience, 0);
+  assert.equal(normalized.pets["pet.pegasus"].careMoments, 0);
+});
+
+test("care moments, meters, and bond survive save serialization and active-pet switching", () => {
+  const original = harness();
+  original.service.unlockPet("pet.phoenix", "chapter-02");
+  original.service.performCare("pet.pegasus", "grooming");
+  original.service.performCare("pet.phoenix", "play");
+  original.service.selectActivePet("pet.phoenix");
+  const saved = JSON.parse(JSON.stringify(original.store.getState()));
+  const restored = harness(saved);
+  const snapshot = restored.service.getSnapshot();
+  const pegasus = snapshot.pets.find((pet) => pet.id === "pet.pegasus");
+  const phoenix = snapshot.pets.find((pet) => pet.id === "pet.phoenix");
+  assert.equal(snapshot.activePetId, "pet.phoenix");
+  assert.equal(pegasus.careProgress.grooming, 25);
+  assert.equal(pegasus.bondExperience, 5);
+  assert.equal(pegasus.careMoments, 1);
+  assert.equal(phoenix.careProgress.play, 25);
+  assert.equal(phoenix.bondExperience, 5);
+  assert.equal(phoenix.careMoments, 1);
+});
