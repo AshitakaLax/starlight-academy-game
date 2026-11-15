@@ -2,6 +2,7 @@ import { selectUiPreferences } from "./uiPreferences.js";
 import { selectAudioSettings } from "../systems/audio/audioSettings.js";
 import { selectNarrationSettings } from "../systems/narration/narrationSettings.js";
 import { selectEconomy } from "../systems/economy/economyState.js";
+import { createAcademyScene } from "../rendering/scenes/createAcademyScene.js";
 import { renderColoringCanvas } from "../gameplay/coloring/renderColoringCanvas.js";
 import { createAcademyScene } from "../rendering/scenes/createAcademyScene.js";
 
@@ -90,6 +91,11 @@ const MARKUP = String.raw`<div class="academy-shell" data-text-scale="normal" da
           <button class="path-card path-pets" type="button" data-game-action="hub/dock-selected" data-game-payload='{"dockId":"pets"}'><span class="path-card-icon" aria-hidden="true">♡</span><span class="path-card-title">Magical companions</span><span class="path-card-note">Three friends to meet</span><span class="path-card-arrow" aria-hidden="true">↗</span></button>
           <button class="path-card path-wardrobe" type="button" data-game-action="hub/dock-selected" data-game-payload='{"dockId":"wardrobe"}'><span class="path-card-icon" aria-hidden="true">❀</span><span class="path-card-title">Creative wardrobe</span><span class="path-card-note">Style &amp; imagination</span><span class="path-card-arrow" aria-hidden="true">↗</span></button>
         </div>
+      </section>
+      <section class="pet-collection-panel" data-pet-collection-panel hidden aria-labelledby="pet-collection-title">
+        <div class="wardrobe-panel-heading"><div><p class="academy-overline">MAGICAL COMPANIONS</p><h2 id="pet-collection-title">Your Pet Collection</h2><p>Every companion keeps its own appearance and friendship progress. Choose who joins you today.</p></div><span class="wardrobe-heading-star" aria-hidden="true">♡</span></div>
+        <div class="pet-collection-grid" data-pet-collection-grid></div>
+        <p class="wardrobe-status" data-pet-collection-status role="status" aria-live="polite">Your Pegasus is ready to explore with you.</p>
       </section>
       <section class="wardrobe-panel" data-wardrobe-panel hidden aria-labelledby="wardrobe-panel-title">
         <div class="wardrobe-panel-heading">
@@ -305,6 +311,9 @@ export function createAcademyShell({
     hero: requireElement(root, ".academy-hero"),
     quickPaths: requireElement(root, ".quick-paths"),
     wardrobePanel: requireElement(root, "[data-wardrobe-panel]"),
+    petCollectionPanel: requireElement(root, "[data-pet-collection-panel]"),
+    petCollectionGrid: requireElement(root, "[data-pet-collection-grid]"),
+    petCollectionStatus: requireElement(root, "[data-pet-collection-status]"),
     wardrobeEquipped: requireElement(root, "[data-wardrobe-equipped]"),
     wardrobeInventory: requireElement(root, "[data-wardrobe-inventory]"),
     wardrobeStatus: requireElement(root, "[data-wardrobe-status]"),
@@ -316,6 +325,9 @@ export function createAcademyShell({
     coloringResetConfirm: requireElement(root, "[data-coloring-reset-confirm]"),
     coloringStatus: requireElement(root, "[data-coloring-status]")
   };
+  if (petCollectionService !== null && typeof petCollectionService.getSnapshot !== "function") {
+    throw new TypeError("petCollectionService must expose getSnapshot().");
+  }
   if (wardrobeService !== null
       && (typeof wardrobeService.getPreview !== "function"
         || typeof wardrobeService.purchaseItem !== "function"
@@ -386,6 +398,79 @@ export function createAcademyShell({
     }
     narrationVoiceSelect.replaceChildren(...options);
     narrationVoiceSelect.value = settings.voiceURI;
+  }
+
+  function renderPetCollection(statusMessage = null) {
+    if (!petCollectionService) {
+      panel.petCollectionGrid.replaceChildren();
+      panel.petCollectionStatus.textContent = "Pet collection is not connected.";
+      return;
+    }
+    const snapshot = petCollectionService.getSnapshot();
+    const fragment = documentRef.createDocumentFragment();
+    for (const pet of snapshot.pets) {
+      const card = documentRef.createElement("article");
+      card.className = "pet-collection-card";
+      card.dataset.petState = pet.unlocked ? (pet.active ? "active" : "unlocked") : "locked";
+      const symbol = documentRef.createElement("span");
+      symbol.className = "pet-collection-symbol";
+      symbol.textContent = pet.symbol;
+      symbol.setAttribute("aria-hidden", "true");
+      const title = documentRef.createElement("h3");
+      title.textContent = pet.title;
+      const description = documentRef.createElement("p");
+      description.textContent = pet.description;
+      const appearance = documentRef.createElement("p");
+      const palette = pet.appearancePalettes.find((entry) => entry.id === pet.appearance.paletteId);
+      appearance.className = "pet-collection-detail";
+      appearance.textContent = pet.unlocked ? "Look: " + (palette?.label ?? "Classic") : "A new friend to discover";
+      card.append(symbol, title, description, appearance);
+      const action = documentRef.createElement("button");
+      action.type = "button";
+      action.className = pet.active ? "wardrobe-secondary-action" : "wardrobe-primary-action";
+      action.disabled = !pet.unlocked || pet.active;
+      action.dataset.petAction = "select";
+      action.dataset.petId = pet.id;
+      action.textContent = pet.active ? "Exploring with you" : pet.unlocked ? "Choose companion" : "Locked";
+      card.append(action);
+      if (pet.unlocked) {
+        const label = documentRef.createElement("label");
+        label.className = "pet-appearance-choice";
+        label.textContent = "Appearance";
+        const select = documentRef.createElement("select");
+        select.dataset.petAction = "appearance";
+        select.dataset.petId = pet.id;
+        for (const optionData of pet.appearancePalettes) {
+          const option = documentRef.createElement("option");
+          option.value = optionData.id;
+          option.textContent = optionData.label;
+          select.append(option);
+        }
+        select.value = pet.appearance.paletteId;
+        label.append(select);
+        card.append(label);
+      }
+      fragment.append(card);
+    }
+    panel.petCollectionGrid.replaceChildren(fragment);
+    panel.petCollectionStatus.textContent = statusMessage ?? ("Your active companion is " + (snapshot.activePet?.title ?? "ready") + ". Every pet's progress is saved separately.");
+  }
+
+  function handlePetAction(event) {
+    const control = event.target?.closest?.("[data-pet-action]");
+    if (!control || !root.contains(control) || !petCollectionService) return false;
+    try {
+      if (control.dataset.petAction === "select") {
+        petCollectionService.selectActivePet(control.dataset.petId);
+        renderPetCollection("Your companion is ready for an adventure!");
+      } else if (control.dataset.petAction === "appearance") {
+        petCollectionService.setAppearancePalette(control.dataset.petId, control.value);
+        renderPetCollection("A fresh look! Your companion's appearance has been saved.");
+      }
+    } catch (error) {
+      renderPetCollection(error?.message || "That companion could not be selected.");
+    }
+    return true;
   }
 
   function renderWardrobe(statusMessage = null) {
@@ -702,6 +787,9 @@ export function createAcademyShell({
     panel.heroTitle.textContent = destination.heroTitle;
     panel.heroDescription.textContent = destination.heroDescription;
     panel.heroButton.textContent = destination.button;
+    const petsMode = dockId === "pets";
+    panel.petCollectionPanel.hidden = !petsMode;
+    if (petsMode) renderPetCollection();
     const wardrobeMode = dockId === "wardrobe";
     if (!wardrobeMode) coloringOpen = false;
     const coloringMode = wardrobeMode && coloringOpen;
@@ -776,6 +864,7 @@ export function createAcademyShell({
 
   function handleClick(event) {
     if (handleColoringAction(event)) return;
+    if (handlePetAction(event)) return;
     if (handleWardrobeAction(event)) return;
     const actionElement = event.target?.closest?.("[data-ui-action]");
     if (!actionElement || !root.contains(actionElement)) return;
