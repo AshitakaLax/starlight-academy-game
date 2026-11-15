@@ -505,14 +505,12 @@ export function createAcademyShell({
 
   function handlePetAction(event) {
     const control = event.target?.closest?.("[data-pet-action]");
-    if (!control || !root.contains(control) || !petCollectionService) return false;
+    if (!control || !root.contains(control) || !petCollectionService
+        || control.dataset.petAction === "appearance") return false;
     try {
       if (control.dataset.petAction === "select") {
         petCollectionService.selectActivePet(control.dataset.petId);
         renderPetCollection("Your companion is ready for an adventure!");
-      } else if (control.dataset.petAction === "appearance") {
-        petCollectionService.setAppearancePalette(control.dataset.petId, control.value);
-        renderPetCollection("A fresh look! Your companion's appearance has been saved.");
       } else if (control.dataset.petAction === "care") {
         const result = petCollectionService.performCare(control.dataset.petId, control.dataset.careType);
         const pet = petCollectionService.getPet(control.dataset.petId);
@@ -858,8 +856,8 @@ export function createAcademyShell({
     const wardrobeMode = dockId === "wardrobe";
     if (!wardrobeMode) coloringOpen = false;
     const coloringMode = wardrobeMode && coloringOpen;
-    panel.hero.hidden = wardrobeMode;
-    panel.quickPaths.hidden = wardrobeMode;
+    panel.hero.hidden = wardrobeMode || petsMode;
+    panel.quickPaths.hidden = wardrobeMode || petsMode;
     panel.wardrobePanel.hidden = !wardrobeMode || coloringMode;
     panel.coloringPanel.hidden = !coloringMode;
     if (coloringMode) renderColoring();
