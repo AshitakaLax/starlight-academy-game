@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Starlight Academy: Studio of Magic & Motion</title>
+  <link rel="stylesheet" href="./ui/styles/base.css" />
+</head>
+<body>
+  <div id="app" class="app-root"></div>
+  <script type="module">
+    import { bootstrap } from "./app/bootstrap.js";
+    bootstrap("#app").catch((e) => {
+      console.error(e);
+      document.body.innerHTML = "<pre>" + e.stack + "</pre>";
+    });
+  </script>
+</body>
+</html>
