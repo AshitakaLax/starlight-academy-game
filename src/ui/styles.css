@@ -436,3 +436,88 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   .chapter-path-list { grid-template-columns: 1fr; }
   .chapter-session-actions { display: grid; }
 }
+
+
+/* Chapter 1 vertical-slice activity surfaces */
+.chapter-activity-body {
+  display: grid;
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+.chapter-story-scene,
+.chapter-question-card,
+.chapter-hint-card {
+  border: 1px solid rgba(139, 115, 164, .2);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .72);
+  padding: clamp(1rem, 2vw, 1.5rem);
+}
+.chapter-story-scene {
+  color: var(--ink, #41374f);
+  line-height: 1.7;
+}
+.chapter-story-scene p + p { margin-top: .8rem; }
+.chapter-question-card {
+  display: grid;
+  gap: .9rem;
+}
+.chapter-question-kicker,
+.chapter-question-card > p:first-child {
+  margin: 0;
+  color: var(--muted-ink, #776b82);
+  font-size: .82rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.chapter-question-prompt {
+  margin: 0;
+  font-size: clamp(1.25rem, 2.2vw, 1.8rem);
+  line-height: 1.35;
+}
+.chapter-answer-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .65rem;
+}
+.chapter-answer-choice {
+  min-height: 3.25rem;
+  border: 1px solid rgba(122, 94, 151, .35);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--ink, #41374f);
+  font: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.chapter-answer-choice:hover { background: #f5eefb; }
+.chapter-answer-choice:focus-visible,
+.chapter-question-tools button:focus-visible,
+.chapter-story-scene button:focus-visible {
+  outline: 3px solid #8463a8;
+  outline-offset: 3px;
+}
+.chapter-question-feedback {
+  margin: 0;
+  color: var(--muted-ink, #776b82);
+  line-height: 1.5;
+}
+.chapter-question-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem;
+}
+.chapter-hint-card {
+  background: #f8f3ff;
+  border-color: rgba(132, 99, 168, .28);
+  line-height: 1.6;
+}
+.chapter-hint-card h5,
+.chapter-hint-card h6 { margin: 0 0 .45rem; }
+.chapter-hint-card p { margin: .45rem 0; }
+.chapter-hint-card ol { margin: .5rem 0 .5rem 1.2rem; padding: 0; }
+.chapter-hint-card li + li { margin-top: .45rem; }
+@media (max-width: 620px) {
+  .chapter-answer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
