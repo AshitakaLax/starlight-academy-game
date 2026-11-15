@@ -1,24 +1,17 @@
 import { isPlainObject } from "../../core/state/stateUtils.js";
-import { selectPetCollection } from "./petCollectionState.js";
-import { CARE_TRACKS } from "./petCollectionState.js";
+import { CARE_TRACKS, selectPetCollection } from "./petCollectionState.js";
 import { gameConfig } from "../../config/gameConfig.js";
 
 function hasOnlyKeys(value, keys) {
   return Object.keys(value).every((key) => keys.includes(key));
 }
 
-export function createPetActionDefinitions({ petCatalog, careConfig = gameConfig.petCare } = {}) {
+export function createPetActionDefinitions({ petCatalog } = {}) {
   if (!petCatalog || typeof petCatalog.has !== "function" || typeof petCatalog.get !== "function"
       || typeof petCatalog.list !== "function") {
     throw new TypeError("createPetActionDefinitions requires a pet catalog.");
   }
-  if (!careConfig || !Number.isInteger(careConfig.progressPerInteraction)
-      || careConfig.progressPerInteraction < 1 || careConfig.progressPerInteraction > 100
-      || !Number.isInteger(careConfig.progressMaximum) || careConfig.progressMaximum < 1
-      || careConfig.progressMaximum > 1000 || !Number.isInteger(careConfig.bondExperiencePerInteraction)
-      || careConfig.bondExperiencePerInteraction < 1 || careConfig.bondExperiencePerInteraction > 1000) {
-    throw new TypeError("Pet care configuration contains unsupported progression values.");
-  }
+  const careConfig = gameConfig.petCare;
 
   return Object.freeze({
     "pets/pet-unlocked": Object.freeze({
