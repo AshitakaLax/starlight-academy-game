@@ -1,4 +1,6 @@
 import { createGameApp } from "./app/createGameApp.js";
+import { createGameStore } from "./core/state/createGameStore.js";
+import { selectCurrentScreen } from "./core/state/selectors.js";
 import { gameConfig } from "./config/gameConfig.js";
 import { chapterDefinitions } from "./chapters/registry.js";
 import { sideQuestDefinitions } from "./side-quests/registry.js";
@@ -9,6 +11,12 @@ import releaseManifest from "./data/release-manifest.json";
 async function launch() {
   const root = document.getElementById("app");
   if (!root) throw new Error("Missing #app root element.");
+
+  const store = createGameStore();
+  const screenScope = store.createScope("launch-screen");
+  screenScope.subscribeSelector(selectCurrentScreen, (screenId) => {
+    root.dataset.screenId = screenId ?? "";
+  }, { emitCurrent: true });
 
   const app = createGameApp();
   await app.start();
@@ -48,6 +56,8 @@ async function launch() {
   document.documentElement.dataset.appStatus = app.status;
 
   window.addEventListener("pagehide", () => {
+    screenScope.dispose();
+    store.destroy();
     void app.stop();
   }, { once: true });
 }
