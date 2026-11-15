@@ -1,3 +1,5 @@
+import { cloneSerializable, deepFreeze } from "../state/stateUtils.js";
+
 const ACTION_TYPE_PATTERN = /^[a-z][a-z0-9-]*(?:\/[a-z][a-z0-9-]*)+$/;
 const DOCK_IDS = Object.freeze(["chapters", "gymnastics", "pets", "wardrobe", "quests"]);
 
@@ -10,6 +12,7 @@ function isPlainObject(value) {
 function normalizeKey(key) {
   if (key === " ") return "Space";
   if (key === "Esc") return "Escape";
+  if (typeof key === "string" && /^[A-Z]$/.test(key)) return key.toLowerCase();
   return key;
 }
 
@@ -22,9 +25,12 @@ function normalizeBinding(binding, contextId, key) {
       || (result.preventDefault !== undefined && typeof result.preventDefault !== "boolean")) {
     throw new TypeError('Invalid binding for key "' + key + '" in context "' + contextId + '".');
   }
+  const payload = result.payload === undefined
+    ? undefined
+    : deepFreeze(cloneSerializable(result.payload, "inputBinding.payload"));
   return Object.freeze({
     type: result.type,
-    ...(result.payload === undefined ? {} : { payload: Object.freeze({ ...result.payload }) }),
+    ...(payload === undefined ? {} : { payload }),
     preventDefault: result.preventDefault !== false
   });
 }
@@ -104,7 +110,14 @@ export function createInputRouter({
       return false;
     }
 
-    if (context.enabledWhen && context.enabledWhen(state) !== true) return false;
+    if (context.enabledWhen) {
+      try {
+        if (context.enabledWhen(state) !== true) return false;
+      } catch (error) {
+        reportError(error, "context:" + context.id);
+        return false;
+      }
+    }
     return true;
   }
 
