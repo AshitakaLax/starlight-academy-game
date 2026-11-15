@@ -112,6 +112,7 @@ test("invalid states and malformed save envelopes are rejected before writing", 
   ]) {
     assert.throws(() => manager.previewImport(serialized));
   }
+  assert.equal(manager.getStatus().state, "import-error");
   assert.equal(storage.getItem("starlight-academy.save"), null);
 });
 
@@ -180,6 +181,7 @@ test("import preview does not overwrite; existing saves require explicit confirm
   assert.equal(preview.replacesExistingSave, true);
   assert.deepEqual(preview.state, incoming);
   assert.throws(() => manager.import(envelope(incoming)), /confirm replacement/);
+  assert.equal(manager.getStatus().state, "confirmation-required");
   assert.equal(storage.getItem("starlight-academy.save"), oldSerialized);
 
   const imported = manager.import(envelope(incoming), { confirmReplace: true });
