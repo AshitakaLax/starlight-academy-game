@@ -415,7 +415,8 @@ test("curriculum evidence action rejects unknown skills, unsupported tiers, and 
     { ...base, correct: "yes" },
     { ...base, hintLevel: 4 },
     { ...base, attempts: 0 },
-    { ...base, activityId: "bad id" }
+    { ...base, activityId: "bad id" },
+    { ...base, responseTimeMs: 2300 }
   ]) {
     assert.throws(() => store.dispatch({ type: "curriculum/evidence-recorded", payload }));
   }
