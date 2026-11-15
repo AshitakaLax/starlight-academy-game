@@ -222,3 +222,72 @@ export interface AdaptiveTierDecision {
   readonly independentCorrect: number;
   readonly windowSize: number;
 }
+
+
+export type RewardReplayPolicy =
+  | { readonly type: "once" }
+  | { readonly type: "capped"; readonly maxClaims: number };
+
+export interface RewardDefinition {
+  readonly id: string;
+  readonly sourceId: string;
+  readonly title: string;
+  readonly starGems: number;
+  readonly starlightSparkles: number;
+  readonly replayPolicy: RewardReplayPolicy;
+}
+
+export interface ShopItemDefinition {
+  readonly id: string;
+  readonly title: string;
+  readonly priceStarGems: number;
+  readonly maxOwned: number;
+}
+
+export interface EconomyTransaction {
+  readonly sequence: number;
+  readonly type: "reward" | "purchase";
+  readonly referenceId: string;
+  readonly sourceId: string | null;
+  readonly starGemsDelta: number;
+  readonly starlightSparklesDelta: number;
+  readonly starGemsBalance: number;
+  readonly starlightSparklesBalance: number;
+}
+
+export interface EconomyState {
+  readonly starGems: number;
+  readonly starlightSparkles: number;
+  readonly rewardClaims: Readonly<Record<string, number>>;
+  readonly ownedItems: Readonly<Record<string, number>>;
+  readonly transactions: readonly EconomyTransaction[];
+  readonly nextTransactionSequence: number;
+}
+
+export interface EconomyBalance {
+  readonly starGems: number;
+  readonly starlightSparkles: number;
+}
+
+export interface EconomyService {
+  claimReward(rewardId: string): Readonly<{
+    granted: boolean;
+    reason: string;
+    rewardId: string;
+    claimCount?: number;
+    maximumClaims?: number;
+    transaction?: EconomyTransaction | null;
+    balance: EconomyBalance;
+  }>;
+  purchaseItem(itemId: string): Readonly<{
+    purchased: boolean;
+    reason: string;
+    itemId: string;
+    ownedCount?: number;
+    priceStarGems?: number;
+    transaction?: EconomyTransaction | null;
+    balance: EconomyBalance;
+  }>;
+  canPurchase(itemId: string): Readonly<{ allowed: boolean; reason: string }>;
+  getBalance(): EconomyBalance;
+}
