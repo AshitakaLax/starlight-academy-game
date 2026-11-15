@@ -15,6 +15,8 @@ export { createAcademyScene } from "./rendering/scenes/createAcademyScene.js";
 export { createAudioEngine } from "./systems/audio/createAudioEngine.js";
 export { createAudioService } from "./systems/audio/createAudioService.js";
 export { DEFAULT_AUDIO_SETTINGS, selectAudioSettings } from "./systems/audio/audioSettings.js";
+export { createNarrationService } from "./systems/narration/createNarrationService.js";
+export { DEFAULT_NARRATION_SETTINGS, selectNarrationSettings } from "./systems/narration/narrationSettings.js";
 export { gameConfig } from "./config/gameConfig.js";
 export { chapterDefinitions, getChapterDefinition } from "./chapters/registry.js";
 export { sideQuestDefinitions, getSideQuestDefinition } from "./side-quests/registry.js";
