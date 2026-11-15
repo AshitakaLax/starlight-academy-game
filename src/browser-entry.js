@@ -1,7 +1,9 @@
 import { createGameApp } from "./app/createGameApp.js";
 import { createGameStore } from "./core/state/createGameStore.js";
-import { selectCurrentScreen } from "./core/state/selectors.js";
+import { createSaveManager, getBrowserStorage } from "./core/save/createSaveManager.js";
+import { createSaveService } from "./core/save/createSaveService.js";
 import { gameConfig } from "./config/gameConfig.js";
+import { selectCurrentScreen } from "./core/state/selectors.js";
 import { chapterDefinitions } from "./chapters/registry.js";
 import { sideQuestDefinitions } from "./side-quests/registry.js";
 import academyEmblem from "./assets/academy-emblem.svg";
@@ -12,13 +14,41 @@ async function launch() {
   const root = document.getElementById("app");
   if (!root) throw new Error("Missing #app root element.");
 
+  const saveHealth = document.createElement("p");
+  saveHealth.className = "academy-save-status";
+  saveHealth.setAttribute("role", "status");
+  saveHealth.setAttribute("aria-live", "polite");
+  saveHealth.textContent = "Checking saved progress…";
+
   const store = createGameStore();
   const screenScope = store.createScope("launch-screen");
   screenScope.subscribeSelector(selectCurrentScreen, (screenId) => {
     root.dataset.screenId = screenId ?? "";
   }, { emitCurrent: true });
 
-  const app = createGameApp();
+  const saveManager = createSaveManager({
+    storage: getBrowserStorage(),
+    storageKey: gameConfig.persistence.storageKey,
+    schemaVersion: gameConfig.persistence.schemaVersion,
+    autosaveDelayMs: gameConfig.persistence.autosaveDelayMs,
+    maxImportBytes: gameConfig.persistence.maxImportBytes,
+    onStatus(status) {
+      saveHealth.textContent = status.message;
+      saveHealth.dataset.status = status.state;
+      root.dataset.saveStatus = status.state;
+    }
+  });
+  const saveService = createSaveService({
+    store,
+    saveManager,
+    onError(error, context) {
+      console.error("Starlight Academy save operation failed (" + context + ").", error);
+      saveHealth.textContent = "Progress could not be saved. You can keep playing, but export a backup when available.";
+      saveHealth.dataset.status = "error";
+    }
+  });
+
+  const app = createGameApp({ services: [saveService] });
   await app.start();
 
   const card = document.createElement("section");
@@ -51,7 +81,7 @@ async function launch() {
     + " chapters and " + sideQuestDefinitions.length
     + " side quests currently authored. More gameplay is added in the next implementation steps.";
 
-  card.append(emblem, title, subtitle, status, release, foundation);
+  card.append(emblem, title, subtitle, status, release, foundation, saveHealth);
   root.replaceChildren(card);
   document.documentElement.dataset.appStatus = app.status;
 
