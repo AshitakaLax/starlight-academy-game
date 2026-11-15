@@ -218,7 +218,9 @@ export function createInputRouter({
     if (typeof root.contains === "function" && !root.contains(actionElement)) return;
 
     const requiredContext = actionElement.getAttribute?.("data-game-context");
+    const overlayIsOpen = getActiveOverlayId() !== null;
     if (requiredContext && !getContext(requiredContext)) return;
+    if (overlayIsOpen && !requiredContext) return;
 
     const type = actionElement.getAttribute?.("data-game-action");
     if (typeof type !== "string" || !ACTION_TYPE_PATTERN.test(type)) {
