@@ -2,6 +2,8 @@ import { createGameApp } from "./app/createGameApp.js";
 import { createGameStore } from "./core/state/createGameStore.js";
 import { createSaveManager, getBrowserStorage } from "./core/save/createSaveManager.js";
 import { createSaveService } from "./core/save/createSaveService.js";
+import { createInputRouter } from "./core/input/createInputRouter.js";
+import { registerStandardInputContexts } from "./core/input/standardContexts.js";
 import { gameConfig } from "./config/gameConfig.js";
 import { selectCurrentScreen } from "./core/state/selectors.js";
 import { chapterDefinitions } from "./chapters/registry.js";
@@ -25,6 +27,11 @@ async function launch() {
   appScope.subscribeSelector(selectCurrentScreen, (screenId) => {
     root.dataset.screenId = screenId ?? "";
   }, { emitCurrent: true });
+  appScope.subscribeSelector(
+    (state) => state.app?.activeDockId ?? null,
+    (dockId) => { root.dataset.activeDockId = dockId ?? ""; },
+    { emitCurrent: true }
+  );
 
   const saveManager = createSaveManager({
     storage: getBrowserStorage(),
@@ -48,7 +55,26 @@ async function launch() {
     }
   });
 
-  const app = createGameApp({ services: [saveService] });
+  const inputRouter = createInputRouter({
+    store,
+    target: window,
+    documentRef: document,
+    root,
+    onError(error, context) {
+      console.error("Starlight Academy input was not accepted (" + context + ").", error);
+    }
+  });
+  const unregisterInputContexts = registerStandardInputContexts(inputRouter);
+  const inputService = {
+    name: "input",
+    start() { inputRouter.start(); },
+    stop() {
+      inputRouter.stop();
+      unregisterInputContexts();
+    }
+  };
+
+  const app = createGameApp({ services: [saveService, inputService] });
   await app.start();
 
   const card = document.createElement("section");
