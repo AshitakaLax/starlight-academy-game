@@ -10,6 +10,7 @@ This repository is a modular JavaScript ES-module source project. The player-fac
 - [x] STEP-04 — Versioned save manager, autosave/checkpoints, JSON backup/restore, migrations, and recovery status (npm check/test/build confirmed passing by user)
 - [x] STEP-05 — Context-aware keyboard shortcuts and delegated mouse-action routing (user confirmed npm check/test/build pass)
 - [~] STEP-06 — Responsive academy hub, accessible settings, text scaling, reduced motion, and save backup controls implemented; verification pending
+- [~] STEP-07 — Layered canvas renderer, student and Pegasus scene, high-DPI resize, visibility lifecycle, reduced motion, and masked offscreen texture utility implemented; verification pending
 
 The current HTML includes the academy hub visual shell, five navigation destinations, accessible settings, text scaling, reduced motion, and local save backup controls. Chapter activities, gymnastics routines, pet interactions, wardrobe customization, and other playable systems are added in later ledger steps; the shell is not yet the completed game.
 
@@ -41,7 +42,7 @@ build/
   build.mjs                Bundles and validates the offline HTML
   index.template.html      HTML shell with inline CSS/JS insertion points
 
-tests/                     Node built-in tests for foundation, state, save, input, UI preferences, and build
+tests/                     Node built-in tests for foundation, state, save, input, UI, rendering, and build
 dist/                       Generated, git-ignored HTML deliverable
 ~~~
 

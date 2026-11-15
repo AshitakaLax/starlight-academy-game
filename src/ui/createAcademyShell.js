@@ -1,4 +1,5 @@
 import { selectUiPreferences } from "./uiPreferences.js";
+import { createAcademyScene } from "../rendering/scenes/createAcademyScene.js";
 
 const DESTINATIONS = Object.freeze({
   chapters: Object.freeze({
@@ -75,7 +76,7 @@ const MARKUP = String.raw`<div class="academy-shell" data-text-scale="normal" da
         <div class="hero-copy"><p class="hero-overline"><span aria-hidden="true">✦</span> LET YOUR CURIOSITY SHINE</p><h2 id="hero-title" data-hero-title>Every great adventure begins with a little wonder.</h2><p data-hero-description>Your chapter path is taking shape. New discoveries and creative challenges are waiting.</p>
           <button class="primary-action" type="button" data-game-action="hub/dock-selected" data-game-payload='{"dockId":"chapters"}'><span data-hero-button>Explore the chapter path</span><span aria-hidden="true">↗</span></button>
         </div>
-        <div class="hero-art" aria-hidden="true"><div class="hero-moon"></div><span class="hero-star star-one">✦</span><span class="hero-star star-two">✧</span><span class="hero-star star-three">✦</span><span class="hero-star star-four">✧</span><div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div><div class="hero-crest" data-hero-crest></div><div class="hero-caption">DREAM • DISCOVER • SHINE</div></div>
+        <div class="hero-art" aria-hidden="true"><canvas class="academy-scene-canvas" data-academy-scene aria-hidden="true"></canvas><div class="hero-moon"></div><span class="hero-star star-one">✦</span><span class="hero-star star-two">✧</span><span class="hero-star star-three">✦</span><span class="hero-star star-four">✧</span><div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div><div class="hero-crest" data-hero-crest></div><div class="hero-caption">DREAM • DISCOVER • SHINE</div></div>
       </section>
       <section class="quick-paths" aria-labelledby="quick-paths-title">
         <div class="section-heading-row"><div><p class="academy-overline">CHOOSE YOUR NEXT STEP</p><h2 id="quick-paths-title">Explore the academy</h2></div><span aria-hidden="true">✧</span></div>
@@ -182,6 +183,7 @@ export function createAcademyShell({
     heroButton: requireElement(root, "[data-hero-button]")
   };
   const settingsTrigger = requireElement(root, ".settings-trigger");
+  const academyScene = createAcademyScene({ canvas: requireElement(root, "[data-academy-scene]"), documentRef, windowRef });
   let pendingImportText = null;
   let previousFocus = null;
   let lastOverlayId = store.getState()?.ui?.activeOverlayId ?? null;
@@ -210,6 +212,7 @@ export function createAcademyShell({
     if (documentRef.documentElement) documentRef.documentElement.dataset.textScale = preferences.textScale;
     const systemReducedMotion = windowRef?.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
     shell.dataset.reducedMotion = String(preferences.reducedMotion || systemReducedMotion);
+    academyScene.setReducedMotion(preferences.reducedMotion || systemReducedMotion);
     panel.kicker.textContent = destination.kicker;
     panel.title.textContent = destination.title;
     panel.description.textContent = destination.description;
@@ -231,6 +234,7 @@ export function createAcademyShell({
 
     const overlayId = state?.ui?.activeOverlayId ?? null;
     const settingsOpen = overlayId === "settings";
+    academyScene.setActive(state?.app?.screenId === "academy" && overlayId === null);
     const justOpened = settingsOpen && lastOverlayId !== "settings";
     const justClosed = !settingsOpen && lastOverlayId === "settings";
     settingsBackdrop.hidden = !settingsOpen;
@@ -341,11 +345,13 @@ export function createAcademyShell({
   importInput.addEventListener("change", handleFileChange);
   const unsubscribe = store.subscribe(render);
   render();
+  academyScene.start();
 
   return Object.freeze({
     dispose() {
       if (disposed) return;
       disposed = true;
+      academyScene.destroy();
       unsubscribe();
       root.removeEventListener("click", handleClick);
       root.removeEventListener("keydown", handleDialogKeydown);

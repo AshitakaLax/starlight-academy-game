@@ -9,6 +9,9 @@ export { createInitialGameState, coreActionDefinitions } from "./core/state/acti
 export { createSelector, selectActiveOverlayId, selectAtPath, selectCurrentScreen } from "./core/state/selectors.js";
 export { createAcademyShell } from "./ui/createAcademyShell.js";
 export { DEFAULT_UI_PREFERENCES, selectUiPreferences } from "./ui/uiPreferences.js";
+export { createCanvasRenderer } from "./rendering/canvas/createCanvasRenderer.js";
+export { createMaskedTexture } from "./rendering/canvas/createMaskedTexture.js";
+export { createAcademyScene } from "./rendering/scenes/createAcademyScene.js";
 export { gameConfig } from "./config/gameConfig.js";
 export { chapterDefinitions, getChapterDefinition } from "./chapters/registry.js";
 export { sideQuestDefinitions, getSideQuestDefinition } from "./side-quests/registry.js";
