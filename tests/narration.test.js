@@ -36,6 +36,27 @@ test("narration defaults off and older saves receive safe defaults", () => {
   assert.deepEqual(selectNarrationSettings({}), { enabled: false, voiceURI: "", rate: 1 });
 });
 
+test("narration settings action validates values and preserves omitted preferences", () => {
+  const store = createGameStore();
+  store.dispatch({ type: "narration/settings-updated", payload: { enabled: true } });
+  store.dispatch({ type: "narration/settings-updated", payload: { rate: 1.1, voiceURI: "voice-test" } });
+  assert.deepEqual(selectNarrationSettings(store.getState()), {
+    enabled: true, voiceURI: "voice-test", rate: 1.1
+  });
+  const current = store.getState();
+  assert.throws(() => store.dispatch({ type: "narration/settings-updated", payload: { rate: 1.3 } }), /0.8 to 1.2/);
+  assert.throws(() => store.dispatch({ type: "narration/settings-updated", payload: { enabled: "yes" } }), /boolean/);
+  assert.throws(() => store.dispatch({ type: "narration/settings-updated", payload: { voiceURI: 3 } }), /voiceURI/);
+  assert.throws(() => store.dispatch({ type: "narration/settings-updated", payload: { voiceName: "unknown" } }), /at least one/);
+  assert.equal(store.getState(), current);
+});
+
+test("narration service refuses to speak without a visible caption target", () => {
+  assert.throws(() => createNarrationService({
+    store: createGameStore(), speechSynthesis: new FakeSpeechSynthesis(), UtteranceCtor: FakeUtterance
+  }), /visible textElement/);
+});
+
 test("disabled narration keeps the requested instruction visible without speaking", () => {
   const speech = new FakeSpeechSynthesis();
   const caption = captionElement();
@@ -58,7 +79,7 @@ test("enabled narration uses a selected voice, respects rate and ducks music whi
   store.dispatch({ type: "narration/settings-updated", payload: { enabled: true, voiceURI: voice.voiceURI, rate: 1.15 } });
   const service = createNarrationService({
     store, speechSynthesis: speech, UtteranceCtor: FakeUtterance,
-    audioEngine: { setMusicDuck: (value) => duckLevels.push(value) }
+    audioEngine: { setMusicDuck: (value) => duckLevels.push(value) }, textElement: captionElement()
   });
   service.start();
   assert.equal(service.speak("Follow the sparkling path."), true);
@@ -104,7 +125,7 @@ test("missing voice names fall back to the browser default and never block narra
   const speech = new FakeSpeechSynthesis([]);
   const store = createGameStore();
   store.dispatch({ type: "narration/settings-updated", payload: { enabled: true, voiceURI: "not-installed" } });
-  const service = createNarrationService({ store, speechSynthesis: speech, UtteranceCtor: FakeUtterance });
+  const service = createNarrationService({ store, speechSynthesis: speech, UtteranceCtor: FakeUtterance, textElement: captionElement() });
   service.start();
   assert.equal(service.speak("You can still learn without a named voice."), true);
   assert.equal(speech.utterances[0].voice, null);
@@ -160,7 +181,7 @@ test("voiceschanged refreshes voice discovery and subscriptions are cleaned up",
   const second = { voiceURI: "voice-two", name: "Two", lang: "en" };
   const speech = new FakeSpeechSynthesis([first]);
   const service = createNarrationService({
-    store: createGameStore(), speechSynthesis: speech, UtteranceCtor: FakeUtterance
+    store: createGameStore(), speechSynthesis: speech, UtteranceCtor: FakeUtterance, textElement: captionElement()
   });
   const seen = [];
   const unsubscribe = service.subscribeVoices((voices) => seen.push(voices.map((voice) => voice.voiceURI).join(",")));
