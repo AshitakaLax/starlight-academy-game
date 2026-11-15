@@ -107,6 +107,12 @@ test("master, music, effects, and mute update their independent buses immediatel
   assert.equal(context.gains[1].gain.value, 0.3);
   engine.setSettings({ muted: false, masterVolume: 140 });
   assert.equal(context.gains[0].gain.value, 1);
+  engine.setMusicDuck(0.25);
+  assert.equal(context.gains[1].gain.value, 0.075);
+  engine.setSettings({ musicVolume: 40 });
+  assert.equal(context.gains[1].gain.value, 0.1);
+  engine.setMusicDuck(1);
+  assert.equal(context.gains[1].gain.value, 0.4);
   await engine.destroy();
 });
 
