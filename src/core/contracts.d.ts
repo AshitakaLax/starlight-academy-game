@@ -404,3 +404,58 @@ export interface ColoringService {
   restoreFromStore(): void;
   dispose(): void;
 }
+
+export interface PetAppearance {
+  readonly paletteId: string;
+}
+
+export interface PetCareProgress {
+  readonly feeding: number;
+  readonly grooming: number;
+  readonly play: number;
+}
+
+export interface PetProgress {
+  readonly unlocked: boolean;
+  readonly unlockSource: string | null;
+  readonly appearance: PetAppearance;
+  readonly bondExperience: number;
+  readonly careProgress: PetCareProgress;
+}
+
+export interface PetDefinition {
+  readonly id: string;
+  readonly species: string;
+  readonly title: string;
+  readonly description: string;
+  readonly symbol: string;
+  readonly order: number;
+  readonly starter: boolean;
+  readonly appearancePalettes: readonly Readonly<{
+    id: string;
+    label: string;
+    primaryColor: string;
+    secondaryColor: string;
+    accentColor: string;
+  }>[];
+  readonly defaultPaletteId: string;
+}
+
+export interface PetCollectionState {
+  readonly activePetId: string;
+  readonly pets: Readonly<Record<string, PetProgress>>;
+}
+
+export interface PetCollectionSnapshot {
+  readonly activePetId: string;
+  readonly activePet: Readonly<PetDefinition & PetProgress & { active: true; totalCareMoments: number }> | null;
+  readonly pets: readonly Readonly<PetDefinition & PetProgress & { active: boolean; totalCareMoments: number }>[];
+}
+
+export interface PetCollectionService {
+  getSnapshot(): PetCollectionSnapshot;
+  getPet(petId: string): (PetDefinition & PetProgress & { active: boolean }) | null;
+  unlockPet(petId: string, sourceId: string): Readonly<{ unlocked: boolean; changed: boolean; reason: string; petId: string; unlockSource: string | null }>;
+  selectActivePet(petId: string): Readonly<{ changed: boolean; activePetId: string; pet: unknown }>;
+  setAppearancePalette(petId: string, paletteId: string): Readonly<{ changed: boolean; pet: unknown }>;
+}
