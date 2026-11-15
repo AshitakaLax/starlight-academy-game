@@ -1,6 +1,6 @@
 import { createGameApp } from "./app/createGameApp.js";
 import { createGameStore } from "./core/state/createGameStore.js";
-import { createInitialGameState } from "./core/state/actions.js";
+import { createInitialGameState, mergeGameStateDefaults } from "./core/state/actions.js";
 import { createInitialCurriculumProgress, curriculumActionDefinitions } from "./systems/curriculum/curriculumProgress.js";
 import { createSaveManager, getBrowserStorage } from "./core/save/createSaveManager.js";
 import { createSaveService } from "./core/save/createSaveService.js";
@@ -42,11 +42,12 @@ async function launch() {
   narrationStatus.setAttribute("aria-live", "polite");
   narrationStatus.textContent = "Narration is optional and turned off.";
 
+  const initialGameState = {
+    ...createInitialGameState(),
+    curriculum: createInitialCurriculumProgress()
+  };
   const store = createGameStore({
-    initialState: {
-      ...createInitialGameState(),
-      curriculum: createInitialCurriculumProgress()
-    },
+    initialState: initialGameState,
     actions: curriculumActionDefinitions
   });
   const saveManager = createSaveManager({
@@ -64,6 +65,7 @@ async function launch() {
   const saveService = createSaveService({
     store,
     saveManager,
+    normalizeRestoredState: (restored) => mergeGameStateDefaults(initialGameState, restored),
     onError(error, context) {
       console.error("Starlight Academy save operation failed (" + context + ").", error);
       saveHealth.textContent = "Progress could not be saved. You can keep playing, but export a backup when available.";
