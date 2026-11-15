@@ -113,15 +113,19 @@ export function createChapterRuntimeService({
         ...progress.activityResults.map((entry) => ({ ...entry })),
         { activityId: activity.id, status }
       ];
-      store.dispatch({
-        type: "chapters/checkpoint-saved",
-        payload: { chapterId, activityResults }
-      });
-      if (activityResults.length === chapter.activities.length) {
+      if (activityResults.length < chapter.activities.length) {
+        store.dispatch({
+          type: "chapters/checkpoint-saved",
+          payload: { chapterId, activityResults }
+        });
+      } else {
         store.dispatch({
           type: "chapters/chapter-completed",
           payload: { chapterId, activityResults }
         });
+        if (readProgress().status !== "completed") {
+          throw new Error("The chapter could not be marked complete.");
+        }
         const rewardReceipts = chapter.majorRewardIds.map((rewardId) => economyService.claimReward(rewardId));
         completionReceipt = freezeSnapshot({
           chapterId,
