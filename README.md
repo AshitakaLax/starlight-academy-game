@@ -41,7 +41,7 @@ build/
   build.mjs                Bundles and validates the offline HTML
   index.template.html      HTML shell with inline CSS/JS insertion points
 
-tests/                     Node built-in tests for foundation, state, save, input, and build
+tests/                     Node built-in tests for foundation, state, save, input, UI preferences, and build
 dist/                       Generated, git-ignored HTML deliverable
 ~~~
 
@@ -86,7 +86,7 @@ See src/core/input/README.md for context registration, action bindings and event
 - Save migrations are registered by source schema version and run before current-schema validation.
 - Export produces a portable JSON backup. Import preview does not write; replacing an existing save requires explicit confirmation.
 - A failed import or corrupt stored save never deletes or silently overwrites the existing data.
-- The source shell displays save-health status. Full import/export and recovery controls belong to STEP-06.
+- The academy shell displays save-health status and exposes JSON backup export plus validated import with explicit confirmation. Recovery diagnostics remain visible without silently overwriting existing progress.
 
 See src/core/save/README.md for the persistence API and migration rules.
 
