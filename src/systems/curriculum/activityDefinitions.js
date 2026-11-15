@@ -100,7 +100,7 @@ export function createActivityRegistry(initialDefinitions = []) {
   const definitions = new Map();
 
   function register(input) {
-    const definition = Object.isFrozen(input) ? input : createActivityDefinition(input);
+    const definition = createActivityDefinition(input);
     const validation = validateActivityDefinition(definition);
     if (validation !== true) throw new TypeError(validation);
     if (definitions.has(definition.id)) throw new Error("Activity already registered: " + definition.id);
