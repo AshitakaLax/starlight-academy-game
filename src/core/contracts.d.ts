@@ -508,3 +508,43 @@ export interface PetCareConfiguration {
 export interface PetAbilityConfiguration {
   readonly definitions: Readonly<Record<string, PetAbilityDefinition>>;
 }
+
+
+export interface GymnasticsPoint {
+  readonly x: number;
+  readonly y: number;
+}
+
+export interface GymnasticsRoutine {
+  readonly id: string;
+  readonly title: string;
+  readonly description: string;
+  readonly bpm: number;
+  readonly countInBeats: number;
+  readonly tracePath: readonly GymnasticsPoint[];
+  readonly beatCheckpoints: readonly number[];
+}
+
+export type GymnasticsRoutineStage = "preview" | "count-in" | "tracing" | "rhythm" | "completed";
+
+export interface GymnasticsRoutineResult {
+  readonly routineId: string;
+  readonly stage: GymnasticsRoutineStage;
+  readonly traceAccuracyScore: number | null;
+  readonly rhythmTimingScore: number | null;
+  readonly combinedScore: number | null;
+  readonly starRating: number | null;
+  readonly completed: boolean;
+}
+
+export interface GymnasticsRoutineRecord {
+  readonly completedRuns: number;
+  readonly personalBest: Readonly<{
+    traceAccuracyScore: number;
+    rhythmTimingScore: number;
+    combinedScore: number;
+    starRating: number;
+  }>;
+  readonly lastRun: GymnasticsRoutineResult | null;
+  readonly recentRuns: readonly GymnasticsRoutineResult[];
+}
