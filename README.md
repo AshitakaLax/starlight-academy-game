@@ -5,10 +5,11 @@ This repository is a modular JavaScript ES-module source project. The player-fac
 ## Current implementation scope
 
 - [x] STEP-01 — Modular source foundation and interface boundaries
-- [~] STEP-02 — Build pipeline implemented; npm install/check/test/build pass; manual local launch in Chrome and Edge remains to be confirmed
+- [~] STEP-02 — Build pipeline implemented; npm install/check/test/build pass per user; manual local launch in Chrome and Edge remains to be confirmed
 - [x] STEP-03 — Centralized immutable event-driven state store, validated actions, selectors, and scoped subscriptions
+- [x] STEP-04 — Versioned save manager, autosave/checkpoints, JSON backup/restore, migrations, and recovery status
 
-The current HTML is an offline launch shell demonstrating the packaged project foundation and the state store's UI subscription boundary. Game screens and playable systems are added in their later ledger steps; the shell is not yet the completed game.
+The current HTML is an offline launch shell demonstrating the packaged project foundation, state store, and local save health. Game screens and playable systems are added in their later ledger steps; the shell is not yet the completed game.
 
 ## Source layout
 
@@ -19,8 +20,8 @@ src/
   app/                     Application bootstrap and lifecycle
   core/
     state/                 Immutable store, actions, selectors, subscription scopes
+    save/                  Versioned persistence, import/export, migration and recovery
     input/                 Context-aware keyboard and mouse routing boundary
-    save/                  Versioned local persistence boundary
   systems/                 Audio, narration, curriculum, hints, economy
   gameplay/                Chapter runtime, gymnastics, pets, coloring
   chapters/                Data-driven chapter definitions and registry
@@ -30,13 +31,13 @@ src/
     screens/               Semantic DOM screens and controls
     styles.css             CSS embedded in the final HTML
   assets/                  Vector assets embedded by the build
-  data/                    Release and game data embedded by the build
+  data/                    Release and game data
 
 build/
   build.mjs                Bundles and validates the offline HTML
   index.template.html      HTML shell with inline CSS/JS insertion points
 
-tests/                     Node built-in tests for foundation, state, and build
+tests/                     Node built-in tests for foundation, state, save, and build
 dist/                       Generated, git-ignored HTML deliverable
 ~~~
 
@@ -61,6 +62,18 @@ dist/                       Generated, git-ignored HTML deliverable
 - Re-entrant dispatches from subscribers are queued FIFO so a transition finishes before the next transition begins.
 
 See src/core/state/README.md for the store API and usage details.
+
+## Save and recovery rules
+
+- Save files use a format identifier, schema version, timestamp, and JSON-compatible state.
+- Browser storage is accessed defensively. Unavailable, blocked, full, malformed, or newer-version saves produce a readable save-health status.
+- Autosave is debounced. Explicit checkpoints and shutdown flush pending progress.
+- Save migrations are registered by source schema version and run before current-schema validation.
+- Export produces a portable JSON backup. Import preview does not write; replacing an existing save requires explicit confirmation.
+- A failed import or corrupt stored save never deletes or silently overwrites the existing data.
+- The source shell displays save-health status. Full import/export and recovery controls belong to STEP-06.
+
+See src/core/save/README.md for the persistence API and migration rules.
 
 ## Development setup
 
