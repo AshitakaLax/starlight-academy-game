@@ -60,12 +60,43 @@ export interface InputRouter {
   registerContext(contextId: string, bindings: Record<string, string>): void;
 }
 
+export interface SaveStatus {
+  readonly state: "idle" | "empty" | "pending" | "saved" | "loaded" | "migrated"
+    | "migration-save-failed" | "unavailable" | "error" | "recovery-required"
+    | "import-preview" | "imported";
+  readonly message: string;
+  readonly savedAt: string | null;
+  readonly code: string | null;
+}
+
+export interface SaveImportPreview<TState extends object> {
+  readonly state: Readonly<TState>;
+  readonly sourceVersion: number;
+  readonly schemaVersion: number;
+  readonly migrated: boolean;
+  readonly hasExistingSave: boolean;
+  readonly replacesExistingSave: boolean;
+}
+
 export interface SaveManager<TState extends object = Record<string, unknown>> {
-  save(state: Readonly<TState>): void | Promise<void>;
+  save(state: Readonly<TState>): { savedAt: string; schemaVersion: number };
+  checkpoint(state: Readonly<TState>): { savedAt: string; schemaVersion: number };
+  schedule(state: Readonly<TState>): boolean;
+  flush(): { savedAt: string; schemaVersion: number } | null;
+  cancelAutosave(): void;
   load(): TState | null | Promise<TState | null>;
-  export(): string | Promise<string>;
-  /** Validate and migrate before replacing the active save. */
-  import(serialized: string): TState | Promise<TState>;
+  export(state?: Readonly<TState>): string;
+  previewImport(serialized: string): SaveImportPreview<TState>;
+  /** Existing local progress requires explicit replacement confirmation. */
+  import(serialized: string, options?: { confirmReplace?: boolean }): TState;
+  getStatus(): SaveStatus;
+}
+
+export interface SaveService<TState extends object = Record<string, unknown>> extends ApplicationService {
+  saveCheckpoint(): { savedAt: string; schemaVersion: number };
+  export(): string;
+  previewImport(serialized: string): SaveImportPreview<TState>;
+  import(serialized: string, options?: { confirmReplace?: boolean }): Readonly<TState>;
 }
 
 export interface GameplaySystem {
