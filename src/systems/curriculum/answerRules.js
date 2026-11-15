@@ -6,6 +6,7 @@ function normalizeText(value, caseSensitive) {
 /** Compare a response using an activity's declared answer contract. */
 export function checkActivityAnswer(answer, correctAnswer, rules = {}) {
   if (!rules || typeof rules !== "object") throw new TypeError("Answer rules must be an object.");
+  if (answer === null || answer === undefined || correctAnswer === null || correctAnswer === undefined) return false;
   switch (rules.type) {
     case "numeric": {
       const candidate = typeof answer === "number" ? answer
