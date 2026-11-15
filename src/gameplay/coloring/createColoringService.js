@@ -22,13 +22,17 @@ function cloneDesign(design) {
   return { pixels: new Uint8Array(design.pixels), palette: design.palette.slice() };
 }
 
-function designsEqual(left, right) {
-  if (left.palette.length !== right.palette.length || left.pixels.length !== right.pixels.length) return false;
-  if (!left.palette.every((color, index) => color === right.palette[index])) return false;
+function pixelsEqual(left, right) {
+  if (left.pixels.length !== right.pixels.length) return false;
   for (let index = 0; index < left.pixels.length; index += 1) {
     if (left.pixels[index] !== right.pixels[index]) return false;
   }
   return true;
+}
+function designsEqual(left, right) {
+  return pixelsEqual(left, right)
+    && left.palette.length === right.palette.length
+    && left.palette.every((color, index) => color === right.palette[index]);
 }
 
 /** Coordinates and bounded history for clipped brush, eraser, stamp, undo, and redo tools. */
@@ -189,7 +193,7 @@ export function createColoringService({ store, templateRegistry, historyLimit = 
     const before = activeStroke;
     activeStroke = null;
     previousPoint = null;
-    if (designsEqual(before, currentDesign)) {
+    if (pixelsEqual(before, currentDesign)) {
       currentDesign.palette = before.palette;
       return Object.freeze({ changed: false, texture: getTexture() });
     }
