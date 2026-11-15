@@ -132,10 +132,9 @@ const BUILT_IN_GENERATORS = Object.freeze({
 });
 
 function freezeRecursively(value) {
-  if (value && typeof value === "object" && !Object.isFrozen(value)) {
-    Object.freeze(value);
-    for (const child of Object.values(value)) freezeRecursively(child);
-  }
+  if (!value || typeof value !== "object") return value;
+  for (const child of Object.values(value)) freezeRecursively(child);
+  if (!Object.isFrozen(value)) Object.freeze(value);
   return value;
 }
 
@@ -177,7 +176,7 @@ export function createQuestionGeneratorRegistry(customGenerators = {}) {
       throw new TypeError("Generator " + activity.generatorId + " must return a prompt and correctAnswer.");
     }
     const question = {
-      id: activity.id + ":" + hashSeed(seed).toString(16),
+      id: activity.id + ":" + tier + ":" + hashSeed(seed).toString(16),
       activityId: activity.id,
       tier,
       seed: typeof seed === "string" ? seed : String(seed),
