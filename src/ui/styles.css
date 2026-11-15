@@ -405,3 +405,34 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   .gymnastics-ribbon-art { display: none; }
   .gymnastics-score-grid { grid-template-columns: 1fr; }
 }
+
+
+.chapter-path-panel { display: grid; gap: 16px; margin-top: 24px; }
+.chapter-path-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.chapter-path-heading h2 { margin: 2px 0 5px; color: #4f3b64; font-family: Georgia, serif; font-size: 1.45rem; }
+.chapter-path-heading p:not(.academy-overline) { max-width: 680px; margin: 0; color: #7d6e88; font-size: .78rem; line-height: 1.5; }
+.chapter-path-heading > span { color: #a283c1; font-size: 2.5rem; }
+.chapter-path-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+.chapter-path-card, .chapter-path-empty { display: grid; align-content: start; justify-items: start; gap: 8px; padding: 17px; border: 1px solid #e8deef; border-radius: 14px; background: #fff; }
+.chapter-path-card[data-chapter-state="completed"] { border-color: #c8b2dc; background: #fcf9ff; }
+.chapter-path-card[data-chapter-state="in-progress"] { border-color: #d4bfdc; background: #fffafd; }
+.chapter-path-number { color: #9a81ae; font-size: .61rem; font-weight: 900; letter-spacing: .1em; }
+.chapter-path-card h3, .chapter-path-empty h3 { margin: 0; color: #5a456e; font-family: Georgia, serif; font-size: .98rem; }
+.chapter-path-card p, .chapter-path-empty p { margin: 0; color: #786b83; font-size: .7rem; line-height: 1.5; }
+.chapter-path-card .chapter-path-objectives { color: #766084; font-weight: 700; }
+.chapter-path-card .chapter-path-details { color: #987fa7; font-size: .64rem; font-weight: 800; }
+.chapter-path-empty { grid-column: 1 / -1; padding: 24px; background: linear-gradient(120deg, #fff, #f8f1fc); }
+.chapter-session-panel { display: grid; gap: 12px; padding: 19px; border: 1px solid #e4d7ed; border-radius: 15px; background: #fff; }
+.chapter-session-panel[hidden], .chapter-session-completion[hidden], .chapter-path-panel[hidden] { display: none !important; }
+.chapter-session-status { margin: 0; padding: 10px 12px; border-radius: 9px; color: #684f7b; background: #f8f2fc; font-size: .72rem; font-weight: 800; }
+.chapter-session-panel h3 { margin: 0; color: #5a456e; font-family: Georgia, serif; font-size: 1.2rem; }
+.chapter-session-panel > p:not(.chapter-session-status):not(.academy-overline) { margin: 0; color: #786b83; font-size: .76rem; line-height: 1.55; }
+.chapter-session-type { color: #957da4 !important; font-size: .65rem !important; font-weight: 900; letter-spacing: .06em; }
+.chapter-session-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.chapter-session-completion { display: grid; gap: 9px; padding: 13px; border-radius: 11px; background: #f8f4fb; }
+.chapter-session-completion h4 { margin: 0; color: #654c79; font-family: Georgia, serif; font-size: 1rem; }
+.chapter-session-completion p { margin: 0; color: #786b83; font-size: .72rem; line-height: 1.5; }
+@media (max-width: 650px) {
+  .chapter-path-list { grid-template-columns: 1fr; }
+  .chapter-session-actions { display: grid; }
+}
