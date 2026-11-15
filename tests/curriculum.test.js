@@ -104,6 +104,15 @@ test("activity definitions declare skills, objectives, tiers, answer rules, and 
   assert.throws(() => createActivityDefinition({
     ...activity, answerRules: { type: "unknown" }
   }), /answerRules/);
+  assert.throws(() => createActivityDefinition({
+    ...activity,
+    generatorConstraints: {
+      foundation: { factorMin: Number.NaN },
+      core: {},
+      stretch: {}
+    }
+  }), /finite, JSON-compatible data/);
+
 });
 
 test("activity registry rejects duplicate IDs and returns stable sorted definitions", () => {
