@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createGameStore } from "../src/core/state/createGameStore.js";
-import { createInitialGameState } from "../src/core/state/actions.js";
+import { createInitialGameState, mergeGameStateDefaults } from "../src/core/state/actions.js";
 import { gameConfig } from "../src/config/gameConfig.js";
 import { DIFFICULTY_TIER_IDS, difficultyTierDefinitions, getDifficultyTier } from "../src/systems/curriculum/difficultyTiers.js";
 import { skillDefinitions, skillRegistry, getSkillDefinition } from "../src/systems/curriculum/skillRegistry.js";
@@ -194,31 +194,31 @@ test("answer rules support numeric tolerance, normalized text, choice IDs, and s
   assert.equal(checkActivityAnswer("not a number", 3, { type: "numeric" }), false);
 });
 
-test("restoring a pre-curriculum save retains newly introduced default skill state", () => {
+test("legacy save normalization restores defaults without carrying forward progress from the current save", () => {
   const store = createStore();
-  store.dispatch({
-    type: "app/state-restored",
-    payload: {
-      state: {
-        app: { screenId: "academy" },
-        ui: { activeOverlayId: null }
-      }
-    }
+  const defaults = store.getState();
+  const evidencePayload = {
+    skillId: "math.multiplication",
+    activityId: "chapter-01.multiplication-practice",
+    tier: "core",
+    correct: true,
+    hintLevel: 0,
+    attempts: 1
+  };
+  store.dispatch({ type: "curriculum/evidence-recorded", payload: evidencePayload });
+  assert.equal(selectSkillProgress(store.getState(), "math.multiplication").totalResponses, 1);
+
+  const normalized = mergeGameStateDefaults(defaults, {
+    app: { screenId: "academy" },
+    ui: { activeOverlayId: null }
   });
+  store.dispatch({ type: "app/state-restored", payload: { state: normalized } });
   assert.equal(Object.keys(store.getState().curriculum.skills).length, skillDefinitions.length);
+  assert.equal(selectSkillProgress(store.getState(), "math.multiplication").totalResponses, 0);
   assert.equal(store.getState().audio.masterVolume, gameConfig.audio.defaultMasterVolume);
   assert.equal(store.getState().narration.enabled, false);
-  store.dispatch({
-    type: "curriculum/evidence-recorded",
-    payload: {
-      skillId: "math.multiplication",
-      activityId: "chapter-01.multiplication-practice",
-      tier: "core",
-      correct: true,
-      hintLevel: 0,
-      attempts: 1
-    }
-  });
+
+  store.dispatch({ type: "curriculum/evidence-recorded", payload: evidencePayload });
   assert.equal(selectSkillProgress(store.getState(), "math.multiplication").totalResponses, 1);
   store.destroy();
 });
