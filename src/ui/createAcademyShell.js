@@ -1,6 +1,7 @@
 import { selectUiPreferences } from "./uiPreferences.js";
 import { selectAudioSettings } from "../systems/audio/audioSettings.js";
 import { selectNarrationSettings } from "../systems/narration/narrationSettings.js";
+import { selectEconomy } from "../systems/economy/economyState.js";
 import { createAcademyScene } from "../rendering/scenes/createAcademyScene.js";
 
 const DESTINATIONS = Object.freeze({
@@ -54,8 +55,8 @@ const MARKUP = String.raw`<div class="academy-shell" data-text-scale="normal" da
     <p class="academy-overline">A PLACE TO LEARN, MOVE &amp; IMAGINE</p><p class="academy-brand-name">Starlight Academy</p><p class="academy-brand-subtitle">Studio of Magic &amp; Motion</p>
   </div></div>
   <div class="academy-topbar-actions">
-    <div class="academy-currency-chip" aria-label="Star Gems are spendable rewards"><span class="currency-glyph gems" aria-hidden="true">✦</span><span><strong>Star Gems</strong><small>Spendable rewards</small></span></div>
-    <div class="academy-currency-chip sparkle-chip" aria-label="Starlight Sparkles track mastery and achievements"><span class="currency-glyph sparkles" aria-hidden="true">✧</span><span><strong>Starlight Sparkles</strong><small>Mastery &amp; achievements</small></span></div>
+    <div class="academy-currency-chip" aria-label="Star Gems are spendable rewards"><span class="currency-glyph gems" aria-hidden="true">✦</span><span><strong>Star Gems <span data-currency-balance="starGems">0</span></strong><small>Spendable rewards</small></span></div>
+    <div class="academy-currency-chip sparkle-chip" aria-label="Starlight Sparkles track mastery and achievements"><span class="currency-glyph sparkles" aria-hidden="true">✧</span><span><strong>Starlight Sparkles <span data-currency-balance="starlightSparkles">0</span></strong><small>Mastery &amp; achievements</small></span></div>
     <button class="settings-trigger" type="button" data-game-action="ui/overlay-opened" data-game-payload='{"overlayId":"settings"}' aria-haspopup="dialog" aria-controls="academy-settings"><span aria-hidden="true">⚙</span><span>Settings</span></button>
   </div>
 </header>
@@ -271,6 +272,13 @@ export function createAcademyShell({
     const dockId = Object.hasOwn(DESTINATIONS, selectedDock) ? selectedDock : "chapters";
     const destination = DESTINATIONS[dockId];
     const preferences = selectUiPreferences(state);
+    const economy = selectEconomy(state);
+    for (const balanceElement of root.querySelectorAll("[data-currency-balance]")) {
+      const currency = balanceElement.dataset.currencyBalance;
+      if (currency === "starGems" || currency === "starlightSparkles") {
+        balanceElement.textContent = String(economy[currency]);
+      }
+    }
 
     shell.dataset.textScale = preferences.textScale;
     if (documentRef.documentElement) documentRef.documentElement.dataset.textScale = preferences.textScale;
