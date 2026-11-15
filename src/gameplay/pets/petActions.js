@@ -1,6 +1,7 @@
 import { isPlainObject } from "../../core/state/stateUtils.js";
 import { CARE_TRACKS, selectPetCollection } from "./petCollectionState.js";
 import { gameConfig } from "../../config/gameConfig.js";
+import { selectPetAbilityCareBonus } from "./petAbilities.js";
 
 function hasOnlyKeys(value, keys) {
   return Object.keys(value).every((key) => keys.includes(key));
@@ -79,9 +80,10 @@ export function createPetActionDefinitions({ petCatalog } = {}) {
         const collection = selectPetCollection(state, petCatalog);
         const current = collection.pets[payload.petId];
         if (!current.unlocked) throw new Error("A locked companion cannot receive care.");
+        const abilityBonus = selectPetAbilityCareBonus(state, petCatalog, payload.petId, payload.careType);
         const nextProgress = Math.min(
           careConfig.progressMaximum,
-          current.careProgress[payload.careType] + careConfig.progressPerInteraction
+          current.careProgress[payload.careType] + careConfig.progressPerInteraction + abilityBonus
         );
         const nextBondExperience = Math.min(
           Number.MAX_SAFE_INTEGER,
