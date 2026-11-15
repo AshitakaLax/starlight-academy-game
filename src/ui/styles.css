@@ -364,3 +364,8 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .pet-care-action:hover { background: #f0e6f8; }
 .pet-bond-summary { color: #735b86 !important; font-weight: 800; }
 @media (max-width: 480px) { .pet-care-actions { grid-template-columns: 1fr; } }
+
+.pet-ability-card { display: grid; width: 100%; gap: 5px; padding: 10px 12px; border: 1px solid #e8deef; border-radius: 10px; background: #faf7fc; text-align: left; }
+.pet-ability-card[data-ability-state="active"] { border-color: #ad91c6; background: #f3ebfa; box-shadow: inset 3px 0 #9672b3; }
+.pet-ability-card strong { color: #694e80; font-size: .67rem; letter-spacing: .035em; }
+.pet-ability-card p { margin: 0; color: #74677e; font-size: .68rem; line-height: 1.45; }
