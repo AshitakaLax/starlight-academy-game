@@ -1,5 +1,6 @@
 import { selectUiPreferences } from "./uiPreferences.js";
 import { selectAudioSettings } from "../systems/audio/audioSettings.js";
+import { selectNarrationSettings } from "../systems/narration/narrationSettings.js";
 import { createAcademyScene } from "../rendering/scenes/createAcademyScene.js";
 
 const DESTINATIONS = Object.freeze({
@@ -88,6 +89,7 @@ const MARKUP = String.raw`<div class="academy-shell" data-text-scale="normal" da
           <button class="path-card path-wardrobe" type="button" data-game-action="hub/dock-selected" data-game-payload='{"dockId":"wardrobe"}'><span class="path-card-icon" aria-hidden="true">❀</span><span class="path-card-title">Creative wardrobe</span><span class="path-card-note">Style &amp; imagination</span><span class="path-card-arrow" aria-hidden="true">↗</span></button>
         </div>
       </section>
+      <p class="narration-caption" data-narration-text-slot hidden role="status" aria-live="polite"></p>
     </div>
   </main>
   <aside class="academy-rail" aria-label="Academy overview">
@@ -132,6 +134,20 @@ const MARKUP = String.raw`<div class="academy-shell" data-text-scale="normal" da
         </div>
         <p class="audio-status" data-audio-status-slot role="status" aria-live="polite">Audio begins after your first interaction.</p>
       </section>
+      <section class="setting-card narration-settings" aria-labelledby="narration-heading">
+        <div class="narration-settings-heading"><h3 id="narration-heading">Read-aloud narration</h3><p>Optional spoken guidance. Every instruction is also shown on screen.</p></div>
+        <div class="narration-controls">
+          <button class="toggle-setting narration-toggle" type="button" data-ui-action="toggle-narration" data-narration-toggle aria-pressed="false">Off</button>
+          <label class="narration-choice">Voice
+            <select data-narration-voice aria-label="Narration voice"><option value="">Default browser voice</option></select>
+          </label>
+          <label class="narration-choice">Speaking speed <output data-narration-rate-value>1.00×</output>
+            <input type="range" min="0.8" max="1.2" step="0.05" value="1" data-narration-rate aria-label="Narration speaking speed">
+          </label>
+          <button class="primary-action narration-preview" type="button" data-ui-action="preview-narration" data-narration-preview disabled>Hear welcome sample</button>
+        </div>
+        <p class="narration-status" data-narration-status-slot role="status" aria-live="polite">Narration is optional and turned off.</p>
+      </section>
       <section class="setting-card save-tools" aria-labelledby="save-tools-heading"><div><h3 id="save-tools-heading">Progress &amp; backups</h3><p>Keep a backup of your academy progress or restore one from a JSON save file.</p></div>
         <div class="save-tool-actions"><button type="button" data-ui-action="export-save">Export progress</button><button type="button" data-ui-action="choose-import">Choose import file</button>
           <input type="file" accept=".json,application/json" data-save-import-input hidden aria-label="Choose a Starlight Academy save file">
@@ -153,7 +169,7 @@ function requireElement(root, selector) {
 
 /** Compose the semantic academy hub and accessible settings dialog. */
 export function createAcademyShell({
-  root, store, saveService, saveStatusElement = null, audioStatusElement = null, emblemSvg = "",
+  root, store, saveService, saveStatusElement = null, audioStatusElement = null, narrationService = null,\n  narrationStatusElement = null, narrationTextElement = null, emblemSvg = "",
   documentRef = globalThis.document, windowRef = globalThis.window
 } = {}) {
   if (!root || typeof root.querySelector !== "function" || typeof root.addEventListener !== "function") {
@@ -186,6 +202,10 @@ export function createAcademyShell({
   if (saveStatusElement) saveHealthSlot.append(saveStatusElement);
   const audioStatusSlot = requireElement(root, "[data-audio-status-slot]");
   if (audioStatusElement) audioStatusSlot.replaceWith(audioStatusElement);
+  const narrationStatusSlot = requireElement(root, "[data-narration-status-slot]");
+  if (narrationStatusElement) narrationStatusSlot.replaceWith(narrationStatusElement);
+  const narrationTextSlot = requireElement(root, "[data-narration-text-slot]");
+  if (narrationTextElement) narrationTextSlot.replaceWith(narrationTextElement);
 
   const panel = {
     kicker: requireElement(root, "[data-screen-kicker]"),
@@ -196,6 +216,7 @@ export function createAcademyShell({
     heroButton: requireElement(root, "[data-hero-button]")
   };
   const settingsTrigger = requireElement(root, ".settings-trigger");
+  const narrationVoiceSelect = requireElement(root, "[data-narration-voice]");
   const academyScene = createAcademyScene({ canvas: requireElement(root, "[data-academy-scene]"), documentRef, windowRef });
   let pendingImportText = null;
   let previousFocus = null;
@@ -211,6 +232,33 @@ export function createAcademyShell({
     return [...settingsDialog.querySelectorAll(
       'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
     )].filter((element) => !element.hidden && element.getAttribute("aria-hidden") !== "true");
+  }
+
+  function renderNarrationVoices(voices = narrationService?.getVoices?.() ?? []) {
+    const settings = selectNarrationSettings(store.getState());
+    const options = [];
+    const defaultOption = documentRef.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = "Default browser voice";
+    options.push(defaultOption);
+    const seen = new Set([""]);
+    for (const voice of voices) {
+      if (!voice || typeof voice.voiceURI !== "string" || seen.has(voice.voiceURI)) continue;
+      seen.add(voice.voiceURI);
+      const option = documentRef.createElement("option");
+      option.value = voice.voiceURI;
+      const voiceName = voice.name || voice.voiceURI;
+      option.textContent = voiceName + (voice.lang ? " (" + voice.lang + ")" : "") + (voice.default ? " — default" : "");
+      options.push(option);
+    }
+    if (settings.voiceURI && !seen.has(settings.voiceURI)) {
+      const missingOption = documentRef.createElement("option");
+      missingOption.value = settings.voiceURI;
+      missingOption.textContent = "Saved voice unavailable (using browser default)";
+      options.push(missingOption);
+    }
+    narrationVoiceSelect.replaceChildren(...options);
+    narrationVoiceSelect.value = settings.voiceURI;
   }
 
   function render() {
@@ -258,6 +306,17 @@ export function createAcademyShell({
     muteButton.setAttribute("aria-pressed", String(audio.muted));
     muteButton.textContent = audio.muted ? "Unmute sound" : "Mute sound";
 
+    const narration = selectNarrationSettings(state);
+    const narrationToggle = requireElement(root, "[data-narration-toggle]");
+    narrationToggle.setAttribute("aria-pressed", String(narration.enabled));
+    narrationToggle.textContent = narration.enabled ? "On" : "Off";
+    const narrationPreview = requireElement(root, "[data-narration-preview]");
+    narrationPreview.disabled = !narration.enabled;
+    const narrationRate = requireElement(root, "[data-narration-rate]");
+    narrationRate.value = String(narration.rate);
+    requireElement(root, "[data-narration-rate-value]").textContent = narration.rate.toFixed(2) + "×";
+    renderNarrationVoices();
+
     const overlayId = state?.ui?.activeOverlayId ?? null;
     const settingsOpen = overlayId === "settings";
     academyScene.setActive(state?.app?.screenId === "academy" && overlayId === null);
@@ -288,6 +347,21 @@ export function createAcademyShell({
     const actionElement = event.target?.closest?.("[data-ui-action]");
     if (!actionElement || !root.contains(actionElement)) return;
     const action = actionElement.dataset.uiAction;
+    if (action === "toggle-narration") {
+      const current = selectNarrationSettings(store.getState());
+      store.dispatch({ type: "narration/settings-updated", payload: { enabled: !current.enabled } });
+      return;
+    }
+    if (action === "preview-narration") {
+      const instruction = "Welcome to Starlight Academy. Explore a new idea, move to the music, and celebrate each little discovery.";
+      if (narrationService) narrationService.speak(instruction);
+      else {
+        const caption = requireElement(root, "[data-narration-text-slot]");
+        caption.textContent = instruction;
+        caption.hidden = false;
+      }
+      return;
+    }
     if (action === "toggle-audio-mute") {
       store.dispatch({ type: "audio/settings-updated", payload: { muted: !selectAudioSettings(store.getState()).muted } });
       return;
@@ -330,6 +404,12 @@ export function createAcademyShell({
   }
 
   function handleInput(event) {
+    const narrationRate = event.target?.closest?.("[data-narration-rate]");
+    if (narrationRate && root.contains(narrationRate)) {
+      const rate = Number(narrationRate.value);
+      if (Number.isFinite(rate)) store.dispatch({ type: "narration/settings-updated", payload: { rate } });
+      return;
+    }
     const slider = event.target?.closest?.("[data-audio-slider]");
     if (!slider || !root.contains(slider)) return;
     const key = slider.dataset.audioSlider;
@@ -337,6 +417,12 @@ export function createAcademyShell({
     const value = Number(slider.value);
     if (!Number.isFinite(value)) return;
     store.dispatch({ type: "audio/settings-updated", payload: { [key]: value } });
+  }
+
+  function handleChange(event) {
+    const voiceSelect = event.target?.closest?.("[data-narration-voice]");
+    if (!voiceSelect || !root.contains(voiceSelect)) return;
+    store.dispatch({ type: "narration/settings-updated", payload: { voiceURI: voiceSelect.value } });
   }
 
   async function handleFileChange() {
@@ -382,9 +468,12 @@ export function createAcademyShell({
 
   root.addEventListener("click", handleClick);
   root.addEventListener("input", handleInput);
+  root.addEventListener("change", handleChange);
   root.addEventListener("keydown", handleDialogKeydown);
   importInput.addEventListener("change", handleFileChange);
   const unsubscribe = store.subscribe(render);
+  const unsubscribeVoices = narrationService?.subscribeVoices?.((voices) => renderNarrationVoices(voices)) ?? (() => {});
+  renderNarrationVoices();
   render();
   academyScene.start();
 
@@ -394,8 +483,10 @@ export function createAcademyShell({
       disposed = true;
       academyScene.destroy();
       unsubscribe();
+      unsubscribeVoices();
       root.removeEventListener("click", handleClick);
       root.removeEventListener("input", handleInput);
+      root.removeEventListener("change", handleChange);
       root.removeEventListener("keydown", handleDialogKeydown);
       importInput.removeEventListener("change", handleFileChange);
     },
