@@ -107,7 +107,8 @@ async function launch() {
   await app.start();
 
   const academyShell = createAcademyShell({
-    root, store, saveService, saveStatusElement: saveHealth, audioStatusElement: audioStatus,\n    narrationService, narrationStatusElement: narrationStatus, narrationTextElement: narrationCaption,
+    root, store, saveService, saveStatusElement: saveHealth, audioStatusElement: audioStatus,
+    narrationService, narrationStatusElement: narrationStatus, narrationTextElement: narrationCaption,
     emblemSvg: academyEmblem, documentRef: document, windowRef: window
   });
   document.documentElement.dataset.appStatus = app.status;
