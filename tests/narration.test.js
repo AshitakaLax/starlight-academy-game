@@ -140,6 +140,21 @@ test("turning narration off interrupts speech immediately", () => {
   service.stop();
 });
 
+test("turning narration off cancels an utterance that is queued but has not started", () => {
+  const speech = new FakeSpeechSynthesis();
+  const store = createGameStore();
+  store.dispatch({ type: "narration/settings-updated", payload: { enabled: true } });
+  const service = createNarrationService({ store, speechSynthesis: speech, UtteranceCtor: FakeUtterance });
+  service.start();
+  service.speak("Waiting for the browser voice.");
+  assert.equal(service.getDiagnostics().pending, true);
+  assert.equal(service.getDiagnostics().speaking, false);
+  store.dispatch({ type: "narration/settings-updated", payload: { enabled: false } });
+  assert.equal(speech.cancelCount, 1);
+  assert.equal(service.getDiagnostics().pending, false);
+  service.stop();
+});
+
 test("voiceschanged refreshes voice discovery and subscriptions are cleaned up", () => {
   const first = { voiceURI: "voice-one", name: "One", lang: "en" };
   const second = { voiceURI: "voice-two", name: "Two", lang: "en" };
