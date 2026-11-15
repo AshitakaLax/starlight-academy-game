@@ -43,6 +43,11 @@ export function createInitialGameState() {
       musicVolume: gameConfig.audio.defaultMusicVolume,
       sfxVolume: gameConfig.audio.defaultSfxVolume,
       muted: gameConfig.audio.defaultMuted
+    },
+    narration: {
+      enabled: gameConfig.narration.defaultEnabled,
+      voiceURI: gameConfig.narration.defaultVoiceURI,
+      rate: gameConfig.narration.defaultRate
     }
   };
 }
@@ -176,6 +181,38 @@ export const coreActionDefinitions = Object.freeze({
           && audio.sfxVolume === current.sfxVolume
           && audio.muted === current.muted) return state;
       return { ...state, audio };
+    }
+  }),
+  "narration/settings-updated": Object.freeze({
+    validate(payload) {
+      if (!isPlainObject(payload) || Object.keys(payload).length === 0
+          || !hasOnlyKeys(payload, ["enabled", "voiceURI", "rate"])) {
+        return "narration/settings-updated expects at least one narration setting.";
+      }
+      if (Object.hasOwn(payload, "enabled") && typeof payload.enabled !== "boolean") {
+        return "enabled must be a boolean.";
+      }
+      if (Object.hasOwn(payload, "voiceURI")
+          && (typeof payload.voiceURI !== "string" || payload.voiceURI.length > 512)) {
+        return "voiceURI must be a string of at most 512 characters.";
+      }
+      if (Object.hasOwn(payload, "rate")
+          && (!Number.isFinite(payload.rate) || payload.rate < 0.8 || payload.rate > 1.2)) {
+        return "rate must be a number from 0.8 to 1.2.";
+      }
+      return true;
+    },
+    reduce(state, payload) {
+      const current = isPlainObject(state.narration) ? state.narration : {
+        enabled: gameConfig.narration.defaultEnabled,
+        voiceURI: gameConfig.narration.defaultVoiceURI,
+        rate: gameConfig.narration.defaultRate
+      };
+      const narration = { ...current, ...payload };
+      if (narration.enabled === current.enabled
+          && narration.voiceURI === current.voiceURI
+          && narration.rate === current.rate) return state;
+      return { ...state, narration };
     }
   })
 });
