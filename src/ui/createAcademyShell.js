@@ -1401,9 +1401,10 @@ export function createAcademyShell({
     panel.chapterPathPanel.hidden = !chaptersMode;
     if (chaptersMode) renderChapters();
     else if (activeChapterSession) {
-      activeChapterSession.exit();
+      const exitingSession = activeChapterSession;
       activeChapterSession = null;
       activeChapterId = null;
+      exitingSession.exit();
     }
     const petsMode = dockId === "pets";
     panel.petCollectionPanel.hidden = !petsMode;
