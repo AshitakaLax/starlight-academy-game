@@ -161,7 +161,15 @@ export function createSaveManager({
     }
 
     let version = parsed.schemaVersion;
-    let state = validateAndCloneState(parsed.state, "Imported save");
+    let state;
+    try {
+      state = cloneSerializable(parsed.state, "$importedState");
+    } catch (error) {
+      throw makeError("INVALID_STATE", "Imported save contains data that cannot be migrated safely.", error);
+    }
+    if (!isPlainObject(state)) {
+      throw makeError("INVALID_STATE", "Imported save state must be a plain object.");
+    }
     let migrated = false;
     while (version < schemaVersion) {
       const migrate = migrationMap.get(version);
@@ -169,14 +177,15 @@ export function createSaveManager({
         throw makeError("MIGRATION_UNAVAILABLE", "This save needs an update that is not available in this version.");
       }
       try {
-        state = validateAndCloneState(migrate(state), "Migrated save");
+        state = cloneSerializable(migrate(state), "$migratedState");
+        if (!isPlainObject(state)) throw new TypeError("A migration must return a plain object.");
       } catch (error) {
-        if (error instanceof SaveDataError) throw error;
         throw makeError("MIGRATION_FAILED", "The selected save could not be safely upgraded.", error);
       }
       version += 1;
       migrated = true;
     }
+    state = validateAndCloneState(state, "Migrated save");
 
     return {
       state,
@@ -188,7 +197,13 @@ export function createSaveManager({
   }
 
   function writeState(inputState) {
-    const targetStorage = requireStorage("save");
+    let targetStorage;
+    try {
+      targetStorage = requireStorage("save");
+    } catch (error) {
+      updateStatus("unavailable", error.message, error.code ?? "STORAGE_UNAVAILABLE");
+      throw error;
+    }
     const envelope = createEnvelope(inputState);
     const serialized = JSON.stringify(envelope);
     try {
@@ -270,8 +285,12 @@ export function createSaveManager({
       const parsed = parseEnvelope(serialized);
       lastKnownState = validateAndCloneState(parsed.state);
       if (parsed.migrated) {
-        writeState(lastKnownState);
-        updateStatus("migrated", "Saved progress was safely upgraded to the current format.");
+        try {
+          writeState(lastKnownState);
+          updateStatus("migrated", "Saved progress was safely upgraded to the current format.");
+        } catch {
+          updateStatus("migration-save-failed", "Saved progress was upgraded for this session, but the updated copy could not be written.");
+        }
       } else {
         updateStatus("loaded", "Saved progress was loaded.", null, parsed.savedAt);
       }
