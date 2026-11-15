@@ -103,7 +103,7 @@ test("new narration interrupts the previous utterance and cancel restores music"
   store.dispatch({ type: "narration/settings-updated", payload: { enabled: true } });
   const service = createNarrationService({
     store, speechSynthesis: speech, UtteranceCtor: FakeUtterance,
-    audioEngine: { setMusicDuck: (value) => duckLevels.push(value) }
+    audioEngine: { setMusicDuck: (value) => duckLevels.push(value) }, textElement: captionElement()
   });
   service.start();
   service.speak("First instruction.");
@@ -129,7 +129,7 @@ test("missing voice names fall back to the browser default and never block narra
   service.start();
   assert.equal(service.speak("You can still learn without a named voice."), true);
   assert.equal(speech.utterances[0].voice, null);
-  assert.match(service.getDiagnostics().available ? "available" : "unavailable", /available/);
+  assert.equal(service.isAvailable(), true);
   service.stop();
 });
 
@@ -150,7 +150,7 @@ test("turning narration off interrupts speech immediately", () => {
   const speech = new FakeSpeechSynthesis();
   const store = createGameStore();
   store.dispatch({ type: "narration/settings-updated", payload: { enabled: true } });
-  const service = createNarrationService({ store, speechSynthesis: speech, UtteranceCtor: FakeUtterance });
+  const service = createNarrationService({ store, speechSynthesis: speech, UtteranceCtor: FakeUtterance, textElement: captionElement() });
   service.start();
   service.speak("A short instruction.");
   speech.utterances[0].onstart();
