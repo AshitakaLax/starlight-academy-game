@@ -17,8 +17,7 @@ export function createPetCollectionService({ store, petCatalog } = {}) {
       ...definition,
       ...collection.pets[definition.id],
       active: collection.activePetId === definition.id,
-      totalCareMoments: Object.values(collection.pets[definition.id].careProgress)
-        .reduce((total, count) => total + count, 0)
+      totalCareMoments: collection.pets[definition.id].careMoments
     }));
     return Object.freeze({
       activePetId: collection.activePetId,
@@ -61,6 +60,34 @@ export function createPetCollectionService({ store, petCatalog } = {}) {
     });
   }
 
+  function performCare(petId, careType) {
+    if (typeof petId !== "string" || !petId.trim()) throw new TypeError("performCare requires a pet ID.");
+    const before = getPet(petId);
+    if (!before) throw new RangeError("Unknown pet ID: " + petId);
+    if (!before.unlocked) throw new Error("A locked companion cannot receive care.");
+    const receipt = store.dispatch({
+      type: "pets/care-performed",
+      payload: { petId, careType }
+    });
+    const after = getPet(petId);
+    const progressBefore = before.careProgress[careType];
+    const progressAfter = after.careProgress[careType];
+    return Object.freeze({
+      performed: true,
+      changed: receipt.changed === true,
+      petId,
+      careType,
+      progressBefore,
+      progressAfter,
+      progressIncreased: progressAfter > progressBefore,
+      meterFull: progressAfter >= 100,
+      bondExperienceBefore: before.bondExperience,
+      bondExperienceAfter: after.bondExperience,
+      bondExperienceGained: Math.max(0, after.bondExperience - before.bondExperience),
+      careMoments: after.careMoments
+    });
+  }
+
   function setAppearancePalette(petId, paletteId) {
     if (typeof petId !== "string" || !petId.trim()
         || typeof paletteId !== "string" || !paletteId.trim()) {
@@ -81,6 +108,7 @@ export function createPetCollectionService({ store, petCatalog } = {}) {
     getPet,
     unlockPet,
     selectActivePet,
-    setAppearancePalette
+    setAppearancePalette,
+    performCare
   });
 }
