@@ -93,6 +93,7 @@ export function createAudioService({
     stop,
     get started() { return started; },
     get unlocked() { return unlocked; },
+    playSfx(effectId = "select") { return unlocked ? engine.playSfx(effectId) : false; },
     getDiagnostics: () => Object.freeze({ started, unlocked })
   });
 }
