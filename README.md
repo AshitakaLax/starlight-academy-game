@@ -5,7 +5,7 @@ This repository is a modular JavaScript ES-module source project. The player-fac
 ## Current implementation scope
 
 - [x] STEP-01 — Modular source foundation and interface boundaries
-- [x] STEP-02 — Single-file offline build and packaging pipeline
+- [~] STEP-02 — Build pipeline implemented; local build and browser launch verification pending
 - [ ] STEP-03 — Centralized event-driven state store
 
 The current HTML is an offline launch shell demonstrating the packaged project foundation. Game screens and playable systems are added in their later ledger steps; the shell is not yet the completed game.
@@ -73,6 +73,7 @@ Open that file locally in desktop Chrome or Edge. The packaging validator reject
 - Project CSS is minified and embedded in one inline style element.
 - Imported SVG files are embedded as JavaScript text and inserted as inline vector markup.
 - Imported JSON data is bundled into the JavaScript output.
+- Runtime modules reachable from the browser entry are bundled automatically; synthesized audio/narration code will be included when those systems are implemented and connected in their later ledger steps.
 - No runtime network requests, CDN dependencies, external fonts, or external asset files are permitted.
 
 The empty chapter and side-quest registries are intentional scaffolding. Content is added in the corresponding chapter and side-quest ledger steps.

@@ -11,7 +11,7 @@ test("build emits a self-contained offline HTML document", async () => {
   assert.match(html, /<script>[\s\S]*<\/script>/i);
   assert.match(html, /Starlight Academy/);
   assert.match(html, /academy-emblem/);
-  assert.match(html, /10 chapters/);
+  assert.match(html, /chapterCount\s*:\s*10/);
   assert.doesNotMatch(html, /<script\b[^>]*\bsrc\s*=/i);
   assert.doesNotMatch(html, /<link\b[^>]*\bhref\s*=/i);
   assert.doesNotMatch(html, /\b(?:src|href)\s*=\s*["']https?:\/\//i);
