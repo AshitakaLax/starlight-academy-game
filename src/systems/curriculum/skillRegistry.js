@@ -48,5 +48,5 @@ export const skillRegistry = Object.freeze(
 );
 
 export function getSkillDefinition(id) {
-  return typeof id === "string" ? skillRegistry[id] ?? null : null;
+  return typeof id === "string" && Object.hasOwn(skillRegistry, id) ? skillRegistry[id] : null;
 }
