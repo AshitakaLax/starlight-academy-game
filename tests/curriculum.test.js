@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createGameStore } from "../src/core/state/createGameStore.js";
 import { createInitialGameState, mergeGameStateDefaults } from "../src/core/state/actions.js";
 import { gameConfig } from "../src/config/gameConfig.js";
-import { createLowPressureOnboardingProfile, evaluateAdaptiveTier, selectSkillTier } from "../src/systems/curriculum/adaptiveDifficulty.js";
+import { createLowPressureOnboardingProfile, evaluateAdaptiveTier, selectSkillTier, selectSupportedSkillTier } from "../src/systems/curriculum/adaptiveDifficulty.js";
 import { DIFFICULTY_TIER_IDS, difficultyTierDefinitions, getDifficultyTier } from "../src/systems/curriculum/difficultyTiers.js";
 import { skillDefinitions, skillRegistry, getSkillDefinition } from "../src/systems/curriculum/skillRegistry.js";
 import { createActivityDefinition, createActivityRegistry, validateActivityDefinition } from "../src/systems/curriculum/activityDefinitions.js";
@@ -243,6 +243,9 @@ test("onboarding starts at Core without requiring a placement assessment", () =>
   assert.equal(progress.onboarding.placementTestRequired, false);
   assert.equal(progress.onboarding.initialTier, gameConfig.curriculum.defaultTier);
   assert.equal(selectSkillTier({ curriculum: progress }, "math.multiplication"), "core");
+  assert.equal(selectSkillTier({ curriculum: progress }, "unknown.skill"), null);
+  assert.equal(selectSupportedSkillTier({ curriculum: progress }, "math.multiplication", ["foundation", "stretch"]), "foundation");
+  assert.equal(selectSupportedSkillTier({ curriculum: progress }, "math.multiplication", ["core", "stretch"]), "core");
 });
 
 test("adaptive tier policy waits for a complete rolling window and promotes on independent success", () => {
