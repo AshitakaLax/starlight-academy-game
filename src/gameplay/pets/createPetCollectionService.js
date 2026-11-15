@@ -1,5 +1,6 @@
 import { selectPetCollection, selectPet } from "./petCollectionState.js";
 import { gameConfig } from "../../config/gameConfig.js";
+import { getPetAbilityDefinition, selectActivePetAbility } from "./petAbilities.js";
 
 /** Runtime facade for pet collection; each species retains its own saved data. */
 export function createPetCollectionService({ store, petCatalog } = {}) {
@@ -16,6 +17,7 @@ export function createPetCollectionService({ store, petCatalog } = {}) {
     const collection = selectPetCollection(state, petCatalog);
     const pets = petCatalog.list().map((definition) => Object.freeze({
       ...definition,
+      ability: getPetAbilityDefinition(definition.id),
       ...collection.pets[definition.id],
       active: collection.activePetId === definition.id,
       totalCareMoments: collection.pets[definition.id].careMoments
@@ -23,12 +25,14 @@ export function createPetCollectionService({ store, petCatalog } = {}) {
     return Object.freeze({
       activePetId: collection.activePetId,
       activePet: pets.find((pet) => pet.id === collection.activePetId) ?? null,
+      activeAbility: selectActivePetAbility(state, petCatalog),
       pets: Object.freeze(pets)
     });
   }
 
   function getPet(petId) {
-    return selectPet(store.getState(), petCatalog, petId);
+    const pet = selectPet(store.getState(), petCatalog, petId);
+    return pet ? Object.freeze({ ...pet, ability: getPetAbilityDefinition(petId) }) : null;
   }
 
   function unlockPet(petId, sourceId) {
