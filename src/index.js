@@ -23,7 +23,7 @@ export { createActivityDefinition, createActivityRegistry, validateActivityDefin
 export { createSeededRandom, createQuestionGeneratorRegistry, generateQuestion } from "./systems/curriculum/questionGenerators.js";
 export { checkActivityAnswer } from "./systems/curriculum/answerRules.js";
 export { createInitialCurriculumProgress, curriculumActionDefinitions, selectSkillProgress, selectCurriculumEvidence } from "./systems/curriculum/curriculumProgress.js";
-export { createLowPressureOnboardingProfile, evaluateAdaptiveTier, selectSkillTier } from "./systems/curriculum/adaptiveDifficulty.js";
+export { createLowPressureOnboardingProfile, evaluateAdaptiveTier, selectSkillTier, selectSupportedSkillTier } from "./systems/curriculum/adaptiveDifficulty.js";
 export { gameConfig } from "./config/gameConfig.js";
 export { chapterDefinitions, getChapterDefinition } from "./chapters/registry.js";
 export { sideQuestDefinitions, getSideQuestDefinition } from "./side-quests/registry.js";
