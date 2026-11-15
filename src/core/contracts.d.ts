@@ -420,6 +420,7 @@ export interface PetProgress {
   readonly unlockSource: string | null;
   readonly appearance: PetAppearance;
   readonly bondExperience: number;
+  readonly careMoments: number;
   readonly careProgress: PetCareProgress;
 }
 
@@ -458,6 +459,7 @@ export interface PetCollectionService {
   unlockPet(petId: string, sourceId: string): Readonly<{ unlocked: boolean; changed: boolean; reason: string; petId: string; unlockSource: string | null }>;
   selectActivePet(petId: string): Readonly<{ changed: boolean; activePetId: string; pet: unknown }>;
   setAppearancePalette(petId: string, paletteId: string): Readonly<{ changed: boolean; pet: unknown }>;
+  performCare(petId: string, careType: PetCareType): PetCareProgressResult;
 }
 
 export type PetCareType = "feeding" | "grooming" | "play";
