@@ -94,6 +94,17 @@ test("effects are synthesized with envelopes and unknown effect IDs are ignored"
   await engine.destroy();
 });
 
+test("the gymnastics metronome beat is available as a short synthesized effect", async () => {
+  const engine = createAudioEngine({ AudioContextCtor: FakeAudioContext });
+  await engine.unlock();
+  assert.equal(engine.playSfx("beat"), true);
+  const effect = FakeAudioContext.instances.at(-1).oscillators.at(-1);
+  assert.equal(effect.started, true);
+  assert.equal(effect.stops, 1);
+  assert.equal(engine.getDiagnostics().createdEffectCount, 1);
+  await engine.destroy();
+});
+
 test("master, music, effects, and mute update their independent buses immediately", async () => {
   const engine = createAudioEngine({ AudioContextCtor: FakeAudioContext });
   await engine.unlock();
