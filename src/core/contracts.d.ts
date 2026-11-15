@@ -447,10 +447,29 @@ export interface PetCollectionState {
   readonly pets: Readonly<Record<string, PetProgress>>;
 }
 
+export interface PetAbilityDefinition {
+  readonly id: string;
+  readonly title: string;
+  readonly description: string;
+  readonly careType: PetCareType;
+  readonly careProgressBonus: number;
+}
+
+export interface ActivePetAbility extends PetAbilityDefinition {
+  readonly petId: string;
+}
+
+export interface PetCollectionCard extends PetDefinition, PetProgress {
+  readonly ability: PetAbilityDefinition | null;
+  readonly active: boolean;
+  readonly totalCareMoments: number;
+}
+
 export interface PetCollectionSnapshot {
   readonly activePetId: string;
-  readonly activePet: Readonly<PetDefinition & PetProgress & { active: true; totalCareMoments: number }> | null;
-  readonly pets: readonly Readonly<PetDefinition & PetProgress & { active: boolean; totalCareMoments: number }>[];
+  readonly activePet: Readonly<PetCollectionCard> | null;
+  readonly activeAbility: ActivePetAbility | null;
+  readonly pets: readonly Readonly<PetCollectionCard>[];
 }
 
 export interface PetCollectionService {
@@ -472,6 +491,7 @@ export interface PetCareProgressResult {
   readonly progressBefore: number;
   readonly progressAfter: number;
   readonly progressIncreased: boolean;
+  readonly abilityBonus: number;
   readonly meterFull: boolean;
   readonly bondExperienceBefore: number;
   readonly bondExperienceAfter: number;
@@ -483,4 +503,8 @@ export interface PetCareConfiguration {
   readonly progressPerInteraction: number;
   readonly progressMaximum: number;
   readonly bondExperiencePerInteraction: number;
+}
+
+export interface PetAbilityConfiguration {
+  readonly definitions: Readonly<Record<string, PetAbilityDefinition>>;
 }
