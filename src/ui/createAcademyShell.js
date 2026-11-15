@@ -2,6 +2,7 @@ import { selectUiPreferences } from "./uiPreferences.js";
 import { selectAudioSettings } from "../systems/audio/audioSettings.js";
 import { selectNarrationSettings } from "../systems/narration/narrationSettings.js";
 import { selectEconomy } from "../systems/economy/economyState.js";
+import { gameConfig } from "../config/gameConfig.js";
 import { renderColoringCanvas } from "../gameplay/coloring/renderColoringCanvas.js";
 import { createAcademyScene } from "../rendering/scenes/createAcademyScene.js";
 
@@ -407,6 +408,11 @@ export function createAcademyShell({
     }
     const snapshot = petCollectionService.getSnapshot();
     const fragment = documentRef.createDocumentFragment();
+    const careLabels = {
+      feeding: "Treat feeding",
+      grooming: "Sparkle grooming",
+      play: "Ribbon-toss play"
+    };
     for (const pet of snapshot.pets) {
       const card = documentRef.createElement("article");
       card.className = "pet-collection-card";
@@ -448,11 +454,53 @@ export function createAcademyShell({
         select.value = pet.appearance.paletteId;
         label.append(select);
         card.append(label);
+
+        const careHeading = documentRef.createElement("h4");
+        careHeading.className = "pet-care-heading";
+        careHeading.textContent = "Little ways to care";
+        card.append(careHeading);
+        const meters = documentRef.createElement("div");
+        meters.className = "pet-care-meters";
+        for (const careType of ["feeding", "grooming", "play"]) {
+          const meterLabel = documentRef.createElement("label");
+          meterLabel.className = "pet-care-meter";
+          const detail = documentRef.createElement("span");
+          detail.textContent = careLabels[careType] + " · " + pet.careProgress[careType] + "%";
+          const progress = documentRef.createElement("progress");
+          progress.max = gameConfig.petCare.progressMaximum;
+          progress.value = pet.careProgress[careType];
+          progress.setAttribute("aria-label", pet.title + " " + careLabels[careType] + " progress");
+          meterLabel.append(detail, progress);
+          meters.append(meterLabel);
+        }
+        card.append(meters);
+
+        const careActions = documentRef.createElement("div");
+        careActions.className = "pet-care-actions";
+        for (const [careType, text] of [
+          ["feeding", "♡ Give a treat"],
+          ["grooming", "✧ Sparkle groom"],
+          ["play", "🎀 Toss ribbon"]
+        ]) {
+          const careButton = documentRef.createElement("button");
+          careButton.type = "button";
+          careButton.className = "pet-care-action";
+          careButton.dataset.petAction = "care";
+          careButton.dataset.petId = pet.id;
+          careButton.dataset.careType = careType;
+          careButton.textContent = text;
+          careActions.append(careButton);
+        }
+        card.append(careActions);
+        const bond = documentRef.createElement("p");
+        bond.className = "pet-bond-summary";
+        bond.textContent = "Friendship " + pet.bondExperience + " · Care moments " + pet.careMoments;
+        card.append(bond);
       }
       fragment.append(card);
     }
     panel.petCollectionGrid.replaceChildren(fragment);
-    panel.petCollectionStatus.textContent = statusMessage ?? ("Your active companion is " + (snapshot.activePet?.title ?? "ready") + ". Every pet's progress is saved separately.");
+    panel.petCollectionStatus.textContent = statusMessage ?? ("Your active companion is " + (snapshot.activePet?.title ?? "ready") + ". Care is always optional, and full meters never stop you from spending another happy moment together.");
   }
 
   function handlePetAction(event) {
@@ -465,9 +513,27 @@ export function createAcademyShell({
       } else if (control.dataset.petAction === "appearance") {
         petCollectionService.setAppearancePalette(control.dataset.petId, control.value);
         renderPetCollection("A fresh look! Your companion's appearance has been saved.");
+      } else if (control.dataset.petAction === "care") {
+        const result = petCollectionService.performCare(control.dataset.petId, control.dataset.careType);
+        const pet = petCollectionService.getPet(control.dataset.petId);
+        const petName = pet?.definition?.title ?? control.dataset.petId;
+        const careName = {
+          feeding: "treat",
+          grooming: "sparkle grooming",
+          play: "ribbon toss"
+        }[result.careType] ?? "care";
+        const trackName = {
+          feeding: "Feeding",
+          grooming: "Grooming",
+          play: "Play"
+        }[result.careType] ?? "Care";
+        const message = result.meterFull
+          ? petName + " loved that " + careName + " moment! The " + trackName.toLowerCase() + " meter is full, and your friendship still grows."
+          : petName + " enjoyed that " + careName + " moment! " + trackName + " progress is now " + result.progressAfter + "%.";
+        renderPetCollection(message);
       }
     } catch (error) {
-      renderPetCollection(error?.message || "That companion could not be selected.");
+      renderPetCollection(error?.message || "That companion could not be cared for.");
     }
     return true;
   }
