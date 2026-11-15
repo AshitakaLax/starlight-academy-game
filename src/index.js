@@ -50,3 +50,9 @@ export { createInitialPetCollectionState, selectPetCollection, selectPet, CARE_T
 export { createPetActionDefinitions } from "./gameplay/pets/petActions.js";
 export { createPetCollectionService } from "./gameplay/pets/createPetCollectionService.js";
 export { getPetAbilityDefinition, selectActivePetAbility, selectPetAbilityCareBonus } from "./gameplay/pets/petAbilities.js";
+
+export { createGymnasticsRoutine, createGymnasticsRoutineCatalog, defaultGymnasticsRoutines } from "./gameplay/gymnastics/gymnasticsCatalog.js";
+export { createGymnasticsEngine } from "./gameplay/gymnastics/gymnasticsEngine.js";
+export { createInitialGymnasticsState, selectGymnasticsProgress } from "./gameplay/gymnastics/gymnasticsState.js";
+export { createGymnasticsActionDefinitions } from "./gameplay/gymnastics/gymnasticsActions.js";
+export { createGymnasticsService } from "./gameplay/gymnastics/createGymnasticsService.js";
