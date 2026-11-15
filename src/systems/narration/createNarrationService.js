@@ -16,8 +16,8 @@ export function createNarrationService({
   if (!store || typeof store.getState !== "function" || typeof store.subscribe !== "function") {
     throw new TypeError("createNarrationService requires a game store.");
   }
-  if (textElement !== null && typeof textElement !== "object") {
-    throw new TypeError("textElement must be a DOM text element or null.");
+  if (!textElement || typeof textElement !== "object" || typeof textElement.textContent !== "string") {
+    throw new TypeError("createNarrationService requires a visible textElement for every spoken instruction.");
   }
   if (typeof onStatus !== "function") throw new TypeError("onStatus must be a function.");
   if (audioEngine !== null && typeof audioEngine.setMusicDuck !== "function") {
@@ -99,7 +99,7 @@ export function createNarrationService({
       status("unavailable", "Narration is not available in this browser. The instruction remains visible as text.");
       return false;
     }
-    if (!interrupt && speaking) return false;
+    if (!interrupt && hasPendingUtterance) return false;
 
     cancel();
     const utteranceId = requestId;
@@ -164,8 +164,8 @@ export function createNarrationService({
     if (started) return;
     started = true;
     settings = selectNarrationSettings(store.getState());
-    refreshVoices();
     speechSynthesis?.addEventListener?.("voiceschanged", onVoicesChanged);
+    refreshVoices();
     unsubscribeStore = store.subscribe((state, action) => {
       settings = selectNarrationSettings(state);
       if (!settings.enabled && hasPendingUtterance) cancel();
