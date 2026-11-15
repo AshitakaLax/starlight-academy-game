@@ -1,12 +1,12 @@
 import { createChapterCatalog, createChapterDefinition, validateChapterDefinition } from "../gameplay/chapter-runtime/chapterCatalog.js";
+import { chapterOneDefinition } from "./chapterOne.js";
 
 /**
- * Data-driven chapter registry.
- * Definitions are authored in STEP-21 and STEP-23 through STEP-31.
- * Each chapter owns its activity sequence; the registry imposes no universal order.
+ * Data-driven chapter registry. New chapter files can add authored content
+ * without changing the runtime's activity or progression contracts.
  */
 export { createChapterCatalog, createChapterDefinition, validateChapterDefinition };
-export const chapterDefinitions = Object.freeze([]);
+export const chapterDefinitions = Object.freeze([chapterOneDefinition]);
 
 export function getChapterDefinition(id) {
   return chapterDefinitions.find((chapter) => chapter.id === id) ?? null;
