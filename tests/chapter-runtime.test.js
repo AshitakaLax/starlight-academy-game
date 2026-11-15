@@ -114,6 +114,12 @@ test("chapter catalog rejects duplicate and unknown prerequisite definitions", (
   assert.equal(createChapterCatalog([]).list().length, 0);
 });
 
+test("chapter catalog rejects prerequisite cycles", () => {
+  const chapterA = { ...chapterOne, prerequisiteChapterIds: ["chapter-02"] };
+  const chapterB = { ...chapterTwo, prerequisiteChapterIds: ["chapter-01"] };
+  assert.throws(() => createChapterCatalog([chapterA, chapterB]), /prerequisite cycle/);
+});
+
 test("runtime exposes independent chapter sequences and prerequisite availability", () => {
   const { service } = harness();
   const snapshot = service.getSnapshot();
@@ -244,15 +250,18 @@ test("checkpoints cannot erase completed activities or save a full chapter witho
   }), /final activity must complete the chapter/);
 });
 
-test("chapter completion action cannot be dispatched before its preceding ordered checkpoint", () => {
+test("chapter completion cannot be forged before its ordered checkpoint", () => {
   const { store } = harness();
-  assert.throws(() => store.dispatch({
+  const initial = store.getState();
+  const receipt = store.dispatch({
     type: "chapters/chapter-completed",
     payload: {
       chapterId: "chapter-01",
       activityResults: chapterOne.activities.map((activity) => ({ activityId: activity.id, status: "completed" }))
     }
-  }), /ordered chapter activity/);
+  });
+  assert.equal(receipt.changed, false);
+  assert.equal(store.getState(), initial);
 });
 
 test("major rewards must exist, match their chapter source, and use a once-only policy", () => {
@@ -262,7 +271,7 @@ test("major rewards must exist, match their chapter source, and use a once-only 
   const onceEconomyStore = harness();
   assert.throws(() => createChapterRuntimeService({
     store: onceEconomyStore.store,
-    chapterCatalog: chapters,
+    chapterCatalog: createChapterCatalog([chapterOne]),
     rewardRegistry: wrongSource,
     economyService: onceEconomyStore.economyService
   }), /chapter as sourceId/);
