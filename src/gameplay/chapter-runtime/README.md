@@ -15,7 +15,7 @@ A chapter defines its own ordered `activities`. Each activity has a stable chapt
 - Safe exit preserves the current checkpoint. A new session resumes at the next unfinished activity.
 - A skipped activity is recorded as skipped, not as a hard failure. The chapter still reaches completion.
 - Recent run history is bounded by `gameConfig.chapterRuntime.completedHistoryLimit`; older saves receive empty runtime defaults.
-- The chapter path UI displays chapter status, prerequisite availability, current activity, progress, and replay options. The current chapter registry remains intentionally empty until STEP-21 authors the first playable chapter.
+- The chapter path UI displays chapter status, prerequisite availability, current activity, progress, and replay options. Chapter 1 is registered in `src/chapters/chapterOne.js`; its browser integration supplies tiered curriculum questions and Professor Hoot hints, routes the ribbon activity through the shared gymnastics service, and unlocks chapter-sourced wardrobe cosmetics when the run completes.
 
 ## Module responsibilities
 
