@@ -423,7 +423,7 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .chapter-path-card .chapter-path-details { color: #987fa7; font-size: .64rem; font-weight: 800; }
 .chapter-path-empty { grid-column: 1 / -1; padding: 24px; background: linear-gradient(120deg, #fff, #f8f1fc); }
 .chapter-session-panel { display: grid; gap: 12px; padding: 19px; border: 1px solid #e4d7ed; border-radius: 15px; background: #fff; }
-.chapter-session-panel[hidden], .chapter-session-completion[hidden], .chapter-path-panel[hidden] { display: none !important; }
+.chapter-session-panel[hidden], .chapter-session-completion[hidden], .chapter-session-actions[hidden], .chapter-path-list[hidden], .chapter-path-panel[hidden] { display: none !important; }
 .chapter-session-status { margin: 0; padding: 10px 12px; border-radius: 9px; color: #684f7b; background: #f8f2fc; font-size: .72rem; font-weight: 800; }
 .chapter-session-panel h3 { margin: 0; color: #5a456e; font-family: Georgia, serif; font-size: 1.2rem; }
 .chapter-session-panel > p:not(.chapter-session-status):not(.academy-overline) { margin: 0; color: #786b83; font-size: .76rem; line-height: 1.55; }
