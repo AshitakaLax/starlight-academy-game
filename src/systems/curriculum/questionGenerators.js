@@ -1,4 +1,5 @@
 import { validateActivityDefinition } from "./activityDefinitions.js";
+import { gameConfig } from "../../config/gameConfig.js";
 
 function hashSeed(seed) {
   if (typeof seed === "number" && Number.isFinite(seed)) return seed >>> 0;
@@ -160,7 +161,7 @@ export function createQuestionGeneratorRegistry(customGenerators = {}) {
     return () => generators.delete(id);
   }
 
-  function generate(activity, { seed, tier = "core" } = {}) {
+  function generate(activity, { seed, tier = gameConfig.curriculum.defaultTier } = {}) {
     const validation = validateActivityDefinition(activity);
     if (validation !== true) throw new TypeError(validation);
     if (!activity.supportedTiers.includes(tier)) {
