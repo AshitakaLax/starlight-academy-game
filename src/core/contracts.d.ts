@@ -291,3 +291,52 @@ export interface EconomyService {
   canPurchase(itemId: string): Readonly<{ allowed: boolean; reason: string }>;
   getBalance(): EconomyBalance;
 }
+
+
+export type WardrobeEquipmentSlot = "head" | "outfit" | "footwear" | "accessory";
+
+export type WardrobeAcquisition =
+  | { readonly type: "starter"; readonly sourceId?: string }
+  | { readonly type: "purchase"; readonly priceStarGems: number }
+  | { readonly type: "chapter" | "quest"; readonly sourceId: string };
+
+export interface WardrobeItemDefinition {
+  readonly id: string;
+  readonly title: string;
+  readonly slot: WardrobeEquipmentSlot;
+  readonly description: string;
+  readonly symbol: string;
+  readonly theme: string;
+  readonly acquisition: WardrobeAcquisition;
+}
+
+export interface WardrobeOwnership {
+  readonly sourceType: "starter" | "purchase" | "chapter" | "quest";
+  readonly sourceId: string;
+}
+
+export interface WardrobeState {
+  readonly inventory: Readonly<Record<string, WardrobeOwnership>>;
+  readonly equipped: Readonly<Record<WardrobeEquipmentSlot, string | null>>;
+}
+
+export interface WardrobeService {
+  getInventory(): readonly Readonly<WardrobeItemDefinition & {
+    ownership: WardrobeOwnership | null;
+    owned: boolean;
+    equipped: boolean;
+    status: "locked" | "owned" | "equipped";
+    available: boolean;
+    reason: string;
+  }>[];
+  getEquipped(): readonly Readonly<{
+    slot: WardrobeEquipmentSlot;
+    itemId: string | null;
+    item: WardrobeItemDefinition | null;
+  }>[];
+  unlockItem(itemId: string, sourceId: string): Readonly<{ unlocked: boolean; reason: string; itemId: string; ownership: WardrobeOwnership | null }>;
+  unlockSource(sourceId: string): Readonly<{ sourceId: string; unlockedItemIds: readonly string[]; alreadyOwnedItemIds: readonly string[]; count: number }>;
+  purchaseItem(itemId: string): Readonly<{ purchased: boolean; reason: string; itemId: string; ownership?: WardrobeOwnership | null; priceStarGems?: number; starGems?: number }>;
+  equipItem(itemId: string): Readonly<{ equipped: boolean; reason: string; itemId: string; slot?: WardrobeEquipmentSlot }>;
+  unequipSlot(slot: WardrobeEquipmentSlot): Readonly<{ changed: boolean; slot: WardrobeEquipmentSlot; itemId: null }>;
+}
