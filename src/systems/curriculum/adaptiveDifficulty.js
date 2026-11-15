@@ -33,7 +33,8 @@ export function evaluateAdaptiveTier({
     reason = nextTier === currentTier ? "foundation-support-retained" : "more-supported-practice";
   }
 
-  const direction = nextTier === currentTier ? "maintain" : nextTier > currentTier
+  const nextIndex = DIFFICULTY_TIER_IDS.indexOf(nextTier);
+  const direction = nextIndex === tierIndex ? "maintain" : nextIndex > tierIndex
     ? "increase"
     : "decrease";
 
