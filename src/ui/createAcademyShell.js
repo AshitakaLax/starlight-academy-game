@@ -439,6 +439,17 @@ export function createAcademyShell({
       action.textContent = pet.active ? "Exploring with you" : pet.unlocked ? "Choose companion" : "Locked";
       card.append(action);
       if (pet.unlocked) {
+        if (pet.ability) {
+          const ability = documentRef.createElement("section");
+          ability.className = "pet-ability-card";
+          ability.dataset.abilityState = pet.active ? "active" : "inactive";
+          const abilityTitle = documentRef.createElement("strong");
+          abilityTitle.textContent = (pet.active ? "ACTIVE ABILITY · " : "ABILITY · ") + pet.ability.title;
+          const abilityDescription = documentRef.createElement("p");
+          abilityDescription.textContent = pet.ability.description;
+          ability.append(abilityTitle, abilityDescription);
+          card.append(ability);
+        }
         const label = documentRef.createElement("label");
         label.className = "pet-appearance-choice";
         label.textContent = "Appearance";
@@ -500,7 +511,10 @@ export function createAcademyShell({
       fragment.append(card);
     }
     panel.petCollectionGrid.replaceChildren(fragment);
-    panel.petCollectionStatus.textContent = statusMessage ?? ("Your active companion is " + (snapshot.activePet?.title ?? "ready") + ". Care is always optional, and full meters never stop you from spending another happy moment together.");
+    const abilitySummary = snapshot.activeAbility
+      ? " " + snapshot.activeAbility.title + " is active: " + snapshot.activeAbility.description
+      : "";
+    panel.petCollectionStatus.textContent = statusMessage ?? ("Your active companion is " + (snapshot.activePet?.title ?? "ready") + "." + abilitySummary + " Care is always optional, and full meters never stop you from spending another happy moment together.");
   }
 
   function handlePetAction(event) {
@@ -525,9 +539,12 @@ export function createAcademyShell({
           grooming: "Grooming",
           play: "Play"
         }[result.careType] ?? "Care";
+        const abilityMessage = result.abilityBonus > 0
+          ? " Your active companion ability added up to " + result.abilityBonus + " extra care points."
+          : "";
         const message = result.meterFull
-          ? petName + " loved that " + careName + " moment! The " + trackName.toLowerCase() + " meter is full, and your friendship still grows."
-          : petName + " enjoyed that " + careName + " moment! " + trackName + " progress is now " + result.progressAfter + "%.";
+          ? petName + " loved that " + careName + " moment! The " + trackName.toLowerCase() + " meter is full, and your friendship still grows." + abilityMessage
+          : petName + " enjoyed that " + careName + " moment! " + trackName + " progress is now " + result.progressAfter + "%." + abilityMessage;
         renderPetCollection(message);
       }
     } catch (error) {
