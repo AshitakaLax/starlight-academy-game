@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createGameStore } from "../src/core/state/createGameStore.js";
-import { createInitialGameState } from "../src/core/state/actions.js";
+import { createInitialGameState, mergeGameStateDefaults } from "../src/core/state/actions.js";
 import {
   COLORING_PIXEL_COUNT,
   COLORING_TEXTURE_HEIGHT,
@@ -21,6 +21,7 @@ import {
 import { createInitialColoringState, selectColoring, selectGarmentDesign } from "../src/gameplay/coloring/coloringState.js";
 import { createColoringActionDefinitions } from "../src/gameplay/coloring/coloringActions.js";
 import { createColoringService } from "../src/gameplay/coloring/createColoringService.js";
+import { renderColoringCanvas } from "../src/gameplay/coloring/renderColoringCanvas.js";
 
 function createHarness({ historyLimit = 12 } = {}) {
   const templateRegistry = createGarmentTemplateRegistry(defaultGarmentTemplates);
@@ -232,20 +233,28 @@ test("designs remain independent by garment template and restore when switching 
   assert.equal(templateRegistry.get(service.getSnapshot().template.id).id, "garment.comet-dress");
 });
 
-test("encoded coloring designs persist in store and restore in a new editing session", () => {
+test("encoded coloring designs persist through a fresh store and a state-restored import", () => {
   const harness = createHarness();
   harness.service.setColor("#86ABC9");
   harness.service.beginStroke({ x: 32, y: 30 });
   harness.service.endStroke();
-  const savedTexture = harness.store.getState().coloring.designs["garment.academy-tunic"].texture;
+  const savedState = JSON.parse(JSON.stringify(harness.store.getState()));
+  const savedTexture = savedState.coloring.designs["garment.academy-tunic"].texture;
   assert.ok(savedTexture.runs.length > 0);
 
+  const restoredActions = createColoringActionDefinitions({ templateRegistry: harness.templateRegistry });
+  const restoredStore = createGameStore({ initialState: savedState, actions: restoredActions });
   const restoredService = createColoringService({
-    store: harness.store,
+    store: restoredStore,
     templateRegistry: harness.templateRegistry
   });
   assert.deepEqual(restoredService.getTexture(), savedTexture);
   assert.ok(restoredService.getSnapshot().palette.includes("#86abc9"));
+
+  const replacementState = { ...savedState, coloring: createInitialColoringState(harness.templateRegistry) };
+  restoredStore.dispatch({ type: "app/state-restored", payload: { state: replacementState } });
+  restoredService.restoreFromStore();
+  assert.equal(countPainted(restoredService.getTexture()), 0);
 });
 
 test("template selection and design save actions validate IDs and encoded data", () => {
@@ -274,11 +283,7 @@ test("legacy saves receive a first garment selection and empty design map withou
     profile: { nickname: "Moonbeam" },
     curriculum: { skills: { "math.multiplication": { totalResponses: 3 } } }
   };
-  const merged = {
-    ...defaults,
-    ...restored,
-    coloring: restored.coloring ?? defaults.coloring
-  };
+  const merged = mergeGameStateDefaults(defaults, restored);
   assert.deepEqual(merged.coloring, defaults.coloring);
   assert.equal(merged.profile.nickname, "Moonbeam");
   assert.equal(merged.curriculum.skills["math.multiplication"].totalResponses, 3);
@@ -295,4 +300,24 @@ test("service validates dependencies, tools, colors, sizes, stamps, and disposed
   service.dispose();
   assert.throws(() => service.getSnapshot(), /disposed/);
   assert.ok(templateRegistry.has("garment.academy-tunic"));
+});
+
+
+test("rendering helper composes the clipped texture into a scaled garment preview", () => {
+  const { service } = createHarness();
+  service.beginStroke({ x: 32, y: 30 });
+  service.endStroke();
+  function context() {
+    return {
+      createImageData(width, height) { return { data: new Uint8ClampedArray(width * height * 4) }; },
+      putImageData() {}, clearRect() {}, save() {}, restore() {}, beginPath() {}, moveTo() {},
+      lineTo() {}, closePath() {}, fill() {}, stroke() {}, clip() {}, drawImage() {}
+    };
+  }
+  const canvas = { width: 0, height: 0, getContext: () => context() };
+  const documentRef = { createElement: () => ({ width: 0, height: 0, getContext: () => context() }) };
+  const result = renderColoringCanvas(canvas, service.getSnapshot(), { documentRef });
+  assert.deepEqual(result, { width: 256, height: 320, pixelWidth: 64, pixelHeight: 80 });
+  assert.equal(canvas.width, 256);
+  assert.equal(canvas.height, 320);
 });
