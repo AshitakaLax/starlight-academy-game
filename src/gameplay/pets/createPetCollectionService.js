@@ -1,4 +1,5 @@
 import { selectPetCollection, selectPet } from "./petCollectionState.js";
+import { gameConfig } from "../../config/gameConfig.js";
 
 /** Runtime facade for pet collection; each species retains its own saved data. */
 export function createPetCollectionService({ store, petCatalog } = {}) {
@@ -80,7 +81,7 @@ export function createPetCollectionService({ store, petCatalog } = {}) {
       progressBefore,
       progressAfter,
       progressIncreased: progressAfter > progressBefore,
-      meterFull: progressAfter >= 100,
+      meterFull: progressAfter >= gameConfig.petCare.progressMaximum,
       bondExperienceBefore: before.bondExperience,
       bondExperienceAfter: after.bondExperience,
       bondExperienceGained: Math.max(0, after.bondExperience - before.bondExperience),
