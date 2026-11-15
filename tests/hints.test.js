@@ -112,7 +112,7 @@ test("hint stages must have ordered attempt thresholds and an activity-specific 
 
   const extraField = multiplicationHints();
   extraField.debug = true;
-  assert.match(validateHintDefinition(extraField), /unsupported/);
+  assert.match(validateHintDefinition(extraField), /contain only activityId/);
 });
 
 test("hint registry binds definitions to known activities and matching skill IDs", () => {
