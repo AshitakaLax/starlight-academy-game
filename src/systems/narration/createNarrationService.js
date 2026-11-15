@@ -29,6 +29,7 @@ export function createNarrationService({
   let voices = [];
   let unsubscribeStore = null;
   let speaking = false;
+  let hasPendingUtterance = false;
   let requestId = 0;
   const voiceListeners = new Set();
 
@@ -72,13 +73,15 @@ export function createNarrationService({
   }
 
   function cancel() {
+    if (!hasPendingUtterance && !speaking) return false;
     requestId += 1;
-    const wasSpeaking = speaking;
+    const wasActive = hasPendingUtterance || speaking;
+    hasPendingUtterance = false;
     speaking = false;
     try { speechSynthesis?.cancel?.(); } catch {}
     setMusicDuck(1);
-    if (wasSpeaking) status("ready", "Narration stopped.");
-    return wasSpeaking;
+    if (wasActive) status("ready", "Narration stopped.");
+    return wasActive;
   }
 
   function speak(text, { interrupt = true, rate } = {}) {
@@ -118,11 +121,13 @@ export function createNarrationService({
       const finish = () => {
         if (utteranceId !== requestId) return;
         speaking = false;
+        hasPendingUtterance = false;
         setMusicDuck(1);
         status("ready", "Narration is ready.");
       };
       utterance.onend = finish;
       utterance.onerror = finish;
+      hasPendingUtterance = true;
       speechSynthesis.speak(utterance);
       status("queued", voices.length > 0
         ? "Narration is ready. Your chosen voice will be used when available."
@@ -130,6 +135,7 @@ export function createNarrationService({
       return true;
     } catch {
       speaking = false;
+      hasPendingUtterance = false;
       setMusicDuck(1);
       status("error", "Speech could not be started. The instruction remains visible as text.");
       return false;
@@ -162,7 +168,7 @@ export function createNarrationService({
     speechSynthesis?.addEventListener?.("voiceschanged", onVoicesChanged);
     unsubscribeStore = store.subscribe((state, action) => {
       settings = selectNarrationSettings(state);
-      if (!settings.enabled && speaking) cancel();
+      if (!settings.enabled && hasPendingUtterance) cancel();
     });
     if (!available) {
       status("unavailable", "Narration is not available in this browser. Instructions will remain visible as text.");
@@ -192,7 +198,7 @@ export function createNarrationService({
     subscribeVoices,
     isAvailable: () => available,
     getDiagnostics: () => Object.freeze({
-      started, available, enabled: settings.enabled, speaking, voiceCount: voices.length
+      started, available, enabled: settings.enabled, speaking, pending: hasPendingUtterance, voiceCount: voices.length
     })
   });
 }
