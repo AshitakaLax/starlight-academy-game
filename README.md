@@ -83,8 +83,8 @@ See src/core/state/README.md for the store API and usage details.
 ## Input and navigation rules
 
 - Keyboard shortcuts are registered by screen and overlay context; modal overlays suspend background shortcuts.
-- Hub keys 1–5 select the five dock destinations. Multiple-choice activity keys 1–4 select answers only in multiple-choice mode.
-- H requests a hint only when the current activity explicitly supports hints. Enter/Space advance dialogue when appropriate or activate a focused primary control.
+- Hub keys 1–5 select the five dock destinations. In Chapter 1's learning and challenge activities, keys 1–4 select the correspondingly numbered visible answer; H requests a hint. These shortcuts are inactive during stories, gymnastics, text entry, or modal dialogs.
+- Enter/Space activate focused native controls or advance dialogue when appropriate. Chapter answer choices are native buttons, so Tab and Enter work as well as the number shortcuts.
 - Escape closes the current overlay, or opens Settings when no overlay is active.
 - Text inputs, textareas, selects, contenteditable regions and textboxes retain normal keyboard behavior. Native buttons and links keep browser-managed activation, preventing duplicate actions.
 - Mouse clicks on `data-game-action` controls dispatch named actions once; optional JSON payloads and context gates are validated.
