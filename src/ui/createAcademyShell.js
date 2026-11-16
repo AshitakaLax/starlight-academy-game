@@ -1016,6 +1016,11 @@ export function createAcademyShell({
   }
 
   function focusChapterStep() {
+    if (activeChapterSession?.getSnapshot?.().isComplete) {
+      const completionButton = panel.chapterSessionCompletion.querySelector("button");
+      completionButton?.focus?.();
+      return;
+    }
     const firstAnswer = panel.chapterActivityBody.querySelector("[data-chapter-answer]");
     if (firstAnswer && typeof firstAnswer.focus === "function") {
       firstAnswer.focus();
@@ -1431,6 +1436,7 @@ export function createAcademyShell({
           activeChapterSession.completeActivity();
           resetChapterQuestion();
           renderChapters();
+          focusChapterStep();
         }
       } catch (error) {
         stopGymnasticsClock();
