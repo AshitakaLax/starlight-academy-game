@@ -948,6 +948,112 @@ export function createAcademyShell({
     }
   }
 
+
+  function renderChapterGeometryStimulus(parent, stimulus) {
+    if (!stimulus || !["geometry-shape", "geometry-angle", "geometry-rectangle"].includes(stimulus.kind)) return;
+    const figure = documentRef.createElement("figure");
+    figure.className = "chapter-geometry-visual";
+    const namespace = "http://www.w3.org/2000/svg";
+    const svg = documentRef.createElementNS(namespace, "svg");
+    svg.classList.add("chapter-geometry-svg");
+    svg.setAttribute("viewBox", "0 0 300 220");
+    svg.setAttribute("role", "img");
+    svg.setAttribute("focusable", "false");
+    const addSvg = (name, attributes, value) => {
+      const element = documentRef.createElementNS(namespace, name);
+      for (const [key, item] of Object.entries(attributes)) element.setAttribute(key, String(item));
+      if (value !== undefined) element.textContent = value;
+      svg.append(element);
+      return element;
+    };
+    if (stimulus.kind === "geometry-shape") {
+      const points = {
+        triangle: "150,20 220,178 80,178",
+        square: "95,45 205,45 205,155 95,155",
+        rectangle: "65,65 235,65 235,135 65,135",
+        rhombus: "150,25 225,110 150,195 75,110",
+        pentagon: "150,25 225,80 197,170 103,170 75,80",
+        hexagon: "150,20 215,58 215,142 150,180 85,142 85,58"
+      }[stimulus.shape];
+      if (!points) return;
+      svg.setAttribute("aria-label", stimulus.label + " diagram. " + (stimulus.properties ?? ""));
+      addSvg("polygon", { points, fill: "#f7effd", stroke: "#76539a", "stroke-width": 4, "stroke-linejoin": "round" });
+      if (stimulus.focus === "symmetry" && Number.isInteger(stimulus.symmetryLines)) {
+        const axes = {
+          triangle: { x: 150, y: 99, degrees: [30, 90, 150] },
+          square: { x: 150, y: 100, degrees: [0, 45, 90, 135] },
+          rectangle: { x: 150, y: 100, degrees: [0, 90] },
+          rhombus: { x: 150, y: 110, degrees: [0, 90] },
+          pentagon: { x: 150, y: 105, degrees: [18, 54, 90, 126, 162] },
+          hexagon: { x: 150, y: 100, degrees: [0, 30, 60, 90, 120, 150] }
+        }[stimulus.shape];
+        if (axes) {
+          const defs = documentRef.createElementNS(namespace, "defs");
+          const clip = documentRef.createElementNS(namespace, "clipPath");
+          clip.setAttribute("id", "chapter-geometry-symmetry-clip");
+          const clipPolygon = documentRef.createElementNS(namespace, "polygon");
+          clipPolygon.setAttribute("points", points);
+          clip.append(clipPolygon);
+          defs.append(clip);
+          svg.append(defs);
+          for (const degree of axes.degrees) {
+            const angle = degree * Math.PI / 180;
+            const dx = 140 * Math.cos(angle), dy = 140 * Math.sin(angle);
+            addSvg("line", {
+              x1: axes.x - dx, y1: axes.y - dy, x2: axes.x + dx, y2: axes.y + dy,
+              stroke: "#c18c48", "stroke-width": 2.4, "stroke-dasharray": "6 5",
+              "stroke-linecap": "round", "clip-path": "url(#chapter-geometry-symmetry-clip)"
+            });
+          }
+        }
+      }
+      appendChapterText(figure, "figcaption",
+        stimulus.focus === "symmetry"
+          ? "Imagine folding the " + stimulus.label + " along each dotted line."
+          : stimulus.properties,
+        "chapter-geometry-caption");
+    } else if (stimulus.kind === "geometry-angle") {
+      const degrees = stimulus.degrees;
+      if (!Number.isInteger(degrees) || degrees < 1 || degrees > 180) return;
+      const cx = 150, cy = 165, length = 108, radius = 27;
+      const radians = degrees * Math.PI / 180;
+      const endX = cx + length * Math.cos(radians), endY = cy - length * Math.sin(radians);
+      const arcX = cx + radius * Math.cos(radians), arcY = cy - radius * Math.sin(radians);
+      svg.setAttribute("aria-label", "An angle measuring " + degrees + " degrees.");
+      addSvg("line", { x1: cx, y1: cy, x2: cx + length, y2: cy, stroke: "#76539a", "stroke-width": 5, "stroke-linecap": "round" });
+      addSvg("line", { x1: cx, y1: cy, x2: endX, y2: endY, stroke: "#76539a", "stroke-width": 5, "stroke-linecap": "round" });
+      addSvg("path", {
+        d: "M " + (cx + radius) + " " + cy + " A " + radius + " " + radius + " 0 0 0 " + arcX + " " + arcY,
+        fill: "none", stroke: "#c18c48", "stroke-width": 3
+      });
+      addSvg("circle", { cx, cy, r: 5, fill: "#c18c48" });
+      addSvg("text", { x: 150, y: 32, "text-anchor": "middle", fill: "#60417f", "font-size": 19, "font-weight": 800 }, degrees + "°");
+      appendChapterText(figure, "figcaption", "Compare the opening with a 90° right angle.", "chapter-geometry-caption");
+    } else if (stimulus.kind === "geometry-rectangle") {
+      const width = stimulus.width, height = stimulus.height;
+      if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width > 20 || height > 20) return;
+      const cell = 14, x = 55, y = 45, rectangleWidth = width * cell, rectangleHeight = height * cell;
+      svg.setAttribute("viewBox", "0 0 " + (rectangleWidth + 118) + " " + (rectangleHeight + 100));
+      svg.setAttribute("aria-label", "A rectangle " + width + " centimeters wide and " + height + " centimeters tall.");
+      addSvg("rect", { x, y, width: rectangleWidth, height: rectangleHeight, fill: "#f5edf9", stroke: "#76539a", "stroke-width": 3 });
+      for (let index = 1; index < width; index += 1) {
+        addSvg("line", { x1: x + index * cell, y1: y, x2: x + index * cell, y2: y + rectangleHeight, stroke: "#c6b4d7", "stroke-width": 1 });
+      }
+      for (let index = 1; index < height; index += 1) {
+        addSvg("line", { x1: x, y1: y + index * cell, x2: x + rectangleWidth, y2: y + index * cell, stroke: "#c6b4d7", "stroke-width": 1 });
+      }
+      addSvg("text", { x: x + rectangleWidth / 2, y: y - 15, "text-anchor": "middle", fill: "#60417f", "font-size": 13, "font-weight": 800 }, width + " cm");
+      addSvg("text", { x: x + rectangleWidth + 12, y: y + rectangleHeight / 2, "text-anchor": "start", fill: "#60417f", "font-size": 13, "font-weight": 800 }, height + " cm");
+      appendChapterText(figure, "figcaption",
+        stimulus.focus === "perimeter"
+          ? "Trace the four outside edges to measure around the rectangle."
+          : "Each small tile is one square centimeter. Count the tiles inside.",
+        "chapter-geometry-caption");
+    }
+    figure.append(svg);
+    parent.append(figure);
+  }
+
   function renderChapterActivity(snapshot, activity) {
     const body = panel.chapterActivityBody;
     body.replaceChildren();
@@ -992,6 +1098,7 @@ export function createAcademyShell({
       appendChapterText(card, "h4", question.prompt, "chapter-question-prompt");
       renderChapterFractionStimulus(card, question.stimulus);
       renderChapterWordStimulus(card, question.stimulus);
+      renderChapterGeometryStimulus(card, question.stimulus);
       appendChapterText(card, "p", "Choose with the mouse or press 1–4. Press H whenever you would like a hint.", "chapter-question-help");
       const choices = documentRef.createElement("div");
       choices.className = "chapter-answer-grid";
