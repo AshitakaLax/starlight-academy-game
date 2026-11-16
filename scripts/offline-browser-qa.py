@@ -180,6 +180,14 @@ def main() -> None:
         click_button(page, "Buy · 20 Star Gems")
         require("Star Gems 20" in page.locator("body").inner_text(),
                 "Wardrobe purchase did not debit the catalog price.")
+        # Let the autosave debounce finish and require an existing save before
+        # testing the explicit replacement-confirmation path.
+        page.wait_for_timeout(1_000)
+        pre_import_save = page.evaluate(
+            "(key) => window.__academyQASaveValues.get(key)", STORAGE_KEY
+        )
+        require(isinstance(pre_import_save, str) and pre_import_save,
+                "The academy did not autosave before the backup import test.")
 
         # Settings, narration fallback, sound control, and JSON backup export/import.
         click_button(page, "Settings")
