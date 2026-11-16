@@ -13,7 +13,7 @@ const finale = "The Grand Starlight Championship";
 const questOne = "The Firefly Gap Maze";
 const questNineteen = "The Starlight Skill Matchmaker";
 const questTwenty = "The Grand Constellation Planner";
-</script></body></html>`;
+</script></body></html>`.padEnd(100_001, ' ');
 }
 
 test("release validator accepts a fully embedded standalone academy document", () => {
