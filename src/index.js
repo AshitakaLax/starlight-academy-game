@@ -66,5 +66,7 @@ export { chapterOneActivityDefinitions, chapterOneHintDefinitions, chapterOneRew
 export { chapterTwoActivityDefinitions, chapterTwoHintDefinitions, chapterTwoReward, chapterTwoDefinition } from "./chapters/chapterTwo.js";
 export { chapterThreeActivityDefinitions, chapterThreeHintDefinitions, chapterThreeReward, chapterThreeDefinition } from "./chapters/chapterThree.js";
 export { chapterFourActivityDefinitions, chapterFourHintDefinitions, chapterFourReward, chapterFourDefinition } from "./chapters/chapterFour.js";
+export { chapterFiveActivityDefinitions, chapterFiveHintDefinitions, chapterFiveReward, chapterFiveDefinition } from "./chapters/chapterFive.js";
 export { chapterThreeWordBank, getChapterThreeWords } from "./data/wordBuildingLexicon.js";
+export { habitatCreatureLexicon, habitatEcosystemConnections, getHabitatCreatures, getHabitatAdaptations, getHabitatEcosystemConnections } from "./data/habitatLexicon.js";
 export { createChapterInputController } from "./gameplay/chapter-runtime/chapterInput.js";

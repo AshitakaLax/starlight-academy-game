@@ -23,6 +23,7 @@ import { chapterOneActivityDefinitions, chapterOneHintDefinitions, chapterOneRew
 import { chapterTwoActivityDefinitions, chapterTwoHintDefinitions, chapterTwoReward } from "./chapters/chapterTwo.js";
 import { chapterThreeActivityDefinitions, chapterThreeHintDefinitions, chapterThreeReward } from "./chapters/chapterThree.js";
 import { chapterFourActivityDefinitions, chapterFourHintDefinitions, chapterFourReward } from "./chapters/chapterFour.js";
+import { chapterFiveActivityDefinitions, chapterFiveHintDefinitions, chapterFiveReward } from "./chapters/chapterFive.js";
 import { createActivityRegistry } from "./systems/curriculum/activityDefinitions.js";
 import { createQuestionGeneratorRegistry } from "./systems/curriculum/questionGenerators.js";
 import { createHintRegistry } from "./systems/hints/createHintRegistry.js";
@@ -74,17 +75,18 @@ async function launch() {
   narrationStatus.setAttribute("aria-live", "polite");
   narrationStatus.textContent = "Narration is optional and turned off.";
 
-  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward]);
+  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward, chapterFiveReward]);
   const activityRegistry = createActivityRegistry([
     ...chapterOneActivityDefinitions,
     ...chapterTwoActivityDefinitions,
     ...chapterThreeActivityDefinitions,
-    ...chapterFourActivityDefinitions
+    ...chapterFourActivityDefinitions,
+    ...chapterFiveActivityDefinitions
   ]);
   const questionGeneratorRegistry = createQuestionGeneratorRegistry();
   const hintRegistry = createHintRegistry({
     activityRegistry,
-    initialDefinitions: [...chapterOneHintDefinitions, ...chapterTwoHintDefinitions, ...chapterThreeHintDefinitions, ...chapterFourHintDefinitions]
+    initialDefinitions: [...chapterOneHintDefinitions, ...chapterTwoHintDefinitions, ...chapterThreeHintDefinitions, ...chapterFourHintDefinitions, ...chapterFiveHintDefinitions]
   });
   const wardrobeCatalog = createWardrobeCatalog(defaultWardrobeItems);
   const garmentTemplateRegistry = createGarmentTemplateRegistry(defaultGarmentTemplates);

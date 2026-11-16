@@ -24,7 +24,7 @@ import {
 import { chapterDefinitions, getChapterDefinition } from "../src/chapters/registry.js";
 
 test("Chapter 4 is registered after Chapter 3 with five geometry skills and the correct prerequisite", () => {
-  assert.deepEqual(chapterDefinitions.map((chapter) => chapter.id), ["chapter-01", "chapter-02", "chapter-03", "chapter-04"]);
+  assert.deepEqual(chapterDefinitions.map((chapter) => chapter.id), ["chapter-01", "chapter-02", "chapter-03", "chapter-04", "chapter-05"]);
   assert.equal(getChapterDefinition("chapter-04"), chapterFourDefinition);
   assert.equal(validateChapterDefinition(chapterFourDefinition), true);
   assert.deepEqual(chapterFourDefinition.prerequisiteChapterIds, ["chapter-03"]);

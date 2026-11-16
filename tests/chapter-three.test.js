@@ -37,7 +37,7 @@ function assembleCuratedWord(entry) {
 
 test("Chapter 3 is registered after Chapter 2 with prefix, suffix, potion, and story activities", () => {
   assert.deepEqual(chapterDefinitions.map((chapter) => chapter.id), [
-    "chapter-01", "chapter-02", "chapter-03", "chapter-04"
+    "chapter-01", "chapter-02", "chapter-03", "chapter-04", "chapter-05"
   ]);
   assert.equal(getChapterDefinition("chapter-03"), chapterThreeDefinition);
   assert.equal(getChapterDefinition("chapter-04"), chapterFourDefinition);

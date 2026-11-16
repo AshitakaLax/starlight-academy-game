@@ -949,6 +949,37 @@ export function createAcademyShell({
   }
 
 
+  function renderChapterHabitatStimulus(parent, stimulus) {
+    if (!stimulus || !["habitat-creature", "adaptation-clue", "ecosystem-connection"].includes(stimulus.kind)) return;
+    const figure = documentRef.createElement("figure");
+    figure.className = "chapter-habitat-visual";
+    const symbol = documentRef.createElement("span");
+    symbol.className = "chapter-habitat-symbol";
+    symbol.textContent = stimulus.symbol ?? "🌿";
+    symbol.setAttribute("aria-hidden", "true");
+    figure.append(symbol);
+
+    if (stimulus.kind === "habitat-creature") {
+      appendChapterText(figure, "h5", stimulus.animal, "chapter-habitat-title");
+      appendChapterText(figure, "p", "Climate clue", "chapter-habitat-kicker");
+      appendChapterText(figure, "p", stimulus.climateClue, "chapter-habitat-copy");
+      appendChapterText(figure, "p", "Food and shelter needs", "chapter-habitat-kicker");
+      appendChapterText(figure, "p", stimulus.needsClue, "chapter-habitat-copy");
+    } else if (stimulus.kind === "adaptation-clue") {
+      appendChapterText(figure, "h5", stimulus.animal, "chapter-habitat-title");
+      appendChapterText(figure, "p", "Field observation", "chapter-habitat-kicker");
+      appendChapterText(figure, "strong", stimulus.feature, "chapter-habitat-feature");
+      appendChapterText(figure, "p", stimulus.description, "chapter-habitat-copy");
+    } else {
+      appendChapterText(figure, "h5", stimulus.organism, "chapter-habitat-title");
+      appendChapterText(figure, "p", "Ecosystem field note", "chapter-habitat-kicker");
+      appendChapterText(figure, "strong", stimulus.action, "chapter-habitat-feature");
+      appendChapterText(figure, "p", stimulus.context, "chapter-habitat-copy");
+    }
+    parent.append(figure);
+  }
+
+
   function renderChapterGeometryStimulus(parent, stimulus) {
     if (!stimulus || !["geometry-shape", "geometry-angle", "geometry-rectangle"].includes(stimulus.kind)) return;
     const figure = documentRef.createElement("figure");
@@ -1099,6 +1130,7 @@ export function createAcademyShell({
       renderChapterFractionStimulus(card, question.stimulus);
       renderChapterWordStimulus(card, question.stimulus);
       renderChapterGeometryStimulus(card, question.stimulus);
+      renderChapterHabitatStimulus(card, question.stimulus);
       appendChapterText(card, "p", "Choose with the mouse or press 1–4. Press H whenever you would like a hint.", "chapter-question-help");
       const choices = documentRef.createElement("div");
       choices.className = "chapter-answer-grid";

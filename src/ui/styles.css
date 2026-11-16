@@ -741,3 +741,55 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   .chapter-geometry-visual { padding: 10px; }
   .chapter-geometry-svg { max-height: 215px; }
 }
+
+
+/* Wildlife field notes and habitat clues for Chapter 5. */
+.chapter-habitat-visual {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  max-width: 38rem;
+  margin: 16px auto 18px;
+  padding: 16px 20px;
+  border: 1px solid #cdddc9;
+  border-radius: 18px;
+  background: radial-gradient(circle at 10% 12%, #eaf6e5 0, transparent 11rem), linear-gradient(135deg, #f7fff2, #fffaf1);
+  text-align: center;
+}
+.chapter-habitat-symbol {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border: 1px solid #d9e8d1;
+  border-radius: 50%;
+  background: #fff;
+  font-size: 2rem;
+  line-height: 1;
+}
+.chapter-habitat-title { margin: 2px 0 0; color: #4f684d; font-size: .96rem; }
+.chapter-habitat-kicker {
+  margin: 5px 0 0;
+  color: #7a896f;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+.chapter-habitat-copy {
+  max-width: 34rem;
+  margin: 0;
+  color: #5f6f5c;
+  font-size: .8rem;
+  line-height: 1.5;
+}
+.chapter-habitat-feature {
+  max-width: 34rem;
+  color: #5f6341;
+  font-size: .88rem;
+  line-height: 1.4;
+}
+@media (max-width: 720px) {
+  .chapter-habitat-visual { padding: 12px; }
+  .chapter-habitat-symbol { width: 50px; height: 50px; font-size: 1.75rem; }
+}

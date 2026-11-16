@@ -35,7 +35,7 @@ import { createGymnasticsEngine } from "../src/gameplay/gymnastics/gymnasticsEng
 import { gameConfig } from "../src/config/gameConfig.js";
 
 test("Chapter 1 is registered as a five-part story, math, challenge, and movement adventure", () => {
-  assert.deepEqual(chapterDefinitions.map((chapter) => chapter.id), ["chapter-01", "chapter-02", "chapter-03", "chapter-04"]);
+  assert.deepEqual(chapterDefinitions.map((chapter) => chapter.id), ["chapter-01", "chapter-02", "chapter-03", "chapter-04", "chapter-05"]);
   assert.equal(getChapterDefinition("chapter-01"), chapterOneDefinition);
   assert.equal(getChapterDefinition("chapter-02"), chapterTwoDefinition);
   assert.equal(getChapterDefinition("chapter-03"), chapterThreeDefinition);

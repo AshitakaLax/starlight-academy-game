@@ -1,6 +1,7 @@
 import { validateActivityDefinition } from "./activityDefinitions.js";
 import { gameConfig } from "../../config/gameConfig.js";
 import { getChapterThreeWords } from "../../data/wordBuildingLexicon.js";
+import { getHabitatCreatures, getHabitatAdaptations, getHabitatEcosystemConnections } from "../../data/habitatLexicon.js";
 
 function hashSeed(seed) {
   if (typeof seed === "number" && Number.isFinite(seed)) return seed >>> 0;
@@ -317,6 +318,64 @@ const BUILT_IN_GENERATORS = Object.freeze({
     createRectangleMeasurementQuestion({ random, constraints, focus: "perimeter" }),
   "geometry.area": ({ random, constraints }) =>
     createRectangleMeasurementQuestion({ random, constraints, focus: "area" }),
+  "habitats.biome-match": ({ random, constraints, tier }) => {
+    const creatures = getHabitatCreatures(tier);
+    const creature = random.pick(creatures);
+    const choices = creatures.map((entry) => entry.habitatLabel);
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "Read the animal's climate, food, and shelter clues. Which habitat is the best match?",
+      correctAnswer: creature.habitatLabel,
+      choices: makeDistinctChoices(creature.habitatLabel, choices, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "habitat-creature", animal: creature.animal, symbol: creature.symbol,
+        climateClue: creature.climateClue, needsClue: creature.needsClue
+      })
+    };
+  },
+  "habitats.adaptation-type": ({ random, constraints, tier }) => {
+    const adaptations = getHabitatAdaptations(tier);
+    const adaptation = random.pick(adaptations);
+    const categories = ["structural", "behavioral"];
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "Is this a structural body feature or a behavioral action?",
+      correctAnswer: adaptation.type,
+      choices: makeDistinctChoices(adaptation.type, categories, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "adaptation-clue", animal: adaptation.animal, symbol: adaptation.symbol,
+        feature: adaptation.feature, description: adaptation.description, focus: "type"
+      })
+    };
+  },
+  "habitats.adaptation-purpose": ({ random, constraints, tier }) => {
+    const adaptations = getHabitatAdaptations(tier);
+    const adaptation = random.pick(adaptations);
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "How does this adaptation help the animal survive?",
+      correctAnswer: adaptation.purpose,
+      choices: makeDistinctChoices(adaptation.purpose, adaptations.map((entry) => entry.purpose), random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "adaptation-clue", animal: adaptation.animal, symbol: adaptation.symbol,
+        feature: adaptation.feature, description: adaptation.description, focus: "purpose"
+      })
+    };
+  },
+  "habitats.ecosystem-connection": ({ random, constraints, tier }) => {
+    const connections = getHabitatEcosystemConnections(tier);
+    const connection = random.pick(connections);
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "How can this action affect the ecosystem?",
+      correctAnswer: connection.effect,
+      choices: makeDistinctChoices(connection.effect, connections.map((entry) => entry.effect), random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "ecosystem-connection", organism: connection.organism, symbol: connection.symbol,
+        action: connection.action, context: connection.context
+      })
+    };
+  },
   "language.word-building": ({ random, constraints, tier }) => {
     const focus = constraints.focus;
     if (!["prefix", "suffix"].includes(focus)) {
