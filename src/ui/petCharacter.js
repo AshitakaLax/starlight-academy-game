@@ -41,7 +41,7 @@ const SPECIES_ART = Object.freeze({
   ].join(""),
   "nymph-kitten": [
     '<g class="pet-character-tail"><path d="M113 105 Q149 112 148 87 Q147 72 135 78 Q128 83 136 90" fill="none" stroke="var(--pet-secondary)" stroke-width="11" stroke-linecap="round"/><path d="M140 80q8-6 13 2" fill="none" stroke="var(--pet-accent)" stroke-width="3" stroke-linecap="round"/></g>',
-    '<g class="pet-character-wing pet-character-wing--far"><path d="M67 83 Q43 65 51 49 Q66 49 80 72 Q89 54 102 56 Q107 77 84 91Z" fill="#d9c9e9" stroke="#87769a" stroke-width="2.2"/><path d="M57 56q12 10 20 27 M75 57q9 8 12 22" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/></g>',
+    '<g class="pet-character-wing pet-character-wing--far"><path d="M67 83 Q43 65 51 49 Q66 49 80 72 Q89 54 102 56 Q107 77 84 91Z" fill="var(--pet-secondary)" stroke="#87769a" stroke-width="2.2"/><path d="M57 56q12 10 20 27 M75 57q9 8 12 22" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/></g>',
     '<g class="pet-character-body" stroke="#756589" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">',
     '<ellipse cx="95" cy="102" rx="32" ry="25" fill="var(--pet-primary)"/>',
     '<path d="M76 111 Q75 126 67 129 M96 119 Q97 129 91 132 M112 114 Q119 125 121 130" fill="none" stroke="var(--pet-primary)" stroke-width="9"/><path d="M62 130h10 M87 133h10 M117 131h9" fill="none" stroke="#756589" stroke-width="3.5"/>',
@@ -54,7 +54,7 @@ const SPECIES_ART = Object.freeze({
     '<ellipse cx="70" cy="81" rx="6" ry="3.5" fill="#e8a8bd" stroke="none" opacity=".8"/><ellipse cx="121" cy="81" rx="6" ry="3.5" fill="#e8a8bd" stroke="none" opacity=".8"/>',
     '<path d="M74 42q7-12 15-7 M99 37q10-8 18 2" fill="none" stroke="var(--pet-accent)" stroke-width="4"/>',
     '</g>',
-    '<g class="pet-character-wing pet-character-wing--near"><path d="M81 85 Q58 79 57 63 Q72 57 91 79 Q99 63 110 64 Q116 80 99 93Z" fill="#d9c9e9" stroke="#87769a" stroke-width="2"/><path d="M64 66q14 8 24 19 M87 68q8 8 10 19" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></g>',
+    '<g class="pet-character-wing pet-character-wing--near"><path d="M81 85 Q58 79 57 63 Q72 57 91 79 Q99 63 110 64 Q116 80 99 93Z" fill="var(--pet-secondary)" stroke="#87769a" stroke-width="2"/><path d="M64 66q14 8 24 19 M87 68q8 8 10 19" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></g>',
     '<path d="M47 92l3 6 6 1-5 4 1 7-5-4-6 4 1-7-5-4 6-1Z" fill="var(--pet-accent)"/>'
   ].join("")
 });
@@ -93,4 +93,32 @@ export function createPetCharacterMarkup({ species, palette, reaction = "idle" }
     effects,
     '</svg>'
   ].join("");
+}
+
+
+/**
+ * Resolve a saved pet appearance into the exact colors and SVG used by the UI.
+ * The returned palette ID is mirrored on the character stage for diagnostics
+ * and browser-level verification.
+ */
+export function createPetCharacterPresentation(pet, reaction = "idle") {
+  if (!pet || typeof pet.id !== "string" || !pet.id.startsWith("pet.")) {
+    throw new TypeError("A registered pet is required to create its character presentation.");
+  }
+  const species = pet.id.slice("pet.".length);
+  if (!Object.hasOwn(SPECIES_ART, species)) {
+    throw new TypeError("Pet character species is not supported: " + species);
+  }
+  const palettes = Array.isArray(pet.appearancePalettes) ? pet.appearancePalettes : [];
+  const selectedPalette = palettes.find((entry) => entry.id === pet.appearance?.paletteId)
+    ?? palettes[0]
+    ?? SPECIES_DEFAULTS[species];
+  const paletteId = palettes.includes(selectedPalette) ? selectedPalette.id : "default";
+  const colors = resolvePalette(species, selectedPalette);
+  return Object.freeze({
+    species,
+    paletteId,
+    palette: colors,
+    markup: createPetCharacterMarkup({ species, palette: colors, reaction })
+  });
 }

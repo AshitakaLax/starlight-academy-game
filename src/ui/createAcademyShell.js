@@ -9,7 +9,7 @@ import { buildQuestBoardSnapshot } from "../gameplay/chapter-runtime/questBoard.
 import { gameConfig } from "../config/gameConfig.js";
 import { renderColoringCanvas } from "../gameplay/coloring/renderColoringCanvas.js";
 import { createAcademyScene } from "../rendering/scenes/createAcademyScene.js";
-import { createPetCharacterMarkup } from "./petCharacter.js";
+import { createPetCharacterPresentation } from "./petCharacter.js";
 
 const DESTINATIONS = Object.freeze({
   chapters: Object.freeze({
@@ -571,24 +571,27 @@ export function createAcademyShell({
       const card = documentRef.createElement("article");
       card.className = "pet-collection-card";
       card.dataset.petState = pet.unlocked ? (pet.active ? "active" : "unlocked") : "locked";
-      const palette = pet.appearancePalettes.find((entry) => entry.id === pet.appearance.paletteId)
-        ?? pet.appearancePalettes[0];
+      const presentation = createPetCharacterPresentation(
+        pet,
+        reaction?.petId === pet.id ? reaction.careType : "idle"
+      );
       const character = documentRef.createElement("div");
       character.className = "pet-character-stage";
-      character.dataset.species = pet.id.slice("pet.".length);
+      character.dataset.species = presentation.species;
+      character.dataset.paletteId = presentation.paletteId;
+      character.style.setProperty("--pet-primary", presentation.palette.primaryColor);
+      character.style.setProperty("--pet-secondary", presentation.palette.secondaryColor);
+      character.style.setProperty("--pet-accent", presentation.palette.accentColor);
       character.setAttribute("aria-hidden", "true");
-      character.innerHTML = createPetCharacterMarkup({
-        species: pet.id.slice("pet.".length),
-        palette,
-        reaction: reaction?.petId === pet.id ? reaction.careType : "idle"
-      });
+      character.innerHTML = presentation.markup;
       const title = documentRef.createElement("h3");
       title.textContent = pet.title;
       const description = documentRef.createElement("p");
       description.textContent = pet.description;
       const appearance = documentRef.createElement("p");
       appearance.className = "pet-collection-detail";
-      appearance.textContent = pet.unlocked ? "Look: " + (palette?.label ?? "Classic") : "A new friend to discover";
+      const paletteLabel = pet.appearancePalettes.find((entry) => entry.id === presentation.paletteId)?.label ?? "Classic";
+      appearance.textContent = pet.unlocked ? "Look: " + paletteLabel : "A new friend to discover";
       card.append(character, title, description, appearance);
       const action = documentRef.createElement("button");
       action.type = "button";

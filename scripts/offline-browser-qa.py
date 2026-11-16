@@ -168,6 +168,20 @@ def main() -> None:
         click_button(page, "Pets")
         require("Pegasus" in page.locator("body").inner_text(),
                 "Starter companion did not render.")
+        appearance_select = page.locator(
+            'select[data-pet-action="appearance"][data-pet-id="pet.pegasus"]'
+        )
+        appearance_select.select_option("twilight")
+        pegasus_character = page.locator(
+            '.pet-character-stage[data-species="pegasus"]'
+        )
+        require(pegasus_character.get_attribute("data-palette-id") == "twilight",
+                "Selecting a new appearance did not update the rendered pet palette.")
+        rendered_primary = pegasus_character.locator(
+            ".pet-character-body ellipse"
+        ).evaluate("(element) => getComputedStyle(element).fill")
+        require(rendered_primary == "rgb(217, 213, 242)",
+                "The Pegasus artwork did not repaint with its Twilight palette.")
         click_button(page, "Give a treat")
         pet_text = page.locator("body").inner_text()
         require("Treat feeding · 25%" in pet_text
@@ -240,9 +254,11 @@ def main() -> None:
         require(saved_state.get("chapterRuntime", {}).get("chapters", {})
                 .get("chapter-01", {}).get("status") == "completed",
                 "Save storage did not preserve chapter completion.")
-        require(saved_state.get("petCollection", {}).get("pets", {})
-                .get("pet.pegasus", {}).get("careMoments") == 1,
+        saved_pegasus = saved_state.get("petCollection", {}).get("pets", {}).get("pet.pegasus", {})
+        require(saved_pegasus.get("careMoments") == 1,
                 "Save storage did not preserve pet-care progress.")
+        require(saved_pegasus.get("appearance", {}).get("paletteId") == "twilight",
+                "Save storage did not preserve the selected pet appearance.")
         require("wardrobe.moonbeam-bow" in saved_state.get("wardrobe", {}).get("inventory", {}),
                 "Save storage did not preserve the wardrobe purchase.")
 
@@ -267,6 +283,16 @@ def main() -> None:
         require("Treat feeding · 25%" in restored_pet_text
                 and "Friendship 5 · Care moments 1" in restored_pet_text,
                 "Pet care did not survive browser restoration.")
+        restored_pegasus = restored_page.locator(
+            '.pet-character-stage[data-species="pegasus"]'
+        )
+        require(restored_pegasus.get_attribute("data-palette-id") == "twilight",
+                "The selected pet appearance did not survive browser restoration.")
+        restored_primary = restored_pegasus.locator(
+            ".pet-character-body ellipse"
+        ).evaluate("(element) => getComputedStyle(element).fill")
+        require(restored_primary == "rgb(217, 213, 242)",
+                "The restored Pegasus artwork did not use its selected palette.")
         click_button(restored_page, "Wardrobe")
         require("Moonbeam Bow" in restored_page.locator("body").inner_text(),
                 "Purchased cosmetic did not survive browser restoration.")

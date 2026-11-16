@@ -19,3 +19,6 @@ No elapsed-time or inactivity logic exists in the collection model, so care and 
 ## Animated companion presentation
 
 The Pets screen uses the presentation-only `src/ui/petCharacter.js` helper to render each species as a small inline SVG character. The characters idle with gentle movement and use the selected appearance palette. Feeding, grooming, and ribbon play trigger distinct temporary visual reactions (a happy hop and treat, a sparkle glow, or a playful ribbon flourish). These reactions are not persisted and do not change care, bond, reward, or ability rules. CSS animations respect the academy's reduced-motion preference and the artwork is bundled into the self-contained offline HTML.
+
+
+Appearance selection dispatches the validated `pets/appearance-updated` action. The UI resolves the saved palette ID into a pet-character presentation and applies its primary, secondary, and accent colors to the character stage as well as the inline SVG. This forces every palette-driven part of the artwork to repaint immediately. The selected palette ID is saved with the pet and is verified after an offline browser reload; changing appearance does not affect care or bond progress.
