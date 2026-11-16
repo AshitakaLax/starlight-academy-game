@@ -2,7 +2,7 @@ import { validateActivityDefinition } from "./activityDefinitions.js";
 import { gameConfig } from "../../config/gameConfig.js";
 import { getChapterThreeWords } from "../../data/wordBuildingLexicon.js";
 import { getHabitatCreatures, getHabitatAdaptations, getHabitatEcosystemConnections } from "../../data/habitatLexicon.js";
-import { getPlantLifecycleStages, getPlantLifecycleTransitions, getPlantResourceScenarios, photosynthesisChoiceBank, PHOTOSYNTHESIS_INPUTS_ANSWER } from "../../data/plantLexicon.js";
+import { getPlantLifecycleStages, getPlantLifecycleTransitions, getPlantResourceScenarios, getPlantPhotosynthesisRecipeScenarios, photosynthesisChoiceBank, PHOTOSYNTHESIS_INPUTS_ANSWER } from "../../data/plantLexicon.js";
 import { getGrammarExamples, getReadingPassages } from "../../data/languageArtsLexicon.js";
 import { getVolumeScale, getMassBalanceProblems, getUnitConversionProblems, getElapsedTimeOptions } from "../../data/measurementLexicon.js";
 import { getDivisionSettings, getMultiStepProblems } from "../../data/chimeraChallengeLexicon.js";
@@ -610,6 +610,49 @@ const BUILT_IN_GENERATORS = Object.freeze({
         kind: "photosynthesis-inputs",
         title: "The greenhouse recipe card",
         roles: ["Energy from light", "Taken in through roots", "Taken in from air"]
+      })
+    };
+  },
+  "quests.plant-lifecycle-backtrack": ({ random, constraints, tier }) => {
+    const transition = random.pick(getPlantLifecycleTransitions(tier));
+    const precedingStage = transition.currentStages.at(-1);
+    const laterStage = transition.nextStage;
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    return {
+      prompt: "Which plant life-cycle stage came immediately before " + laterStage.label + "?",
+      correctAnswer: precedingStage.label,
+      choices: makeDistinctChoices(
+        precedingStage.label,
+        getPlantLifecycleStages().map((stage) => stage.label),
+        random,
+        choiceCount
+      ),
+      stimulus: Object.freeze({
+        kind: "plant-lifecycle",
+        title: "Work backward from this stage",
+        listLabel: "Plant life-cycle stage clue",
+        caption: "The shown stage is the clue. Move one step earlier in the cycle.",
+        completedStages: [Object.freeze({
+          id: laterStage.id, label: laterStage.label, description: laterStage.description
+        })]
+      })
+    };
+  },
+  "quests.plant-recipe-restorer": ({ random, constraints, tier }) => {
+    const scenario = random.pick(getPlantPhotosynthesisRecipeScenarios(tier));
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    const resources = ["Sunlight", "Water", "Carbon dioxide", "Oxygen", "Mineral nutrients"];
+    return {
+      prompt: "Two photosynthesis inputs are already on the recipe card. Which input is missing?",
+      correctAnswer: scenario.missingInput,
+      choices: makeDistinctChoices(scenario.missingInput, resources, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "photosynthesis-inputs",
+        title: scenario.title,
+        kicker: "Already present in the recipe",
+        roles: Object.freeze([...scenario.availableInputs]),
+        scenario: scenario.scenario,
+        caption: "Choose the photosynthesis input that is not yet listed."
       })
     };
   },

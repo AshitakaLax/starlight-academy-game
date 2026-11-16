@@ -51,5 +51,5 @@ test("release defaults and incremental content registries match implemented scop
   assert.equal(gameConfig.release.sideQuestCount, 20);
   assert.equal(gameConfig.release.offlineRuntime, true);
   assert.equal(chapterDefinitions.length, 10);
-  assert.equal(sideQuestDefinitions.length, 10);
+  assert.equal(sideQuestDefinitions.length, 12);
 });

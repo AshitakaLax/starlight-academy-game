@@ -958,10 +958,10 @@ export function createAcademyShell({
     figure.className = "chapter-plant-visual";
 
     if (stimulus.kind === "plant-lifecycle") {
-      appendChapterText(figure, "h5", "Growing plant cycle", "chapter-plant-title");
+      appendChapterText(figure, "h5", stimulus.title ?? "Growing plant cycle", "chapter-plant-title");
       const stages = documentRef.createElement("ol");
       stages.className = "chapter-plant-stages";
-      stages.setAttribute("aria-label", "Life-cycle stages already completed");
+      stages.setAttribute("aria-label", stimulus.listLabel ?? "Life-cycle stages already completed");
       for (const [index, stage] of (stimulus.completedStages ?? []).entries()) {
         const item = documentRef.createElement("li");
         item.className = "chapter-plant-stage";
@@ -971,17 +971,18 @@ export function createAcademyShell({
         stages.append(item);
       }
       figure.append(stages);
-      appendChapterText(figure, "figcaption", "Follow the stages in order. Which one comes next?", "chapter-plant-caption");
+      appendChapterText(figure, "figcaption", stimulus.caption ?? "Follow the stages in order. Which one comes next?", "chapter-plant-caption");
     } else if (stimulus.kind === "plant-resource-scenario") {
       appendChapterText(figure, "span", "🌱", "chapter-plant-symbol");
       appendChapterText(figure, "h5", stimulus.title ?? "Greenhouse observation", "chapter-plant-title");
       appendChapterText(figure, "p", "What the plant is experiencing", "chapter-plant-kicker");
       appendChapterText(figure, "p", stimulus.scenario, "chapter-plant-copy");
-      appendChapterText(figure, "p", "Think about what is missing before choosing a resource.", "chapter-plant-caption");
+      appendChapterText(figure, "p", stimulus.caption ?? "Think about what is missing before choosing a resource.", "chapter-plant-caption");
     } else {
       appendChapterText(figure, "span", "☀️", "chapter-plant-symbol");
       appendChapterText(figure, "h5", stimulus.title ?? "Photosynthesis recipe", "chapter-plant-title");
-      appendChapterText(figure, "p", "Complete the three spaces", "chapter-plant-kicker");
+      appendChapterText(figure, "p", stimulus.kicker ?? "Complete the three spaces", "chapter-plant-kicker");
+      if (stimulus.scenario) appendChapterText(figure, "p", stimulus.scenario, "chapter-plant-copy");
       const roles = documentRef.createElement("ul");
       roles.className = "chapter-photosynthesis-roles";
       for (const role of (stimulus.roles ?? [])) {
@@ -990,7 +991,7 @@ export function createAcademyShell({
         roles.append(item);
       }
       figure.append(roles);
-      appendChapterText(figure, "figcaption", "The plant uses these inputs to make sugars and releases oxygen.", "chapter-plant-caption");
+      appendChapterText(figure, "figcaption", stimulus.caption ?? "The plant uses these inputs to make sugars and releases oxygen.", "chapter-plant-caption");
     }
 
     parent.append(figure);

@@ -114,6 +114,54 @@ export function getPlantResourceScenarios(tier = "core") {
   );
 }
 
+/**
+ * Partly completed photosynthesis recipes for application questions.
+ * Foundation introduces one missing-input pattern; Core adds a second;
+ * Stretch includes all three possible missing inputs.
+ */
+export const plantPhotosynthesisRecipeScenarios = deepFreeze([
+  {
+    id: "recipe-missing-carbon-dioxide",
+    tier: "foundation",
+    missingInput: "Carbon dioxide",
+    availableInputs: ["Sunlight", "Water"],
+    title: "The fresh-air recipe card",
+    scenario: "The plant has sunlight and water, but the greenhouse air is not being refreshed around its leaves."
+  },
+  {
+    id: "recipe-missing-water",
+    tier: "core",
+    missingInput: "Water",
+    availableInputs: ["Sunlight", "Carbon dioxide"],
+    title: "The dry-roots recipe card",
+    scenario: "The leaves receive sunlight and fresh air, but the growing mix is dry and the roots cannot absorb water."
+  },
+  {
+    id: "recipe-missing-sunlight",
+    tier: "stretch",
+    missingInput: "Sunlight",
+    availableInputs: ["Water", "Carbon dioxide"],
+    title: "The dark-greenhouse recipe card",
+    scenario: "The plant has water and fresh air, but it is growing in a dark room without light."
+  }
+]);
+
+const PHOTOSYNTHESIS_RECIPE_TIER_ORDER = Object.freeze({
+  foundation: 0,
+  core: 1,
+  stretch: 2
+});
+
+export function getPlantPhotosynthesisRecipeScenarios(tier = "core") {
+  const level = PHOTOSYNTHESIS_RECIPE_TIER_ORDER[tier];
+  if (!Number.isInteger(level)) {
+    throw new RangeError("Unknown photosynthesis-recipe difficulty tier: " + tier);
+  }
+  return plantPhotosynthesisRecipeScenarios.filter((scenario) =>
+    PHOTOSYNTHESIS_RECIPE_TIER_ORDER[scenario.tier] <= level
+  );
+}
+
 export const PHOTOSYNTHESIS_INPUTS_ANSWER = "Sunlight, water, and carbon dioxide";
 
 export const photosynthesisChoiceBank = deepFreeze([
