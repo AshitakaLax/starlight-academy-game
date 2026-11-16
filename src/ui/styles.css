@@ -1461,9 +1461,9 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .pet-character-art[data-reaction="feeding"] .pet-character-body { animation: pet-character-idle 3.6s ease-in-out infinite, pet-character-happy-hop .78s ease-in-out 2; }
 .pet-character-art[data-reaction="grooming"] .pet-character-body { animation: pet-character-idle 3.6s ease-in-out infinite, pet-character-groom-glow 1.15s ease-in-out 2; }
 .pet-character-art[data-reaction="play"] .pet-character-body { animation: pet-character-idle 3.6s ease-in-out infinite, pet-character-play-hop .82s ease-in-out 2; }
-.pet-character-art[data-reaction="feeding"] .pet-character-effect--feeding { opacity: 1; transform-box: fill-box; transform-origin: center; animation: pet-character-effect-pop .75s ease-out 2; }
-.pet-character-art[data-reaction="grooming"] .pet-character-effect--grooming { opacity: 1; transform-box: fill-box; transform-origin: center; animation: pet-character-sparkle .9s ease-in-out 2; }
-.pet-character-art[data-reaction="play"] .pet-character-effect--play { opacity: 1; transform-box: fill-box; transform-origin: center; animation: pet-character-ribbon .9s ease-in-out 2; }
+.pet-character-art[data-reaction="feeding"] .pet-character-effect--feeding { transform-box: fill-box; transform-origin: center; animation: pet-character-effect-pop .75s ease-out 2; }
+.pet-character-art[data-reaction="grooming"] .pet-character-effect--grooming { transform-box: fill-box; transform-origin: center; animation: pet-character-sparkle .9s ease-in-out 2; }
+.pet-character-art[data-reaction="play"] .pet-character-effect--play { transform-box: fill-box; transform-origin: center; animation: pet-character-ribbon .9s ease-in-out 2; }
 @keyframes pet-character-idle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 @keyframes pet-character-wing-flutter { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-7deg); } }
 @keyframes pet-character-tail-sway { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(7deg); } }
@@ -1483,3 +1483,13 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 }
 .academy-shell[data-reduced-motion="true"] .pet-character-art,
 .academy-shell[data-reduced-motion="true"] .pet-character-art * { animation: none !important; }
+
+/* With motion disabled, keep the care cue as a calm, static illustration. */
+@media (prefers-reduced-motion: reduce) {
+  .pet-character-art[data-reaction="feeding"] .pet-character-effect--feeding,
+  .pet-character-art[data-reaction="grooming"] .pet-character-effect--grooming,
+  .pet-character-art[data-reaction="play"] .pet-character-effect--play { opacity: 1; }
+}
+.academy-shell[data-reduced-motion="true"] .pet-character-art[data-reaction="feeding"] .pet-character-effect--feeding,
+.academy-shell[data-reduced-motion="true"] .pet-character-art[data-reaction="grooming"] .pet-character-effect--grooming,
+.academy-shell[data-reduced-motion="true"] .pet-character-art[data-reaction="play"] .pet-character-effect--play { opacity: 1; }
