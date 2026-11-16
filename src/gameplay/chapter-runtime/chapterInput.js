@@ -36,14 +36,14 @@ export function createChapterInputController({
     if (/^[1-4]$/.test(event.key)) {
       const choiceIndex = Number(event.key) - 1;
       if (choiceIndex >= question.choices.length) return false;
-      onAnswer(question.choices[choiceIndex]);
       event.preventDefault?.();
+      onAnswer(question.choices[choiceIndex]);
       return true;
     }
 
     if (String(event.key).toLowerCase() === "h") {
-      onHint(question);
       event.preventDefault?.();
+      onHint(question);
       return true;
     }
     return false;
