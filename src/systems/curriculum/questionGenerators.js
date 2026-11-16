@@ -1,5 +1,6 @@
 import { validateActivityDefinition } from "./activityDefinitions.js";
 import { gameConfig } from "../../config/gameConfig.js";
+import { getChapterThreeWords } from "../../data/wordBuildingLexicon.js";
 
 function hashSeed(seed) {
   if (typeof seed === "number" && Number.isFinite(seed)) return seed >>> 0;
@@ -197,6 +198,92 @@ const BUILT_IN_GENERATORS = Object.freeze({
           denominator,
           showValue: true
         })]
+      })
+    };
+  },
+  "language.word-building": ({ random, constraints, tier }) => {
+    const focus = constraints.focus;
+    if (!["prefix", "suffix"].includes(focus)) {
+      throw new TypeError("Word-building focus must be prefix or suffix.");
+    }
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    if (choiceCount > 6) throw new RangeError("Word-building choiceCount cannot exceed 6.");
+    const candidates = getChapterThreeWords(tier).filter((entry) =>
+      focus === "prefix" ? entry.prefixes.length > 0 : entry.suffixes.length > 0
+    );
+    if (candidates.length === 0) {
+      throw new RangeError("No curated words are available for " + focus + " practice at tier " + tier + ".");
+    }
+    const entry = random.pick(candidates);
+    const componentOptions = [
+      ...entry.prefixes.map((part) => ({
+        label: "Prefix",
+        text: part.display,
+        meaning: part.meaning
+      })),
+      { label: "Root",
+        text: entry.root.text,
+        meaning: entry.root.meaning
+      },
+      ...entry.suffixes.map((part) => ({
+        label: "Suffix",
+        text: part.display,
+        meaning: part.meaning
+      }))
+    ];
+    const distractors = random.shuffle(
+      getChapterThreeWords(tier).filter((candidate) => candidate.word !== entry.word)
+    ).slice(0, choiceCount - 1);
+    const choices = random.shuffle([entry.word, ...distractors.map((candidate) => candidate.word)]);
+    return {
+      prompt: "Choose the correctly spelled word formed by the parts shown.",
+      correctAnswer: entry.word,
+      choices,
+      stimulus: Object.freeze({
+        kind: "word-parts",
+        title: focus === "prefix" ? "Add a beginning" : "Add an ending",
+        instruction: "Read each word part from left to right, then blend the parts together.",
+        components: componentOptions,
+        meaning: entry.meaning
+      })
+    };
+  },
+  "language.context-potion": ({ random, constraints, tier }) => {
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    if (choiceCount > 6) throw new RangeError("Context-potion choiceCount cannot exceed 6.");
+    const entries = getChapterThreeWords(tier);
+    if (entries.length < choiceCount) {
+      throw new RangeError("The curated word bank does not have enough distinct choices for tier " + tier + ".");
+    }
+    const entry = random.pick(entries);
+    const distractors = random.shuffle(entries.filter((candidate) => candidate.word !== entry.word))
+      .slice(0, choiceCount - 1);
+    const choices = random.shuffle([entry.meaning, ...distractors.map((candidate) => candidate.meaning)]);
+    return {
+      prompt: "Read the potion note. Which meaning of “" + entry.word + "” best fits the sentence?",
+      correctAnswer: entry.meaning,
+      choices,
+      stimulus: Object.freeze({
+        kind: "context-potion",
+        title: "A clue from the cauldron",
+        word: entry.word,
+        sentence: entry.sentence,
+        root: Object.freeze({
+          text: entry.root.text,
+          meaning: entry.root.meaning
+        }),
+        components: [
+          ...entry.prefixes.map((part) => Object.freeze({
+            label: "Prefix",
+            text: part.display,
+            meaning: part.meaning
+          })),
+          ...entry.suffixes.map((part) => Object.freeze({
+            label: "Suffix",
+            text: part.display,
+            meaning: part.meaning
+          }))
+        ]
       })
     };
   }
