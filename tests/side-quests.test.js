@@ -24,6 +24,8 @@ import { chapterSixDefinition, chapterSixReward } from "../src/chapters/chapterS
 import { chapterSevenDefinition, chapterSevenReward } from "../src/chapters/chapterSeven.js";
 import { chapterEightDefinition, chapterEightReward } from "../src/chapters/chapterEight.js";
 import { chapterNineDefinition, chapterNineReward } from "../src/chapters/chapterNine.js";
+import { chapterTenDefinition, chapterTenReward } from "../src/chapters/chapterTen.js";
+import { getMultiStepProblems } from "../src/data/chimeraChallengeLexicon.js";
 import { getHabitatCreatures, getHabitatEcosystemConnections } from "../src/data/habitatLexicon.js";
 import { getPlantLifecycleStages, getPlantLifecycleTransitions, getPlantPhotosynthesisRecipeScenarios } from "../src/data/plantLexicon.js";
 import { getChapterThreeWords } from "../src/data/wordBuildingLexicon.js";
@@ -36,10 +38,10 @@ import {
 
 const tiers = ["foundation", "core", "stretch"];
 
-test("the first sixteen optional side quests have chapter-specific objectives and rewards", () => {
+test("the first eighteen optional side quests have chapter-specific objectives and rewards", () => {
   const questIds = [
     "quest-01", "quest-02", "quest-03", "quest-04", "quest-05",
-    "quest-06", "quest-07", "quest-08", "quest-09", "quest-10", "quest-11", "quest-12", "quest-13", "quest-14", "quest-15", "quest-16"
+    "quest-06", "quest-07", "quest-08", "quest-09", "quest-10", "quest-11", "quest-12", "quest-13", "quest-14", "quest-15", "quest-16", "quest-17", "quest-18"
   ];
   assert.deepEqual(sideQuestDefinitions.map((quest) => quest.id), questIds);
   for (const [index, id] of questIds.entries()) assert.equal(getSideQuestDefinition(id), sideQuestDefinitions[index]);
@@ -47,19 +49,19 @@ test("the first sixteen optional side quests have chapter-specific objectives an
   assert.deepEqual(sideQuestDefinitions.map((quest) => quest.questType), [
     "mastery", "application", "mastery", "application", "mastery",
     "application", "mastery", "application", "mastery", "application",
-    "mastery", "application", "mastery", "application", "mastery", "application"
+    "mastery", "application", "mastery", "application", "mastery", "application", "mastery", "application"
   ]);
   assert.deepEqual(sideQuestDefinitions.map((quest) => quest.sourceChapterId), [
     "chapter-01", "chapter-01", "chapter-02", "chapter-02", "chapter-03",
     "chapter-03", "chapter-04", "chapter-04", "chapter-05", "chapter-05",
-    "chapter-06", "chapter-06", "chapter-07", "chapter-07", "chapter-08", "chapter-08"
+    "chapter-06", "chapter-06", "chapter-07", "chapter-07", "chapter-08", "chapter-08", "chapter-09", "chapter-09"
   ]);
   assert.deepEqual(sideQuestDefinitions.map((quest) => quest.prerequisiteChapterIds), [
     ["chapter-01"], ["chapter-01"], ["chapter-02"], ["chapter-02"], ["chapter-03"],
     ["chapter-03"], ["chapter-04"], ["chapter-04"], ["chapter-05"], ["chapter-05"],
-    ["chapter-06"], ["chapter-06"], ["chapter-07"], ["chapter-07"], ["chapter-08"], ["chapter-08"]
+    ["chapter-06"], ["chapter-06"], ["chapter-07"], ["chapter-07"], ["chapter-08"], ["chapter-08"], ["chapter-09"], ["chapter-09"]
   ]);
-  for (let pairStart = 0; pairStart < 16; pairStart += 2) {
+  for (let pairStart = 0; pairStart < 18; pairStart += 2) {
     assert.notDeepEqual(sideQuestDefinitions[pairStart].objectives, sideQuestDefinitions[pairStart + 1].objectives);
   }
   assert.deepEqual(sideQuestDefinitions.map((quest) => quest.majorRewardIds), [
@@ -70,7 +72,8 @@ test("the first sixteen optional side quests have chapter-specific objectives an
     ["reward.quest-09-adaptation-detective-lens"], ["reward.quest-10-ecosystem-field-lens"],
     ["reward.quest-11-life-cycle-timeglass"], ["reward.quest-12-greenhouse-recipe-crystal"],
     ["reward.quest-13-grammar-twin-monocle"], ["reward.quest-14-evidence-compass-bookmark"],
-    ["reward.quest-15-metric-audit-loupe"], ["reward.quest-16-harbor-cargo-seal"]
+    ["reward.quest-15-metric-audit-loupe"], ["reward.quest-16-harbor-cargo-seal"],
+    ["reward.quest-17-chimera-blueprint-compass"], ["reward.quest-18-chimera-supply-satchel"]
   ]);
   assert.equal(validateSideQuestDefinition({
     ...sideQuestDefinitions[0], id: "chapter-99", sourceChapterId: "chapter-01", questType: "mastery"
@@ -78,13 +81,13 @@ test("the first sixteen optional side quests have chapter-specific objectives an
   for (const [index, quest] of sideQuestDefinitions.entries()) {
     assert.equal(quest.activities[0].id.startsWith("quest-" + String(index + 1).padStart(2, "0") + "."), true);
   }
-  assert.equal(sideQuestActivityDefinitions.length, 16);
-  assert.equal(sideQuestHintDefinitions.length, 16);
-  assert.equal(sideQuestRewardDefinitions.length, 16);
+  assert.equal(sideQuestActivityDefinitions.length, 18);
+  assert.equal(sideQuestHintDefinitions.length, 18);
+  assert.equal(sideQuestRewardDefinitions.length, 18);
   assert.deepEqual(sideQuestRewardDefinitions.map((reward) => reward.replayPolicy),
-    Array.from({ length: 16 }, () => ({ type: "once" })));
+    Array.from({ length: 18 }, () => ({ type: "once" })));
   assert.deepEqual(sideQuestRewardDefinitions.map((reward) => reward.sourceId), questIds);
-  assert.equal(new Set(sideQuestActivityDefinitions.map((activity) => activity.generatorId)).size, 16);
+  assert.equal(new Set(sideQuestActivityDefinitions.map((activity) => activity.generatorId)).size, 18);
   assert.equal(chapterOneDefinition.activities.length, 5);
   assert.equal(chapterOneDefinition.activities.every((activity) => activity.id.startsWith("chapter-01.")), true);
   assert.equal(chapterTwoDefinition.activities.length, 4);
@@ -596,6 +599,107 @@ test("The Harbor Cargo Calculator combines two curated object masses by tier", (
   }
 });
 
+test("The Chimera's Operation Blueprint distinguishes the correct event order at every tier", () => {
+  const activityRegistry = createActivityRegistry(sideQuestActivityDefinitions);
+  const generators = createQuestionGeneratorRegistry();
+  const activity = activityRegistry.get("quest-17.operation-blueprint");
+  assert.deepEqual(activity.skillIds, ["math.multi-step-reasoning"]);
+  assert.equal(activity.generatorId, "quests.chimera-operation-blueprint");
+
+  const signature = (steps) => JSON.stringify(steps);
+  for (const tier of tiers) {
+    const problems = getMultiStepProblems(tier);
+    const seen = new Set();
+    for (let index = 0; index < 128; index += 1) {
+      const options = { seed: "chimera-blueprint:" + tier + ":" + index, tier };
+      const question = generators.generate(activity, options);
+      assert.deepEqual(generators.generate(activity, options), question);
+      const stimulus = question.stimulus;
+      assert.equal(stimulus.kind, "chimera-operation-blueprint");
+      const source = problems.find((problem) => problem.id === stimulus.problemId);
+      assert.ok(source);
+      seen.add(source.id);
+      assert.equal(stimulus.startingValue, source.startValue);
+      assert.equal(stimulus.story, source.story);
+      assert.equal(stimulus.plans.length, 4);
+      assert.equal(question.choices.length, 4);
+      assert.equal(new Set(question.choices).size, 4);
+      assert.deepEqual(question.choices, stimulus.plans.map((plan) => plan.label));
+      assert.deepEqual(stimulus.plans.map((plan) => plan.label), ["A", "B", "C", "D"]);
+      const expectedSteps = source.steps.map((step) => ({
+        operation: step.operation,
+        operand: step.operand
+      }));
+      let computed = source.startValue;
+      for (const step of source.steps) {
+        if (step.operation === "add") computed += step.operand;
+        else if (step.operation === "subtract") computed -= step.operand;
+        else if (step.operation === "multiply") computed *= step.operand;
+        else if (step.operation === "divide") computed /= step.operand;
+        else assert.fail("Unexpected operation in curated multi-step problem.");
+      }
+      assert.equal(computed, source.answer);
+      const matchingPlans = stimulus.plans.filter((plan) => signature(plan.steps) === signature(expectedSteps));
+      assert.equal(matchingPlans.length, 1);
+      assert.equal(question.correctAnswer, matchingPlans[0].label);
+      assert.equal(checkActivityAnswer(question.correctAnswer, question.correctAnswer, question.answerRules), true);
+      assert.equal(new Set(stimulus.plans.map((plan) => signature(plan.steps))).size, 4);
+    }
+    assert.equal(seen.size, problems.length);
+  }
+});
+
+test("The Workshop Supply Planner applies tiered multi-step arithmetic to new scenarios", () => {
+  const activityRegistry = createActivityRegistry(sideQuestActivityDefinitions);
+  const generators = createQuestionGeneratorRegistry();
+  const activity = activityRegistry.get("quest-18.workshop-supply-plan");
+  assert.deepEqual(activity.skillIds, ["math.multi-step-reasoning"]);
+  assert.equal(activity.generatorId, "quests.chimera-supply-workshop");
+
+  for (const tier of tiers) {
+    const answers = new Set();
+    for (let index = 0; index < 96; index += 1) {
+      const options = { seed: "chimera-supply:" + tier + ":" + index, tier };
+      const question = generators.generate(activity, options);
+      assert.deepEqual(generators.generate(activity, options), question);
+      const stimulus = question.stimulus;
+      assert.equal(stimulus.kind, "chimera-supply-plan");
+      assert.equal(stimulus.tier, tier);
+      assert.ok(stimulus.story.includes("bundles"));
+      let expected;
+      if (tier === "foundation") {
+        const { startingBundles, deliveredBundles, reservedBundles } = stimulus.quantities;
+        expected = startingBundles + deliveredBundles - reservedBundles;
+        assert.equal(stimulus.clues.length, 2);
+        assert.ok(startingBundles > 0 && deliveredBundles > 0 && reservedBundles > 0);
+      } else if (tier === "core") {
+        const { crateCount, bundlesPerCrate, reservedBundles } = stimulus.quantities;
+        expected = crateCount * bundlesPerCrate - reservedBundles;
+        assert.equal(stimulus.clues.length, 2);
+        assert.ok(crateCount >= 3 && bundlesPerCrate >= 14 && reservedBundles > 0);
+        assert.ok(expected >= 20);
+      } else {
+        const { crateCount, bundlesPerCrate, reservedBundles, teamCount } = stimulus.quantities;
+        const remaining = crateCount * bundlesPerCrate - reservedBundles;
+        assert.equal(remaining % teamCount, 0);
+        expected = remaining / teamCount;
+        assert.equal(stimulus.clues.length, 3);
+        assert.ok(crateCount >= 12 && bundlesPerCrate >= 18 && reservedBundles > 0);
+        assert.ok(teamCount >= 3 && expected >= 20);
+      }
+      const formatted = expected.toLocaleString("en-US");
+      assert.equal(question.correctAnswer, formatted);
+      answers.add(formatted);
+      assert.equal(question.choices.length, 4);
+      assert.equal(new Set(question.choices).size, 4);
+      assert.ok(question.choices.every((choice) => /^\d[\d,]*$/.test(choice)));
+      assert.ok(question.choices.includes(question.correctAnswer));
+      assert.equal(checkActivityAnswer(question.correctAnswer, question.correctAnswer, question.answerRules), true);
+    }
+    assert.ok(answers.size > 10);
+  }
+});
+
 test("Professor Hoot gives each side quest three skill-matched hint stages", () => {
   const activityRegistry = createActivityRegistry(sideQuestActivityDefinitions);
   const hintRegistry = createHintRegistry({ activityRegistry, initialDefinitions: sideQuestHintDefinitions });
@@ -623,11 +727,11 @@ test("Professor Hoot gives each side quest three skill-matched hint stages", () 
 test("side quests unlock after their source chapter and never block the next chapter or duplicate rewards on replay", () => {
   const chapterCatalog = createChapterCatalog([
     chapterOneDefinition, chapterTwoDefinition, chapterThreeDefinition,
-    chapterFourDefinition, chapterFiveDefinition, chapterSixDefinition, chapterSevenDefinition, chapterEightDefinition, chapterNineDefinition, ...sideQuestDefinitions
+    chapterFourDefinition, chapterFiveDefinition, chapterSixDefinition, chapterSevenDefinition, chapterEightDefinition, chapterNineDefinition, chapterTenDefinition, ...sideQuestDefinitions
   ]);
   const rewardRegistry = createRewardRegistry([
     chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward,
-    chapterFiveReward, chapterSixReward, chapterSevenReward, chapterEightReward, chapterNineReward, ...sideQuestRewardDefinitions
+    chapterFiveReward, chapterSixReward, chapterSevenReward, chapterEightReward, chapterNineReward, chapterTenReward, ...sideQuestRewardDefinitions
   ]);
   const shopCatalog = createShopCatalog([]);
   const store = createGameStore({
@@ -736,7 +840,7 @@ test("side quests unlock after their source chapter and never block the next cha
   const afterChapterSeven = runtime.getSnapshot().chapters;
   for (const quest of sideQuestDefinitions) {
     const entry = afterChapterSeven.find((item) => item.id === quest.id);
-    assert.equal(entry.prerequisitesMet, quest.sourceChapterId !== "chapter-08");
+    assert.equal(entry.prerequisitesMet, ["chapter-01", "chapter-02", "chapter-03", "chapter-04", "chapter-05", "chapter-06", "chapter-07"].includes(quest.sourceChapterId));
     if (quest.sourceChapterId === "chapter-07") assert.equal(entry.progress.status, "not-started");
     if (quest.sourceChapterId === "chapter-08") assert.equal(entry.progress.status, "not-started");
   }
@@ -749,12 +853,24 @@ test("side quests unlock after their source chapter and never block the next cha
   const afterChapterEight = runtime.getSnapshot().chapters;
   for (const quest of sideQuestDefinitions) {
     const entry = afterChapterEight.find((item) => item.id === quest.id);
-    assert.equal(entry.prerequisitesMet, true);
+    assert.equal(entry.prerequisitesMet, ["chapter-01", "chapter-02", "chapter-03", "chapter-04", "chapter-05", "chapter-06", "chapter-07", "chapter-08"].includes(quest.sourceChapterId));
     assert.equal(entry.progress.status, "not-started");
   }
   const chapterNine = runtime.createSession("chapter-09");
   assert.equal(chapterNine.start().prerequisitesMet, true);
-  chapterNine.exit();
+  for (let index = 0; index < chapterNineDefinition.activities.length; index += 1) {
+    chapterNine.completeActivity();
+  }
+  assert.equal(chapterNine.getSnapshot().isComplete, true);
+  const afterChapterNine = runtime.getSnapshot().chapters;
+  for (const quest of sideQuestDefinitions) {
+    const entry = afterChapterNine.find((item) => item.id === quest.id);
+    assert.equal(entry.prerequisitesMet, true);
+    assert.equal(entry.progress.status, "not-started");
+  }
+  const chapterTen = runtime.createSession("chapter-10");
+  assert.equal(chapterTen.start().prerequisitesMet, true);
+  chapterTen.exit();
 
   for (const quest of sideQuestDefinitions) {
     const interrupted = runtime.createSession(quest.id);
@@ -786,7 +902,8 @@ test("side quests unlock after their source chapter and never block the next cha
   assert.equal(economy.rewardClaims[chapterSixReward.id], 1);
   assert.equal(economy.rewardClaims[chapterSevenReward.id], 1);
   assert.equal(economy.rewardClaims[chapterEightReward.id], 1);
-  assert.equal(economy.starGems, 1540);
-  assert.equal(economy.starlightSparkles, 106);
+  assert.equal(economy.rewardClaims[chapterNineReward.id], 1);
+  assert.equal(economy.starGems, 1835);
+  assert.equal(economy.starlightSparkles, 128);
   store.destroy();
 });

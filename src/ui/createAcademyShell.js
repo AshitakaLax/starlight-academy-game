@@ -1199,7 +1199,8 @@ export function createAcademyShell({
 
   function renderChapterChimeraStimulus(parent, stimulus) {
     if (!stimulus || ![
-      "chimera-division", "chimera-arithmetic", "chimera-multi-step"
+      "chimera-division", "chimera-arithmetic", "chimera-multi-step",
+      "chimera-operation-blueprint", "chimera-supply-plan"
     ].includes(stimulus.kind)) return;
 
     const figure = documentRef.createElement("figure");
@@ -1238,6 +1239,40 @@ export function createAcademyShell({
       equation.setAttribute("aria-label", stimulus.left + " " + stimulus.operation + " " + stimulus.right + " equals question mark");
       figure.append(equation);
       appendChapterText(figure, "figcaption", "Keep the place values organized and check your result.", "chapter-chimera-footnote");
+    } else if (stimulus.kind === "chimera-operation-blueprint") {
+      appendChapterText(figure, "h5", stimulus.title ?? "Operation blueprints", "chapter-chimera-title");
+      appendChapterText(figure, "p", stimulus.story ?? "", "chapter-chimera-story");
+      appendChapterText(figure, "p", "Starting amount: " + Number(stimulus.startingValue).toLocaleString("en-US"), "chapter-chimera-question");
+      appendChapterText(figure, "p", stimulus.question ?? "", "chapter-chimera-question");
+      const plans = documentRef.createElement("ol");
+      plans.className = "chapter-chimera-blueprint-plans";
+      const operationLabels = { add: "Add", subtract: "Subtract", multiply: "Multiply by", divide: "Divide by" };
+      for (const plan of (stimulus.plans ?? [])) {
+        const item = documentRef.createElement("li");
+        const heading = documentRef.createElement("strong");
+        heading.textContent = "Plan " + plan.label;
+        const sequence = documentRef.createElement("span");
+        sequence.textContent = plan.steps.map((step) =>
+          operationLabels[step.operation] + " " + Number(step.operand).toLocaleString("en-US")
+        ).join(" → ");
+        item.append(heading, sequence);
+        plans.append(item);
+      }
+      figure.append(plans);
+      appendChapterText(figure, "figcaption", "Choose the plan that matches every event in the story, in order.", "chapter-chimera-footnote");
+    } else if (stimulus.kind === "chimera-supply-plan") {
+      appendChapterText(figure, "h5", stimulus.title ?? "Workshop supply order", "chapter-chimera-title");
+      appendChapterText(figure, "p", stimulus.story ?? "", "chapter-chimera-story");
+      appendChapterText(figure, "p", stimulus.question ?? "", "chapter-chimera-question");
+      const clues = documentRef.createElement("ol");
+      clues.className = "chapter-chimera-step-prompts";
+      clues.setAttribute("aria-label", "Steps for solving the workshop supply problem");
+      for (const clue of (stimulus.clues ?? [])) {
+        const item = documentRef.createElement("li");
+        item.textContent = clue;
+        clues.append(item);
+      }
+      figure.append(clues);
     } else {
       appendChapterText(figure, "h5", stimulus.title ?? "A path through the clues", "chapter-chimera-title");
       appendChapterText(figure, "p", stimulus.story ?? "", "chapter-chimera-story");

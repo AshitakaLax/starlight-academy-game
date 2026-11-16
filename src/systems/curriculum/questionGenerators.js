@@ -1252,6 +1252,151 @@ const BUILT_IN_GENERATORS = Object.freeze({
       })
     };
   },
+  "quests.chimera-operation-blueprint": ({ random, constraints, tier }) => {
+    const problem = random.pick(getMultiStepProblems(tier));
+    const sourceSteps = problem.steps.map((step) => ({
+      operation: step.operation,
+      operand: step.operand
+    }));
+    const operations = ["add", "subtract", "multiply", "divide"];
+    const signature = (steps) => JSON.stringify(steps);
+    const correctSignature = signature(sourceSteps);
+    const candidatePlans = [
+      sourceSteps.slice().reverse(),
+      sourceSteps.map((step, index) => index === 0
+        ? { ...step, operation: operations.find((operation) => operation !== step.operation) }
+        : { ...step }),
+      sourceSteps.map((step, index) => index === sourceSteps.length - 1
+        ? { ...step, operation: operations.find((operation) => operation !== step.operation) }
+        : { ...step })
+    ];
+    const uniqueDistractors = [];
+    const seen = new Set([correctSignature]);
+    for (const candidate of candidatePlans) {
+      const key = signature(candidate);
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueDistractors.push(candidate);
+      }
+    }
+    if (uniqueDistractors.length < 3) {
+      for (const operation of operations) {
+        const candidate = sourceSteps.map((step, index) => index === 0
+          ? { ...step, operand: step.operand + 1 }
+          : { ...step });
+        candidate[0].operation = operation;
+        const key = signature(candidate);
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniqueDistractors.push(candidate);
+        }
+        if (uniqueDistractors.length === 3) break;
+      }
+    }
+    if (uniqueDistractors.length !== 3) {
+      throw new Error("The Chimera operation blueprint could not create three distinct distractor plans.");
+    }
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    if (choiceCount !== 4) throw new RangeError("The Chimera operation blueprint requires exactly four plans.");
+    const plans = random.shuffle([sourceSteps, ...uniqueDistractors]).map((steps, index) => ({
+      label: String.fromCharCode(65 + index),
+      steps: steps.map((step) => Object.freeze({ ...step }))
+    }));
+    const correctPlan = plans.find((plan) => signature(plan.steps) === correctSignature);
+    return {
+      prompt: "Read the story and choose the operation plan that follows the events in the correct order.",
+      correctAnswer: correctPlan.label,
+      choices: plans.map((plan) => plan.label),
+      stimulus: Object.freeze({
+        kind: "chimera-operation-blueprint",
+        problemId: problem.id,
+        title: problem.title,
+        story: problem.story,
+        question: problem.question,
+        startingValue: problem.startValue,
+        plans: Object.freeze(plans.map((plan) => Object.freeze({
+          label: plan.label,
+          steps: Object.freeze(plan.steps)
+        })))
+      })
+    };
+  },
+  "quests.chimera-supply-workshop": ({ random, constraints, tier }) => {
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    let correctValue;
+    let story;
+    let question;
+    let clues;
+    let quantities;
+    if (tier === "foundation") {
+      const startingBundles = random.integer(18, 36);
+      const deliveredBundles = random.integer(6, 18);
+      const reservedBundles = random.integer(3, 12);
+      correctValue = startingBundles + deliveredBundles - reservedBundles;
+      story = "The Chimera workshop starts with " + startingBundles
+        + " supply bundles. A delivery brings " + deliveredBundles
+        + " more bundles, and " + reservedBundles
+        + " are set aside for the demonstration table.";
+      question = "How many bundles remain for the workshop stations?";
+      clues = [
+        "Combine the starting bundles and the delivery.",
+        "Subtract the bundles set aside for the demonstration."
+      ];
+      quantities = { startingBundles, deliveredBundles, reservedBundles };
+    } else if (tier === "core") {
+      const crateCount = random.integer(3, 8);
+      const bundlesPerCrate = random.integer(14, 32);
+      const totalBundles = crateCount * bundlesPerCrate;
+      const reservedBundles = random.integer(8, Math.min(70, totalBundles - 20));
+      correctValue = totalBundles - reservedBundles;
+      story = "The workshop receives " + crateCount + " crates with "
+        + bundlesPerCrate + " supply bundles in each crate. The crew reserves "
+        + reservedBundles + " bundles for a special display.";
+      question = "How many bundles remain for the workshop stations?";
+      clues = [
+        "Multiply the bundles in each crate by the number of crates.",
+        "Subtract the bundles reserved for the special display."
+      ];
+      quantities = { crateCount, bundlesPerCrate, reservedBundles };
+    } else if (tier === "stretch") {
+      const crateCount = random.integer(12, 28);
+      const bundlesPerCrate = random.integer(18, 42);
+      const totalBundles = crateCount * bundlesPerCrate;
+      const teamCount = random.integer(3, 7);
+      const maximumShare = Math.floor((totalBundles - 1) / teamCount);
+      const bundlesPerTeam = random.integer(Math.max(20, Math.floor(maximumShare * 0.35)), maximumShare);
+      const reservedBundles = totalBundles - bundlesPerTeam * teamCount;
+      correctValue = bundlesPerTeam;
+      story = "The workshop receives " + crateCount + " crates with "
+        + bundlesPerCrate + " supply bundles in each crate. "
+        + reservedBundles + " bundles are reserved for the grand demonstration. "
+        + "The rest are shared equally among " + teamCount + " build teams.";
+      question = "How many bundles does each team receive?";
+      clues = [
+        "Find the total number of bundles in all the crates.",
+        "Subtract the bundles reserved for the grand demonstration.",
+        "Share the remaining bundles equally among the build teams."
+      ];
+      quantities = { crateCount, bundlesPerCrate, reservedBundles, teamCount };
+    } else {
+      throw new RangeError("Unknown workshop-supply difficulty tier: " + tier);
+    }
+    const distractorChoices = makeChoices(correctValue, random, choiceCount);
+    return {
+      prompt: question,
+      correctAnswer: correctValue.toLocaleString("en-US"),
+      choices: distractorChoices.map((value) => value.toLocaleString("en-US")),
+      stimulus: Object.freeze({
+        kind: "chimera-supply-plan",
+        tier,
+        title: "Workshop supply order",
+        story,
+        question,
+        clues: Object.freeze(clues),
+        quantities: Object.freeze(quantities)
+      })
+    };
+  },
   "reasoning.multi-step": ({ random, constraints, tier }) => {
     const problem = random.pick(getMultiStepProblems(tier));
     const correctAnswer = String(problem.answer);
