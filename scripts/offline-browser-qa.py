@@ -179,7 +179,7 @@ def main() -> None:
                 "Selecting a new appearance did not update the rendered pet palette.")
         rendered_primary = pegasus_character.locator(
             ".pet-character-body ellipse"
-        ).evaluate("(element) => getComputedStyle(element).fill")
+        ).first.evaluate("(element) => getComputedStyle(element).fill")
         require(rendered_primary == "rgb(217, 213, 242)",
                 "The Pegasus artwork did not repaint with its Twilight palette.")
         click_button(page, "Give a treat")
@@ -290,7 +290,7 @@ def main() -> None:
                 "The selected pet appearance did not survive browser restoration.")
         restored_primary = restored_pegasus.locator(
             ".pet-character-body ellipse"
-        ).evaluate("(element) => getComputedStyle(element).fill")
+        ).first.evaluate("(element) => getComputedStyle(element).fill")
         require(restored_primary == "rgb(217, 213, 242)",
                 "The restored Pegasus artwork did not use its selected palette.")
         click_button(restored_page, "Wardrobe")
