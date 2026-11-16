@@ -1197,6 +1197,44 @@ export function createAcademyShell({
   }
 
 
+  function renderChapterChampionshipStimulus(parent, stimulus) {
+    if (!stimulus || ![
+      "championship-skill-match", "championship-constellation-plan"
+    ].includes(stimulus.kind)) return;
+
+    const figure = documentRef.createElement("figure");
+    figure.className = "chapter-championship-visual";
+
+    if (stimulus.kind === "championship-skill-match") {
+      appendChapterText(figure, "h5", "A skill behind the star", "chapter-championship-title");
+      appendChapterText(figure, "p", stimulus.subjectLabel + " · skill clue", "chapter-championship-subject");
+      appendChapterText(figure, "p", stimulus.eventDescription, "chapter-championship-clue");
+      appendChapterText(figure, "figcaption", "Choose the star whose challenge uses the skill described above.", "chapter-championship-caption");
+    } else {
+      appendChapterText(figure, "h5", "The balanced constellation", "chapter-championship-title");
+      const list = documentRef.createElement("ul");
+      list.className = "chapter-championship-counts";
+      for (const entry of (stimulus.counts ?? [])) {
+        const item = documentRef.createElement("li");
+        const label = documentRef.createElement("strong");
+        label.textContent = entry.label;
+        const tally = documentRef.createElement("span");
+        tally.textContent = entry.current + " of " + entry.target + " stars";
+        item.append(label, tally);
+        list.append(item);
+      }
+      figure.append(list);
+      if (stimulus.mode === "replace-overfilled") {
+        appendChapterText(figure, "figcaption", "There are 12 selected stars. Compare each subject with four and count the overfilled selections that must be replaced.", "chapter-championship-caption");
+      } else {
+        appendChapterText(figure, "figcaption", "Each subject needs four stars. Compare the current counts with the targets above.", "chapter-championship-caption");
+      }
+    }
+
+    parent.append(figure);
+  }
+
+
   function renderChapterChimeraStimulus(parent, stimulus) {
     if (!stimulus || ![
       "chimera-division", "chimera-arithmetic", "chimera-multi-step",
@@ -1555,6 +1593,7 @@ export function createAcademyShell({
       renderChapterLanguageStimulus(card, question.stimulus);
       renderChapterMeasurementStimulus(card, question.stimulus);
       renderChapterChimeraStimulus(card, question.stimulus);
+      renderChapterChampionshipStimulus(card, question.stimulus);
       appendChapterText(card, "p", "Choose with the mouse or press 1–4. Press H whenever you would like a hint.", "chapter-question-help");
       const choices = documentRef.createElement("div");
       choices.className = "chapter-answer-grid";

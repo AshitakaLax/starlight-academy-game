@@ -6,6 +6,7 @@ import { getPlantLifecycleStages, getPlantLifecycleTransitions, getPlantResource
 import { getGrammarExamples, getReadingPassages } from "../../data/languageArtsLexicon.js";
 import { getVolumeScale, getMassBalanceProblems, getUnitConversionProblems, getElapsedTimeOptions } from "../../data/measurementLexicon.js";
 import { getDivisionSettings, getMultiStepProblems } from "../../data/chimeraChallengeLexicon.js";
+import { grandStarlightSampler, grandStarlightSubjectOrder } from "../../data/championshipSampler.js";
 
 function hashSeed(seed) {
   if (typeof seed === "number" && Number.isFinite(seed)) return seed >>> 0;
@@ -1249,6 +1250,118 @@ const BUILT_IN_GENERATORS = Object.freeze({
         rightValue: right,
         operation,
         symbol: symbols[operation]
+      })
+    };
+  },
+  "quests.championship-skill-match": ({ random, constraints, tier }) => {
+    const target = random.pick(grandStarlightSampler);
+    const sameSubject = grandStarlightSampler.filter((event) =>
+      event.subject === target.subject && event.id !== target.id
+    );
+    const otherSubjects = grandStarlightSampler.filter((event) =>
+      event.subject !== target.subject
+    );
+    let distractors;
+    if (tier === "foundation") {
+      distractors = random.shuffle(otherSubjects).slice(0, 3);
+    } else if (tier === "core") {
+      distractors = [
+        random.pick(sameSubject),
+        ...random.shuffle(otherSubjects).slice(0, 2)
+      ];
+    } else if (tier === "stretch") {
+      distractors = random.shuffle(sameSubject).slice(0, 3);
+    } else {
+      throw new RangeError("Unknown championship skill-match difficulty tier: " + tier);
+    }
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    if (choiceCount !== 4 || distractors.length !== 3) {
+      throw new RangeError("The championship skill match requires four distinct star choices.");
+    }
+    const choices = random.shuffle([target, ...distractors]);
+    return {
+      prompt: "Read the challenge clue. Which championship star represents the skill it describes?",
+      correctAnswer: target.title,
+      choices: choices.map((event) => event.title),
+      stimulus: Object.freeze({
+        kind: "championship-skill-match",
+        eventId: target.id,
+        subject: target.subject,
+        subjectLabel: target.lessonLabel.split("·")[0].trim(),
+        eventDescription: target.description
+      })
+    };
+  },
+  "quests.championship-constellation-plan": ({ random, constraints, tier }) => {
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    if (choiceCount !== 4) throw new RangeError("The constellation planner requires four answer choices.");
+    const subjectLabels = {
+      mathematics: "Mathematics",
+      science: "Science",
+      "language-arts": "Language arts"
+    };
+    const targetCounts = grandStarlightSubjectOrder.map((subject) => ({
+      subject,
+      label: subjectLabels[subject],
+      target: grandStarlightSampler.filter((event) => event.subject === subject).length
+    }));
+    let mode;
+    let counts;
+    let correctAnswer;
+    if (tier === "foundation") {
+      mode = "one-subject";
+      const target = random.pick(targetCounts);
+      const current = random.integer(0, target.target - 1);
+      counts = [{ ...target, current }];
+      correctAnswer = target.target - current;
+    } else if (tier === "core") {
+      mode = "all-subjects";
+      counts = targetCounts.map((target) => ({
+        ...target,
+        current: random.integer(1, target.target)
+      }));
+      if (counts.every((entry) => entry.current === entry.target)) {
+        counts[0].current -= 1;
+      }
+      correctAnswer = counts.reduce((total, entry) => total + entry.target - entry.current, 0);
+    } else if (tier === "stretch") {
+      mode = "replace-overfilled";
+      let overfilled;
+      let science;
+      let languageArts;
+      do {
+        overfilled = random.integer(5, 8);
+        science = random.integer(0, Math.min(8, 12 - overfilled));
+        languageArts = 12 - overfilled - science;
+      } while (languageArts > 8);
+      const values = random.shuffle([overfilled, science, languageArts]);
+      counts = targetCounts.map((target, index) => ({
+        ...target,
+        current: values[index]
+      }));
+      correctAnswer = counts.reduce((total, entry) =>
+        total + Math.max(0, entry.current - entry.target), 0
+      );
+    } else {
+      throw new RangeError("Unknown constellation-planner difficulty tier: " + tier);
+    }
+    const choices = makeChoices(correctAnswer, random, choiceCount).map(String);
+    const totalSelected = counts.reduce((total, entry) => total + entry.current, 0);
+    return {
+      prompt: mode === "one-subject"
+        ? "Each subject needs four stars. How many more " + counts[0].label.toLowerCase() + " stars are needed?"
+        : mode === "all-subjects"
+          ? "Each subject needs four stars. How many more stars are needed in total to finish the balanced constellation?"
+          : "The board already has 12 stars. How many selected stars must be replaced to reach exactly four in each subject?",
+      correctAnswer: String(correctAnswer),
+      choices,
+      stimulus: Object.freeze({
+        kind: "championship-constellation-plan",
+        mode,
+        tier,
+        totalSelected,
+        targetPerSubject: 4,
+        counts: Object.freeze(counts.map((entry) => Object.freeze({ ...entry })))
       })
     };
   },
