@@ -130,6 +130,72 @@ const BUILT_IN_GENERATORS = Object.freeze({
       stimulus: Object.freeze({ sequence, step })
     };
   }
+  ,
+  "fractions.identify": ({ random, constraints }) => {
+    const denominatorMin = readInteger(constraints, "denominatorMin", 4);
+    const denominatorMax = readInteger(constraints, "denominatorMax", denominatorMin);
+    if (denominatorMax < denominatorMin || denominatorMax > 12) {
+      throw new RangeError("Fraction denominator bounds must be ordered and no greater than 12.");
+    }
+    const denominator = random.integer(denominatorMin, denominatorMax);
+    const numerator = random.integer(1, denominator - 1);
+    const correctAnswer = numerator + "/" + denominator;
+    const candidateNumerators = random.shuffle(
+      Array.from({ length: denominator }, (_, index) => index + 1)
+    ).slice(0, constraints.choiceCount ?? 4);
+    const choices = random.shuffle(candidateNumerators.map((value) => value + "/" + denominator));
+    return {
+      prompt: "What fraction of the whole is shaded?",
+      correctAnswer,
+      choices,
+      stimulus: Object.freeze({
+        kind: "fraction-bars",
+        bars: [Object.freeze({
+          label: "Shaded parts",
+          numerator,
+          denominator,
+          showValue: false
+        })]
+      })
+    };
+  },
+  "fractions.equivalent": ({ random, constraints }) => {
+    const denominatorMin = readInteger(constraints, "denominatorMin", 2);
+    const denominatorMax = readInteger(constraints, "denominatorMax", denominatorMin);
+    const multiplierMin = readInteger(constraints, "multiplierMin", 2);
+    const multiplierMax = readInteger(constraints, "multiplierMax", multiplierMin);
+    if (denominatorMax < denominatorMin || multiplierMax < multiplierMin) {
+      throw new RangeError("Equivalent-fraction ranges must be ordered.");
+    }
+    const denominator = random.integer(denominatorMin, denominatorMax);
+    const numerator = random.integer(1, denominator - 1);
+    const multiplier = random.integer(multiplierMin, multiplierMax);
+    const equivalentNumerator = numerator * multiplier;
+    const equivalentDenominator = denominator * multiplier;
+    const correctAnswer = equivalentNumerator + "/" + equivalentDenominator;
+    const distractors = random.shuffle(
+      Array.from({ length: equivalentDenominator }, (_, index) => index + 1)
+        .filter((value) => value !== equivalentNumerator)
+    ).slice(0, Math.max(0, (constraints.choiceCount ?? 4) - 1));
+    const choices = random.shuffle([
+      correctAnswer,
+      ...distractors.map((value) => value + "/" + equivalentDenominator)
+    ]);
+    return {
+      prompt: "Which fraction names the same amount as " + numerator + "/" + denominator + "?",
+      correctAnswer,
+      choices,
+      stimulus: Object.freeze({
+        kind: "fraction-bars",
+        bars: [Object.freeze({
+          label: "Starting fraction",
+          numerator,
+          denominator,
+          showValue: true
+        })]
+      })
+    };
+  }
 });
 
 function freezeRecursively(value) {
