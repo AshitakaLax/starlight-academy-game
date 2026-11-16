@@ -1203,7 +1203,7 @@ export function createAcademyShell({
 
 
   function renderChapterHabitatStimulus(parent, stimulus) {
-    if (!stimulus || !["habitat-creature", "adaptation-clue", "ecosystem-connection"].includes(stimulus.kind)) return;
+    if (!stimulus || !["habitat-creature", "adaptation-clue", "ecosystem-connection", "ecosystem-effect-clue"].includes(stimulus.kind)) return;
     const figure = documentRef.createElement("figure");
     figure.className = "chapter-habitat-visual";
     const symbol = documentRef.createElement("span");
@@ -1223,6 +1223,12 @@ export function createAcademyShell({
       appendChapterText(figure, "p", "Field observation", "chapter-habitat-kicker");
       appendChapterText(figure, "strong", stimulus.feature, "chapter-habitat-feature");
       appendChapterText(figure, "p", stimulus.description, "chapter-habitat-copy");
+    } else if (stimulus.kind === "ecosystem-effect-clue") {
+      appendChapterText(figure, "h5", stimulus.title ?? "Habitat monitor", "chapter-habitat-title");
+      appendChapterText(figure, "p", "Field location", "chapter-habitat-kicker");
+      appendChapterText(figure, "p", stimulus.context, "chapter-habitat-copy");
+      appendChapterText(figure, "p", "Observed ecosystem effect", "chapter-habitat-kicker");
+      appendChapterText(figure, "strong", stimulus.effect, "chapter-habitat-feature");
     } else {
       appendChapterText(figure, "h5", stimulus.organism, "chapter-habitat-title");
       appendChapterText(figure, "p", "Ecosystem field note", "chapter-habitat-kicker");

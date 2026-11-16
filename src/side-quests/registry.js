@@ -6,6 +6,8 @@ import { sideQuestFiveDefinition, sideQuestFiveActivityDefinitions, sideQuestFiv
 import { sideQuestSixDefinition, sideQuestSixActivityDefinitions, sideQuestSixHintDefinitions, sideQuestSixReward } from "./sideQuestSix.js";
 import { sideQuestSevenDefinition, sideQuestSevenActivityDefinitions, sideQuestSevenHintDefinitions, sideQuestSevenReward } from "./sideQuestSeven.js";
 import { sideQuestEightDefinition, sideQuestEightActivityDefinitions, sideQuestEightHintDefinitions, sideQuestEightReward } from "./sideQuestEight.js";
+import { sideQuestNineDefinition, sideQuestNineActivityDefinitions, sideQuestNineHintDefinitions, sideQuestNineReward } from "./sideQuestNine.js";
+import { sideQuestTenDefinition, sideQuestTenActivityDefinitions, sideQuestTenHintDefinitions, sideQuestTenReward } from "./sideQuestTen.js";
 
 /**
  * Data-driven optional side-quest registry. Quest progress shares the safe
@@ -22,7 +24,9 @@ export const sideQuestDefinitions = Object.freeze([
   sideQuestFiveDefinition,
   sideQuestSixDefinition,
   sideQuestSevenDefinition,
-  sideQuestEightDefinition
+  sideQuestEightDefinition,
+  sideQuestNineDefinition,
+  sideQuestTenDefinition
 ]);
 export const sideQuestActivityDefinitions = Object.freeze([
   ...sideQuestOneActivityDefinitions,
@@ -32,7 +36,9 @@ export const sideQuestActivityDefinitions = Object.freeze([
   ...sideQuestFiveActivityDefinitions,
   ...sideQuestSixActivityDefinitions,
   ...sideQuestSevenActivityDefinitions,
-  ...sideQuestEightActivityDefinitions
+  ...sideQuestEightActivityDefinitions,
+  ...sideQuestNineActivityDefinitions,
+  ...sideQuestTenActivityDefinitions
 ]);
 export const sideQuestHintDefinitions = Object.freeze([
   ...sideQuestOneHintDefinitions,
@@ -42,7 +48,9 @@ export const sideQuestHintDefinitions = Object.freeze([
   ...sideQuestFiveHintDefinitions,
   ...sideQuestSixHintDefinitions,
   ...sideQuestSevenHintDefinitions,
-  ...sideQuestEightHintDefinitions
+  ...sideQuestEightHintDefinitions,
+  ...sideQuestNineHintDefinitions,
+  ...sideQuestTenHintDefinitions
 ]);
 export const sideQuestRewardDefinitions = Object.freeze([
   sideQuestOneReward,
@@ -52,7 +60,9 @@ export const sideQuestRewardDefinitions = Object.freeze([
   sideQuestFiveReward,
   sideQuestSixReward,
   sideQuestSevenReward,
-  sideQuestEightReward
+  sideQuestEightReward,
+  sideQuestNineReward,
+  sideQuestTenReward
 ]);
 
 /** @param {string} id */

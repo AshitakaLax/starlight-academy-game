@@ -613,6 +613,42 @@ const BUILT_IN_GENERATORS = Object.freeze({
       })
     };
   },
+  "quests.habitat-adaptation-pair": ({ random, constraints, tier }) => {
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    const creatures = getHabitatCreatures(tier).filter((creature) => creature.adaptations.length >= 2);
+    const creature = random.pick(creatures);
+    const pair = random.shuffle(creature.adaptations).slice(0, 2);
+    return {
+      prompt: "Two field observations describe the same mystery animal. Which animal matches BOTH adaptations?",
+      correctAnswer: creature.animal,
+      choices: makeDistinctChoices(creature.animal, creatures.map((candidate) => candidate.animal), random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "adaptation-clue",
+        animal: "Mystery animal",
+        symbol: "🐾",
+        feature: pair.map((adaptation, index) => (index + 1) + ". " + adaptation.feature).join(" · "),
+        description: pair.map((adaptation, index) => (index + 1) + ". " + adaptation.description).join(" "),
+        adaptationIds: Object.freeze(pair.map((adaptation) => adaptation.id))
+      })
+    };
+  },
+  "quests.ecosystem-cause-tracker": ({ random, constraints, tier }) => {
+    const connections = getHabitatEcosystemConnections(tier);
+    const connection = random.pick(connections);
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    return {
+      prompt: "A sanctuary ranger recorded this habitat change. Which animal action could have caused the observed effect?",
+      correctAnswer: connection.action,
+      choices: makeDistinctChoices(connection.action, connections.map((entry) => entry.action), random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "ecosystem-effect-clue",
+        symbol: "🌿",
+        title: "Sanctuary habitat monitor",
+        context: connection.context,
+        effect: connection.effect
+      })
+    };
+  },
   "habitats.biome-match": ({ random, constraints, tier }) => {
     const creatures = getHabitatCreatures(tier);
     const creature = random.pick(creatures);
