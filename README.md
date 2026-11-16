@@ -56,7 +56,7 @@ build/
   build.mjs                Bundles and validates the offline HTML
   index.template.html      HTML shell with inline CSS/JS insertion points
 
-tests/                     Node built-in tests for foundation, state, save, input, UI, audio/narration, curriculum, hints, Chapter 1 mouse/keyboard controls, rendering, and build
+tests/                     Node built-in tests for foundation, state, save, input, UI, audio/narration, curriculum, hints, Chapters 1–2, rendering, and build
 dist/                       Generated, git-ignored HTML deliverable
 ~~~
 
@@ -85,7 +85,7 @@ See src/core/state/README.md for the store API and usage details.
 ## Input and navigation rules
 
 - Keyboard shortcuts are registered by screen and overlay context; modal overlays suspend background shortcuts.
-- Hub keys 1–5 select the five dock destinations. In Chapter 1's learning and challenge activities, keys 1–4 select the correspondingly numbered visible answer; H requests a hint. These shortcuts are inactive during stories, gymnastics, text entry, or modal dialogs.
+- Hub keys 1–5 select the five dock destinations. In chapter learning and challenge activities, keys 1–4 select the correspondingly numbered visible answer; H requests a hint. These shortcuts are inactive during stories, gymnastics, text entry, or modal dialogs.
 - Enter/Space activate focused native controls or advance dialogue when appropriate. Chapter answer choices are native buttons, so Tab and Enter work as well as the number shortcuts.
 - Escape closes the current overlay, or opens Settings when no overlay is active.
 - Text inputs, textareas, selects, contenteditable regions and textboxes retain normal keyboard behavior. Native buttons and links keep browser-managed activation, preventing duplicate actions.
@@ -121,6 +121,8 @@ The build creates:
 ~~~text
 dist/starlight-academy.html
 ~~~
+
+The GitHub Actions workflow in `.github/workflows/ci.yml` runs the same syntax check, Node regression suite, and standalone HTML build on pushes to the implementation branch or `main`, and on pull requests targeting `main`.
 
 Open that file locally in desktop Chrome or Edge. The packaging validator rejects external script references, stylesheet links, remote resource URLs, unexpanded template placeholders, and missing application mount points. The generated dist/ directory is intentionally excluded from source control.
 
