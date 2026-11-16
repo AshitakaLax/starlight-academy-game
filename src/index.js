@@ -69,8 +69,10 @@ export { chapterFourActivityDefinitions, chapterFourHintDefinitions, chapterFour
 export { chapterFiveActivityDefinitions, chapterFiveHintDefinitions, chapterFiveReward, chapterFiveDefinition } from "./chapters/chapterFive.js";
 export { chapterSixActivityDefinitions, chapterSixHintDefinitions, chapterSixReward, chapterSixDefinition } from "./chapters/chapterSix.js";
 export { chapterSevenActivityDefinitions, chapterSevenHintDefinitions, chapterSevenReward, chapterSevenDefinition } from "./chapters/chapterSeven.js";
+export { chapterEightActivityDefinitions, chapterEightHintDefinitions, chapterEightReward, chapterEightDefinition } from "./chapters/chapterEight.js";
 export { chapterThreeWordBank, getChapterThreeWords } from "./data/wordBuildingLexicon.js";
 export { habitatCreatureLexicon, habitatEcosystemConnections, getHabitatCreatures, getHabitatAdaptations, getHabitatEcosystemConnections } from "./data/habitatLexicon.js";
 export { plantLifecycleStages, getPlantLifecycleStages, getPlantLifecycleTransitions, plantResourceScenarios, getPlantResourceScenarios, PHOTOSYNTHESIS_INPUTS_ANSWER, photosynthesisChoiceBank } from "./data/plantLexicon.js";
 export { grammarSentenceBank, readingPassageBank, getGrammarExamples, getReadingPassages } from "./data/languageArtsLexicon.js";
+export { massBalanceProblems, unitConversionProblems, getVolumeScale, getMassBalanceProblems, getUnitConversionProblems, getElapsedTimeOptions } from "./data/measurementLexicon.js";
 export { createChapterInputController } from "./gameplay/chapter-runtime/chapterInput.js";

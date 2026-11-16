@@ -967,3 +967,220 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   .chapter-language-sentence { font-size: .96rem; }
   .chapter-reading-passage { font-size: .86rem; }
 }
+
+
+/* Poseidon's volume, mass, metric-conversion, and elapsed-time visuals. */
+.chapter-measurement-visual {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: min(100%, 40rem);
+  margin: 16px auto 18px;
+  padding: 17px 20px;
+  border: 1px solid #c7dfe5;
+  border-radius: 18px;
+  background: radial-gradient(circle at 88% 8%, #e0f3f5 0, transparent 12rem), linear-gradient(135deg, #f4fcff, #fffaf1);
+  text-align: center;
+}
+.chapter-measurement-title {
+  margin: 0;
+  color: #386778;
+  font-size: .96rem;
+}
+.chapter-measurement-caption {
+  max-width: 35rem;
+  margin: 0;
+  color: #617d86;
+  font-size: .76rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+.chapter-measurement-note {
+  margin: 0;
+  color: #62808b;
+  font-size: .78rem;
+  font-weight: 750;
+}
+.chapter-beaker-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  width: 100%;
+  min-height: 250px;
+}
+.chapter-measurement-beaker {
+  position: relative;
+  width: 154px;
+  height: 234px;
+  overflow: visible;
+  border: 3px solid #7ba9b6;
+  border-top: 0;
+  border-radius: 5px 5px 17px 17px;
+  background: #ffffffb8;
+  box-shadow: inset 0 0 0 5px #eff8fa;
+}
+.chapter-beaker-liquid {
+  position: absolute;
+  right: 5px;
+  bottom: 0;
+  left: 5px;
+  z-index: 0;
+  border-top: 3px solid #348eaa;
+  border-radius: 0 0 10px 10px;
+  background: linear-gradient(180deg, #91dce7bb, #b6edf0dd);
+  box-shadow: inset 0 8px 16px #ffffff70;
+}
+.chapter-beaker-tick {
+  position: absolute;
+  right: -3px;
+  z-index: 1;
+  width: 100%;
+  height: 1px;
+  pointer-events: none;
+}
+.chapter-beaker-tick-line {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 35px;
+  border-top: 1px solid #578997;
+}
+.chapter-beaker-tick.is-major .chapter-beaker-tick-line {
+  width: 52px;
+  border-top-width: 2px;
+}
+.chapter-beaker-tick-label {
+  position: absolute;
+  top: -11px;
+  left: -46px;
+  width: 39px;
+  color: #426d7b;
+  font-size: .68rem;
+  font-weight: 800;
+  text-align: right;
+}
+.chapter-measurement-unit {
+  max-width: 7rem;
+  margin: 0;
+  color: #557c89;
+  font-size: .75rem;
+  font-weight: 800;
+  text-align: left;
+}
+.chapter-measurement-balance {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 36px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 32rem;
+}
+.chapter-balance-pan {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 8px;
+  min-height: 118px;
+  padding: 13px 9px;
+  border: 1px solid #d5e5e8;
+  border-radius: 14px;
+  background: #fff;
+}
+.chapter-balance-label {
+  color: #6b8790;
+  font-size: .67rem;
+  font-weight: 850;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+.chapter-balance-object {
+  color: #426b78;
+  font-size: .78rem;
+  line-height: 1.35;
+}
+.chapter-balance-weights {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.chapter-balance-weights li {
+  padding: 7px 9px;
+  border: 1px solid #d5e7ec;
+  border-radius: 9px;
+  background: #eff9fb;
+  color: #356e7d;
+  font-size: .75rem;
+  font-weight: 850;
+}
+.chapter-balance-equals {
+  color: #5594a5;
+  font-size: 1.5rem;
+  font-weight: 900;
+}
+.chapter-conversion-equation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 31rem;
+  padding: 20px 12px;
+  border: 1px dashed #b8d7df;
+  border-radius: 14px;
+  background: #ffffffd9;
+}
+.chapter-conversion-value, .chapter-conversion-target {
+  color: #3f6e7d;
+  font-size: clamp(1rem, 2vw, 1.35rem);
+}
+.chapter-conversion-equals {
+  color: #8aaeb8;
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+.chapter-time-timeline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 31rem;
+}
+.chapter-time-point {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  padding: 17px 10px;
+  border: 1px solid #d7e7e9;
+  border-radius: 14px;
+  background: #fff;
+}
+.chapter-time-label {
+  color: #7d9ba4;
+  font-size: .64rem;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+.chapter-time-value {
+  color: #3f6c7b;
+  font: 700 clamp(1.1rem, 2vw, 1.45rem)/1.2 Georgia, serif;
+  white-space: nowrap;
+}
+.chapter-time-arrow {
+  color: #6babb8;
+  font-size: 1.4rem;
+  font-weight: 900;
+}
+@media (max-width: 720px) {
+  .chapter-measurement-visual { padding: 14px; }
+  .chapter-beaker-row { gap: 18px; }
+  .chapter-measurement-beaker { width: 132px; }
+  .chapter-measurement-balance { grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr); gap: 5px; }
+  .chapter-balance-pan { padding: 10px 5px; }
+}

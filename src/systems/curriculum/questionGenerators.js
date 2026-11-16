@@ -4,6 +4,7 @@ import { getChapterThreeWords } from "../../data/wordBuildingLexicon.js";
 import { getHabitatCreatures, getHabitatAdaptations, getHabitatEcosystemConnections } from "../../data/habitatLexicon.js";
 import { getPlantLifecycleStages, getPlantLifecycleTransitions, getPlantResourceScenarios, photosynthesisChoiceBank, PHOTOSYNTHESIS_INPUTS_ANSWER } from "../../data/plantLexicon.js";
 import { getGrammarExamples, getReadingPassages } from "../../data/languageArtsLexicon.js";
+import { getVolumeScale, getMassBalanceProblems, getUnitConversionProblems, getElapsedTimeOptions } from "../../data/measurementLexicon.js";
 
 function hashSeed(seed) {
   if (typeof seed === "number" && Number.isFinite(seed)) return seed >>> 0;
@@ -562,6 +563,102 @@ const BUILT_IN_GENERATORS = Object.freeze({
         title: passage.title,
         passage: passage.passage,
         focus: "inference"
+      })
+    };
+  }
+  ,
+  "measurement.volume-reading": ({ random, constraints, tier }) => {
+    const scale = getVolumeScale(tier);
+    const reading = random.pick(scale.availableReadings);
+    const correctAnswer = reading.toLocaleString("en-US") + " mL";
+    const choices = scale.graduations.map((entry) => entry.value.toLocaleString("en-US") + " mL");
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "How much liquid is in the beaker?",
+      correctAnswer,
+      choices: makeDistinctChoices(correctAnswer, choices, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "measurement-beaker",
+        capacityMl: scale.capacityMl,
+        graduationMl: scale.graduationMl,
+        fillValueMl: reading,
+        graduations: scale.graduations.map((entry) => Object.freeze(entry))
+      })
+    };
+  },
+  "measurement.mass-balance": ({ random, constraints, tier }) => {
+    const problems = getMassBalanceProblems(tier);
+    const problem = random.pick(problems);
+    const step = tier === "foundation" ? 100 : tier === "core" ? 50 : 25;
+    const correctAnswer = problem.massGrams.toLocaleString("en-US") + " g";
+    const candidates = Array.from({ length: 10 }, (_, index) => problem.massGrams + (index + 1) * step)
+      .concat(Array.from({ length: 8 }, (_, index) => Math.max(step, problem.massGrams - (index + 1) * step)))
+      .map((value) => value.toLocaleString("en-US") + " g");
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "The balance is level. What is the mass of the object?",
+      correctAnswer,
+      choices: makeDistinctChoices(correctAnswer, candidates, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "measurement-balance",
+        problemId: problem.id,
+        object: problem.object,
+        weights: problem.weights.map((value) => value.toLocaleString("en-US") + " g"),
+        unit: "g"
+      })
+    };
+  },
+  "measurement.unit-conversion": ({ random, constraints, tier }) => {
+    const problem = random.pick(getUnitConversionProblems(tier));
+    const answerValue = Number.isInteger(problem.resultValue)
+      ? problem.resultValue.toLocaleString("en-US")
+      : String(problem.resultValue);
+    const correctAnswer = answerValue + " " + problem.toUnit;
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "Convert the measurement to the requested unit.",
+      correctAnswer,
+      choices: makeDistinctChoices(correctAnswer, problem.choices, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "measurement-conversion",
+        problemId: problem.id,
+        sourceValue: problem.sourceValue.toLocaleString("en-US"),
+        fromUnit: problem.fromUnit,
+        toUnit: problem.toUnit
+      })
+    };
+  },
+  "measurement.elapsed-time": ({ random, constraints, tier }) => {
+    const options = getElapsedTimeOptions(tier);
+    const startSlots = Math.floor((options.maximumStart - options.minimumStart) / options.startStep);
+    const startMinutes = options.minimumStart + random.integer(0, startSlots) * options.startStep;
+    const elapsedMinutes = random.pick(options.durationChoices);
+    const finishMinutes = startMinutes + elapsedMinutes;
+    const formatClockTime = (value) => {
+      const hour24 = Math.floor(value / 60);
+      const minute = value % 60;
+      const hour12 = hour24 % 12 || 12;
+      return hour12 + ":" + String(minute).padStart(2, "0") + (hour24 < 12 ? " AM" : " PM");
+    };
+    const formatDuration = (value) => {
+      const hours = Math.floor(value / 60);
+      const minutes = value % 60;
+      if (hours === 0) return minutes + " minutes";
+      if (minutes === 0) return hours + (hours === 1 ? " hour" : " hours");
+      return hours + (hours === 1 ? " hour " : " hours ") + minutes + " minutes";
+    };
+    const correctAnswer = formatDuration(elapsedMinutes);
+    const candidates = options.durationChoices.map(formatDuration);
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "How much time passes between the start and finish?",
+      correctAnswer,
+      choices: makeDistinctChoices(correctAnswer, candidates, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "measurement-elapsed-time",
+        startTime: formatClockTime(startMinutes),
+        finishTime: formatClockTime(finishMinutes),
+        elapsedMinutes
       })
     };
   }

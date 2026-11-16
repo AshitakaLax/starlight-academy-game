@@ -1034,6 +1034,111 @@ export function createAcademyShell({
   }
 
 
+  function renderChapterMeasurementStimulus(parent, stimulus) {
+    if (!stimulus || ![
+      "measurement-beaker", "measurement-balance", "measurement-conversion", "measurement-elapsed-time"
+    ].includes(stimulus.kind)) return;
+
+    const figure = documentRef.createElement("figure");
+    figure.className = "chapter-measurement-visual";
+
+    if (stimulus.kind === "measurement-beaker") {
+      appendChapterText(figure, "h5", "Graduated beaker", "chapter-measurement-title");
+      const row = documentRef.createElement("div");
+      row.className = "chapter-beaker-row";
+      const beaker = documentRef.createElement("div");
+      beaker.className = "chapter-measurement-beaker";
+      beaker.setAttribute("role", "list");
+      beaker.setAttribute("aria-label", "Beaker scale graduations in milliliters");
+      const liquid = documentRef.createElement("div");
+      liquid.className = "chapter-beaker-liquid";
+      liquid.style.height = Math.max(0, Math.min(100, stimulus.fillValueMl / stimulus.capacityMl * 100)) + "%";
+      liquid.setAttribute("aria-hidden", "true");
+      beaker.append(liquid);
+      for (const graduation of (stimulus.graduations ?? [])) {
+        const tick = documentRef.createElement("div");
+        tick.className = "chapter-beaker-tick" + (graduation.major ? " is-major" : "");
+        tick.setAttribute("role", "listitem");
+        tick.setAttribute("aria-label", graduation.value + " milliliters" + (graduation.major ? ", major graduation" : ", minor graduation"));
+        tick.style.bottom = (graduation.value / stimulus.capacityMl * 100) + "%";
+        const line = documentRef.createElement("span");
+        line.className = "chapter-beaker-tick-line";
+        tick.append(line);
+        if (graduation.label !== null && graduation.label !== undefined) {
+          const label = documentRef.createElement("span");
+          label.className = "chapter-beaker-tick-label";
+          label.textContent = graduation.label;
+          tick.append(label);
+        }
+        beaker.append(tick);
+      }
+      const unit = documentRef.createElement("p");
+      unit.className = "chapter-measurement-unit";
+      unit.textContent = "Scale: milliliters (mL)";
+      row.append(beaker, unit);
+      figure.append(row);
+      appendChapterText(figure, "figcaption", "Read the graduation that lines up with the top of the liquid.", "chapter-measurement-caption");
+    } else if (stimulus.kind === "measurement-balance") {
+      appendChapterText(figure, "h5", "A level balance", "chapter-measurement-title");
+      appendChapterText(figure, "p", "Both pans have equal mass.", "chapter-measurement-note");
+      const balance = documentRef.createElement("div");
+      balance.className = "chapter-measurement-balance";
+      const objectPan = documentRef.createElement("div");
+      objectPan.className = "chapter-balance-pan";
+      appendChapterText(objectPan, "span", "Object", "chapter-balance-label");
+      appendChapterText(objectPan, "strong", stimulus.object ?? "Unknown object", "chapter-balance-object");
+      const weightPan = documentRef.createElement("div");
+      weightPan.className = "chapter-balance-pan";
+      appendChapterText(weightPan, "span", "Standard weights", "chapter-balance-label");
+      const weights = documentRef.createElement("ul");
+      weights.className = "chapter-balance-weights";
+      for (const value of (stimulus.weights ?? [])) {
+        const item = documentRef.createElement("li");
+        item.textContent = value;
+        weights.append(item);
+      }
+      weightPan.append(weights);
+      const equals = documentRef.createElement("span");
+      equals.className = "chapter-balance-equals";
+      equals.textContent = "=";
+      equals.setAttribute("aria-hidden", "true");
+      balance.append(objectPan, equals, weightPan);
+      figure.append(balance);
+      appendChapterText(figure, "figcaption", "Add the masses on the standard-weight pan to find the object's mass in grams.", "chapter-measurement-caption");
+    } else if (stimulus.kind === "measurement-conversion") {
+      appendChapterText(figure, "h5", "Metric conversion", "chapter-measurement-title");
+      const equation = documentRef.createElement("div");
+      equation.className = "chapter-conversion-equation";
+      appendChapterText(equation, "strong", stimulus.sourceValue + " " + stimulus.fromUnit, "chapter-conversion-value");
+      appendChapterText(equation, "span", "=", "chapter-conversion-equals");
+      appendChapterText(equation, "strong", "? " + stimulus.toUnit, "chapter-conversion-target");
+      figure.append(equation);
+      appendChapterText(figure, "figcaption", "Convert the measurement without changing what it measures.", "chapter-measurement-caption");
+    } else {
+      appendChapterText(figure, "h5", "Harbor clock", "chapter-measurement-title");
+      const timeline = documentRef.createElement("div");
+      timeline.className = "chapter-time-timeline";
+      const start = documentRef.createElement("div");
+      start.className = "chapter-time-point";
+      appendChapterText(start, "span", "START", "chapter-time-label");
+      appendChapterText(start, "strong", stimulus.startTime, "chapter-time-value");
+      const arrow = documentRef.createElement("span");
+      arrow.className = "chapter-time-arrow";
+      arrow.textContent = "→";
+      arrow.setAttribute("aria-hidden", "true");
+      const finish = documentRef.createElement("div");
+      finish.className = "chapter-time-point";
+      appendChapterText(finish, "span", "FINISH", "chapter-time-label");
+      appendChapterText(finish, "strong", stimulus.finishTime, "chapter-time-value");
+      timeline.append(start, arrow, finish);
+      figure.append(timeline);
+      appendChapterText(figure, "figcaption", "Count forward from the start time to the finish time.", "chapter-measurement-caption");
+    }
+
+    parent.append(figure);
+  }
+
+
   function renderChapterHabitatStimulus(parent, stimulus) {
     if (!stimulus || !["habitat-creature", "adaptation-clue", "ecosystem-connection"].includes(stimulus.kind)) return;
     const figure = documentRef.createElement("figure");
@@ -1218,6 +1323,7 @@ export function createAcademyShell({
       renderChapterHabitatStimulus(card, question.stimulus);
       renderChapterPlantStimulus(card, question.stimulus);
       renderChapterLanguageStimulus(card, question.stimulus);
+      renderChapterMeasurementStimulus(card, question.stimulus);
       appendChapterText(card, "p", "Choose with the mouse or press 1–4. Press H whenever you would like a hint.", "chapter-question-help");
       const choices = documentRef.createElement("div");
       choices.className = "chapter-answer-grid";
