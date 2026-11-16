@@ -913,6 +913,9 @@ export function createAcademyShell({
       if (stimulus.meaning) {
         appendChapterText(figure, "figcaption", "Build a word meaning: " + stimulus.meaning, "chapter-word-meaning");
       }
+      if (stimulus.spellingNote) {
+        appendChapterText(figure, "p", "Spelling note: " + stimulus.spellingNote, "chapter-word-spelling-note");
+      }
       if (parts.childElementCount) parent.append(figure);
       return;
     }
