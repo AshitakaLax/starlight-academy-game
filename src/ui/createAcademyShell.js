@@ -3,6 +3,7 @@ import { selectAudioSettings } from "../systems/audio/audioSettings.js";
 import { selectNarrationSettings } from "../systems/narration/narrationSettings.js";
 import { checkActivityAnswer } from "../systems/curriculum/answerRules.js";
 import { selectSupportedSkillTier } from "../systems/curriculum/adaptiveDifficulty.js";
+import { createChapterInputController } from "../gameplay/chapter-runtime/chapterInput.js";
 import { selectEconomy } from "../systems/economy/economyState.js";
 import { gameConfig } from "../config/gameConfig.js";
 import { renderColoringCanvas } from "../gameplay/coloring/renderColoringCanvas.js";
@@ -884,7 +885,7 @@ export function createAcademyShell({
       card.className = "chapter-question-card";
       card.setAttribute("aria-label", activity.type === "challenge" ? "Lantern challenge question" : "Learning question");
       if (activity.type === "challenge") {
-        appendChapterText(card, "p", (metadata.challengeLabel ?? "Challenge progress") + ": " + chapterQuestionIndex + " of " + questionCount);
+        appendChapterText(card, "p", (metadata.challengeLabel ?? "Challenge progress") + ": " + (chapterQuestionIndex + 1) + " of " + questionCount);
       } else if (metadata.lessonLabel) {
         appendChapterText(card, "p", metadata.lessonLabel, "chapter-question-kicker");
       }
@@ -1001,6 +1002,7 @@ export function createAcademyShell({
         chapterActivityFeedback = "Lantern lit! One more puzzle is waiting.";
       }
       renderChapters();
+      focusChapterStep();
       return;
     }
     const presentation = hintService?.recordIncorrect?.(question) ?? null;
@@ -1009,6 +1011,45 @@ export function createAcademyShell({
     chapterHintPresentation = presentation;
     chapterActivityFeedback = "Good try. Take another look, use a clue, and try again. There is no penalty for taking your time.";
     renderChapters();
+    focusChapterStep();
+  }
+
+  function focusChapterStep() {
+    const firstAnswer = panel.chapterActivityBody.querySelector("[data-chapter-answer]");
+    if (firstAnswer && typeof firstAnswer.focus === "function") {
+      firstAnswer.focus();
+      return;
+    }
+    const continueButton = panel.chapterSessionActions.querySelector(
+      '[data-chapter-action="complete-activity"]:not([hidden])'
+    );
+    if (activeChapterSession && continueButton && typeof continueButton.focus === "function") {
+      continueButton.focus();
+      return;
+    }
+    if (activeChapterSession?.getSnapshot?.().currentActivity?.type === "gymnastics"
+        && !panel.gymnasticsPanel.hidden && typeof panel.gymnasticsStart.focus === "function") {
+      panel.gymnasticsStart.focus();
+      return;
+    }
+    const pathAction = panel.chapterPathList.querySelector('[data-chapter-action="start"]:not([disabled])');
+    pathAction?.focus?.();
+  }
+
+  const chapterInputController = createChapterInputController({
+    getCurrentActivity: () => activeChapterSession?.getSnapshot?.().currentActivity ?? null,
+    getCurrentQuestion: () => chapterQuestion,
+    onAnswer: (answer) => submitChapterAnswer(answer),
+    onHint: (question) => {
+      chapterHintPresentation = hintService?.requestHint?.(question) ?? null;
+      chapterActivityFeedback = "A clue is ready. Read it, then try the same question again.";
+      renderChapters();
+      focusChapterStep();
+    }
+  });
+
+  function handleChapterKeydown(event) {
+    chapterInputController.handleKeydown(event);
   }
 
   function renderChapters() {
@@ -1182,6 +1223,7 @@ export function createAcademyShell({
         }
       }
       renderChapters();
+      focusChapterStep();
     } catch (error) {
       panel.chapterSession.hidden = false;
       panel.chapterSessionStatus.textContent = error?.message || "The chapter action could not be completed.";
@@ -1939,6 +1981,7 @@ export function createAcademyShell({
 
   root.addEventListener("click", handleClick);
   root.addEventListener("input", handleInput);
+  root.addEventListener("keydown", handleChapterKeydown);
   panel.gymnasticsCanvas.addEventListener("pointerdown", handleGymnasticsPointerDown);
   panel.gymnasticsCanvas.addEventListener("pointermove", handleGymnasticsPointerMove);
   panel.gymnasticsCanvas.addEventListener("pointerup", handleGymnasticsPointerEnd);
@@ -1975,6 +2018,7 @@ export function createAcademyShell({
       unsubscribeVoices();
       root.removeEventListener("click", handleClick);
       root.removeEventListener("input", handleInput);
+      root.removeEventListener("keydown", handleChapterKeydown);
       panel.gymnasticsCanvas.removeEventListener("pointerdown", handleGymnasticsPointerDown);
       panel.gymnasticsCanvas.removeEventListener("pointermove", handleGymnasticsPointerMove);
       panel.gymnasticsCanvas.removeEventListener("pointerup", handleGymnasticsPointerEnd);
