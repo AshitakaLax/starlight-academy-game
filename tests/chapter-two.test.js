@@ -24,6 +24,7 @@ import {
 import { chapterOneReward } from "../src/chapters/chapterOne.js";
 import { chapterThreeDefinition, chapterThreeReward } from "../src/chapters/chapterThree.js";
 import { chapterFourDefinition, chapterFourReward } from "../src/chapters/chapterFour.js";
+import { chapterFiveReward } from "../src/chapters/chapterFive.js";
 import { chapterDefinitions, getChapterDefinition } from "../src/chapters/registry.js";
 
 test("Chapter 2 is registered with an Apollo story, two fraction skills, and a Chapter 1 prerequisite", () => {
@@ -118,7 +119,7 @@ test("Professor Hoot supplies fraction-specific nudges, strategies, and worked e
 
 test("Chapter 2 waits for Chapter 1, resumes its checkpoint, and grants its reward only once", () => {
   const chapterCatalog = createChapterCatalog(chapterDefinitions);
-  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward]);
+  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward, chapterFiveReward]);
   const shopCatalog = createShopCatalog([]);
   const economyActions = createEconomyActionDefinitions({ rewardRegistry, shopCatalog });
   const store = createGameStore({

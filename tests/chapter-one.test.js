@@ -30,6 +30,7 @@ import { chapterDefinitions, getChapterDefinition } from "../src/chapters/regist
 import { chapterTwoDefinition, chapterTwoReward } from "../src/chapters/chapterTwo.js";
 import { chapterThreeDefinition, chapterThreeReward } from "../src/chapters/chapterThree.js";
 import { chapterFourDefinition, chapterFourReward } from "../src/chapters/chapterFour.js";
+import { chapterFiveReward } from "../src/chapters/chapterFive.js";
 import { createGymnasticsRoutineCatalog, defaultGymnasticsRoutines } from "../src/gameplay/gymnastics/gymnasticsCatalog.js";
 import { createGymnasticsEngine } from "../src/gameplay/gymnastics/gymnasticsEngine.js";
 import { gameConfig } from "../src/config/gameConfig.js";
@@ -91,7 +92,7 @@ test("Chapter 1 Professor Hoot clues advance through nudge, strategy, and a work
 
 test("Chapter 1 saves and resumes, then grants its keepsake and chapter wardrobe item only once", () => {
   const chapterCatalog = createChapterCatalog(chapterDefinitions);
-  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward]);
+  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward, chapterFiveReward]);
   const shopCatalog = createShopCatalog([]);
   const wardrobeCatalog = createWardrobeCatalog(defaultWardrobeItems);
   const economyActions = createEconomyActionDefinitions({ rewardRegistry, shopCatalog });

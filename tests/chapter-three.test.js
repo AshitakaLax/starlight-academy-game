@@ -24,6 +24,7 @@ import {
   chapterThreeReward
 } from "../src/chapters/chapterThree.js";
 import { chapterFourDefinition, chapterFourReward } from "../src/chapters/chapterFour.js";
+import { chapterFiveReward } from "../src/chapters/chapterFive.js";
 import { chapterDefinitions, getChapterDefinition } from "../src/chapters/registry.js";
 import { chapterThreeWordBank, getChapterThreeWords } from "../src/data/wordBuildingLexicon.js";
 
@@ -165,7 +166,7 @@ test("Professor Hoot offers prefix, suffix, and context-specific three-stage ass
 
 test("Chapter 3 waits for Chapter 2, resumes its checkpoint, and grants its Lexicon Lantern only once", () => {
   const chapterCatalog = createChapterCatalog(chapterDefinitions);
-  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward]);
+  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward, chapterFiveReward]);
   const shopCatalog = createShopCatalog([]);
   const economyActions = createEconomyActionDefinitions({ rewardRegistry, shopCatalog });
   const store = createGameStore({
