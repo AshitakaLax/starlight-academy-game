@@ -658,6 +658,13 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   font-weight: 800;
   text-align: center;
 }
+.chapter-word-spelling-note {
+  margin: 0;
+  color: #87683c;
+  font-size: .72rem;
+  font-weight: 700;
+  text-align: center;
+}
 .chapter-potion-visual {
   border-color: #d9d7ef;
   background:
