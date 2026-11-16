@@ -64,4 +64,6 @@ export { createChapterRuntimeService } from "./gameplay/chapter-runtime/createCh
 
 export { chapterOneActivityDefinitions, chapterOneHintDefinitions, chapterOneReward, chapterOneDefinition } from "./chapters/chapterOne.js";
 export { chapterTwoActivityDefinitions, chapterTwoHintDefinitions, chapterTwoReward, chapterTwoDefinition } from "./chapters/chapterTwo.js";
+export { chapterThreeActivityDefinitions, chapterThreeHintDefinitions, chapterThreeReward, chapterThreeDefinition } from "./chapters/chapterThree.js";
+export { chapterThreeWordBank, getChapterThreeWords } from "./data/wordBuildingLexicon.js";
 export { createChapterInputController } from "./gameplay/chapter-runtime/chapterInput.js";
