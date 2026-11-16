@@ -220,7 +220,7 @@ const BUILT_IN_GENERATORS = Object.freeze({
     const sequence = Array.from({ length: sequenceLength }, (_, index) => start + step * index);
     const missingIndex = random.integer(1, sequenceLength - 2);
     const correctAnswer = sequence[missingIndex];
-    const display = sequence.map((value, index) => index === missingIndex ? "__" : String(value)).join(", ");
+    const display = sequence.map((value, index) => index === missingIndex ? "□" : String(value)).join(", ");
     return {
       prompt: "The fireflies keep the same-sized jump. Which number belongs in the gap? " + display,
       correctAnswer,

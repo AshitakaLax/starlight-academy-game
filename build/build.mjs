@@ -9,17 +9,26 @@ const templatePath = path.join(projectRoot, "build", "index.template.html");
 const cssPath = path.join(projectRoot, "src", "ui", "styles.css");
 const entryPath = path.join(projectRoot, "src", "browser-entry.js");
 
-function assertSingleFileOfflineHtml(html) {
+function assertSingleFileOfflineHtml(html, inlineCss = "", inlineJs = "") {
   const failures = [
     [/<script\b[^>]*\bsrc\s*=/i, "External script reference found."],
     [/<link\b[^>]*\bhref\s*=/i, "External stylesheet/resource link found."],
     [/\b(?:src|href)\s*=\s*["'](?:https?:)?\/\//i, "Remote resource URL found."],
     [/@import\s+(?:url\()?\s*["']?https?:/i, "Remote CSS import found."],
     [/url\(\s*["']?https?:/i, "Remote CSS URL found."],
-    [/%INLINE_(?:CSS|JS)%/, "Unreplaced build placeholder found."]
   ];
   for (const [pattern, message] of failures) {
     if (pattern.test(html)) throw new Error("Offline HTML validation failed: " + message);
+  }
+  const placeholder = html.match(/%INLINE_(?:CSS|JS)%/);
+  if (placeholder) {
+    const source = inlineCss.includes(placeholder[0]) ? "inline CSS bundle"
+      : inlineJs.includes(placeholder[0]) ? "inline JavaScript bundle"
+        : "template result";
+    const offset = placeholder.index;
+    const context = html.slice(Math.max(0, offset - 90), Math.min(html.length, offset + 110));
+    throw new Error("Offline HTML validation failed: unreplaced " + placeholder[0]
+      + " marker from " + source + " at output offset " + offset + ". Context: " + context);
   }
   if (!/^<!doctype html>/i.test(html.trimStart())) {
     throw new Error("Offline HTML validation failed: missing HTML doctype.");
@@ -72,10 +81,10 @@ export async function buildGame({ write = true } = {}) {
   const inlineJs = javascript.outputFiles[0].text.replace(/<\/script/gi, "<\\/script");
   const inlineCss = css.code.replace(/<\/style/gi, "<\\/style");
   const html = templateSource
-    .replace("%INLINE_CSS%", inlineCss)
-    .replace("%INLINE_JS%", inlineJs);
+    .replace("%INLINE_CSS%", () => inlineCss)
+    .replace("%INLINE_JS%", () => inlineJs);
 
-  assertSingleFileOfflineHtml(html);
+  assertSingleFileOfflineHtml(html, inlineCss, inlineJs);
   if (write) {
     await mkdir(path.dirname(outputPath), { recursive: true });
     await writeFile(outputPath, html, "utf8");

@@ -68,7 +68,7 @@ test("the Firefly Gap Maze generates verified missing terms at every tier", () =
     const question = generators.generate(activity, options);
     const repeated = generators.generate(activity, options);
     assert.deepEqual(repeated, question);
-    assert.ok(question.prompt.includes("__"));
+    assert.ok(question.prompt.includes("□"));
     assert.equal(question.choices.length, 4);
     assert.equal(question.choices.includes(question.correctAnswer), true);
     const { sequence, missingIndex, step } = question.stimulus;
