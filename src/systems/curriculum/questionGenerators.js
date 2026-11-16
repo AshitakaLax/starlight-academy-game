@@ -448,6 +448,73 @@ const BUILT_IN_GENERATORS = Object.freeze({
       })
     };
   },
+  "quests.geometry-shape-riddle": ({ random, constraints, tier }) => {
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    const shapes = getGeometryShapes(tier);
+    const shape = random.pick(shapes);
+    const properties = [
+      shape.sideCount + " sides",
+      shape.angleClue,
+      shape.symmetryLines + " lines of symmetry"
+    ].join(" · ");
+    return {
+      prompt: "Which shape matches all three clues: " + shape.sideCount + " sides, "
+        + shape.angleClue + ", and " + shape.symmetryLines + " lines of symmetry?",
+      correctAnswer: shape.label,
+      choices: makeDistinctChoices(shape.label, shapes.map((candidate) => candidate.label), random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "geometry-shape",
+        focus: "riddle",
+        shape: shape.name,
+        label: "mystery shape",
+        sideCount: shape.sideCount,
+        symmetryLines: shape.symmetryLines,
+        properties
+      })
+    };
+  },
+  "quests.geometry-measurement-stories": ({ random, constraints }) => {
+    const stories = [
+      {
+        focus: "perimeter",
+        title: "Ribbon around the moonstone stage",
+        setup: "A silver ribbon will trim the outside edge of a rectangular moonstone stage.",
+        question: "How many centimeters of ribbon are needed to go around all four sides?"
+      },
+      {
+        focus: "perimeter",
+        title: "A fence for the star garden",
+        setup: "A short fence will run around the outside edge of a rectangular star garden.",
+        question: "How many centimeters of fencing are needed to surround the garden?"
+      },
+      {
+        focus: "area",
+        title: "Tiles for the landing platform",
+        setup: "The rectangular landing platform will be covered completely with square tiles. Each tile covers one square centimeter.",
+        question: "How many square-centimeter tiles will cover the platform?"
+      },
+      {
+        focus: "area",
+        title: "Paint for the mosaic panel",
+        setup: "A rectangular mosaic panel will be painted across its entire flat surface.",
+        question: "How many square centimeters of surface will be painted?"
+      }
+    ];
+    const story = random.pick(stories);
+    const question = createRectangleMeasurementQuestion({
+      random, constraints, focus: story.focus
+    });
+    return {
+      ...question,
+      prompt: story.setup + " The rectangle is " + question.stimulus.width
+        + " cm wide and " + question.stimulus.height + " cm long. " + story.question,
+      stimulus: Object.freeze({
+        ...question.stimulus,
+        storyTitle: story.title,
+        storyText: story.setup
+      })
+    };
+  },
   "geometry.shape-properties": ({ random, constraints, tier }) => {
     const choiceCount = readInteger(constraints, "choiceCount", 2);
     const shapes = getGeometryShapes(tier);

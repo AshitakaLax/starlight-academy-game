@@ -303,9 +303,9 @@ test("side quests unlock after their source chapter and never block the next cha
   const afterChapterThree = runtime.getSnapshot().chapters;
   for (const quest of sideQuestDefinitions) {
     const entry = afterChapterThree.find((item) => item.id === quest.id);
-    assert.equal(entry.prerequisitesMet, true);
+    assert.equal(entry.prerequisitesMet, ["chapter-01", "chapter-02", "chapter-03"].includes(quest.sourceChapterId));
   }
-  for (const id of ["quest-05", "quest-06"]) {
+  for (const id of ["quest-05", "quest-06", "quest-07", "quest-08"]) {
     assert.equal(afterChapterThree.find((item) => item.id === id).progress.status, "not-started");
   }
   const chapterFour = runtime.createSession("chapter-04");

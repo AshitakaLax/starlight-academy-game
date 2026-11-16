@@ -1316,6 +1316,12 @@ export function createAcademyShell({
     } else if (stimulus.kind === "geometry-rectangle") {
       const width = stimulus.width, height = stimulus.height;
       if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width > 20 || height > 20) return;
+      if (stimulus.storyTitle) {
+        appendChapterText(figure, "h5", stimulus.storyTitle, "chapter-geometry-story-title");
+      }
+      if (stimulus.storyText) {
+        appendChapterText(figure, "p", stimulus.storyText, "chapter-geometry-story-copy");
+      }
       const cell = 14, x = 55, y = 45, rectangleWidth = width * cell, rectangleHeight = height * cell;
       svg.setAttribute("viewBox", "0 0 " + (rectangleWidth + 118) + " " + (rectangleHeight + 100));
       svg.setAttribute("aria-label", "A rectangle " + width + " centimeters wide and " + height + " centimeters tall.");
