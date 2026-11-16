@@ -892,6 +892,59 @@ export function createAcademyShell({
     if (figure.childElementCount) parent.append(figure);
   }
 
+  function renderChapterWordStimulus(parent, stimulus) {
+    if (stimulus?.kind === "word-parts" && Array.isArray(stimulus.components)) {
+      const figure = documentRef.createElement("figure");
+      figure.className = "chapter-word-parts-visual";
+      appendChapterText(figure, "h5", stimulus.title ?? "Build a word", "chapter-word-visual-title");
+      if (stimulus.instruction) appendChapterText(figure, "p", stimulus.instruction, "chapter-word-visual-copy");
+      const parts = documentRef.createElement("div");
+      parts.className = "chapter-word-parts";
+      for (const component of stimulus.components) {
+        if (!component || typeof component.text !== "string" || !component.text.trim()) continue;
+        const part = documentRef.createElement("div");
+        part.className = "chapter-word-part";
+        appendChapterText(part, "span", component.label ?? "Word part", "chapter-word-part-label");
+        appendChapterText(part, "strong", component.text, "chapter-word-part-text");
+        if (component.meaning) appendChapterText(part, "small", component.meaning, "chapter-word-part-meaning");
+        parts.append(part);
+      }
+      figure.append(parts);
+      if (stimulus.meaning) {
+        appendChapterText(figure, "figcaption", "Build a word meaning: " + stimulus.meaning, "chapter-word-meaning");
+      }
+      if (parts.childElementCount) parent.append(figure);
+      return;
+    }
+    if (stimulus?.kind === "context-potion") {
+      const figure = documentRef.createElement("figure");
+      figure.className = "chapter-potion-visual";
+      appendChapterText(figure, "p", stimulus.title ?? "Potion clue", "chapter-word-visual-title");
+      appendChapterText(figure, "h5", stimulus.word, "chapter-potion-word");
+      appendChapterText(figure, "p", "Potion note: “" + stimulus.sentence + "”", "chapter-potion-sentence");
+      const root = stimulus.root;
+      if (root?.text) {
+        const rootNote = documentRef.createElement("p");
+        rootNote.className = "chapter-potion-root";
+        appendChapterText(rootNote, "strong", "Root: " + root.text + " ");
+        appendChapterText(rootNote, "span", "(" + (root.meaning ?? "word base") + ")");
+        figure.append(rootNote);
+      }
+      if (Array.isArray(stimulus.components) && stimulus.components.length) {
+        const components = documentRef.createElement("ul");
+        components.className = "chapter-potion-components";
+        for (const component of stimulus.components) {
+          const item = documentRef.createElement("li");
+          item.textContent = (component.label ?? "Word part") + " " + component.text
+            + (component.meaning ? " · " + component.meaning : "");
+          components.append(item);
+        }
+        figure.append(components);
+      }
+      parent.append(figure);
+    }
+  }
+
   function renderChapterActivity(snapshot, activity) {
     const body = panel.chapterActivityBody;
     body.replaceChildren();
@@ -935,6 +988,7 @@ export function createAcademyShell({
       }
       appendChapterText(card, "h4", question.prompt, "chapter-question-prompt");
       renderChapterFractionStimulus(card, question.stimulus);
+      renderChapterWordStimulus(card, question.stimulus);
       appendChapterText(card, "p", "Choose with the mouse or press 1–4. Press H whenever you would like a hint.", "chapter-question-help");
       const choices = documentRef.createElement("div");
       choices.className = "chapter-answer-grid";
