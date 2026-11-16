@@ -140,10 +140,14 @@ const BUILT_IN_GENERATORS = Object.freeze({
     const denominator = random.integer(denominatorMin, denominatorMax);
     const numerator = random.integer(1, denominator - 1);
     const correctAnswer = numerator + "/" + denominator;
-    const candidateNumerators = random.shuffle(
+    const distractorNumerators = random.shuffle(
       Array.from({ length: denominator }, (_, index) => index + 1)
-    ).slice(0, constraints.choiceCount ?? 4);
-    const choices = random.shuffle(candidateNumerators.map((value) => value + "/" + denominator));
+        .filter((value) => value !== numerator)
+    ).slice(0, Math.max(0, (constraints.choiceCount ?? 4) - 1));
+    const choices = random.shuffle([
+      correctAnswer,
+      ...distractorNumerators.map((value) => value + "/" + denominator)
+    ]);
     return {
       prompt: "What fraction of the whole is shaded?",
       correctAnswer,
