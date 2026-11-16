@@ -3,8 +3,6 @@ import assert from "node:assert/strict";
 import { createGameStore } from "../src/core/state/createGameStore.js";
 import { createInitialGameState, mergeGameStateDefaults } from "../src/core/state/actions.js";
 import {
-  COLORING_TEXTURE_HEIGHT,
-  COLORING_TEXTURE_WIDTH,
   COLORING_MAX_ENCODED_CHARS,
   createBlankColorTexture,
   encodeColorTexture,
@@ -12,6 +10,8 @@ import {
 } from "../src/gameplay/coloring/textureCodec.js";
 import {
   COLORING_PIXEL_COUNT,
+  COLORING_TEXTURE_HEIGHT,
+  COLORING_TEXTURE_WIDTH,
   createGarmentTemplate,
   createGarmentMask,
   createGarmentTemplateRegistry,
