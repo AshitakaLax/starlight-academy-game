@@ -22,7 +22,12 @@ function freezeRecursively(value) {
 function cloneMetadata(value) {
   if (value === undefined) return {};
   if (!isPlainObject(value)) throw new TypeError("Activity metadata must be a plain JSON-compatible object.");
-  const cloned = cloneSerializable(value, "chapter activity metadata");
+  let cloned;
+  try {
+    cloned = cloneSerializable(value, "chapter activity metadata");
+  } catch (error) {
+    throw new TypeError("Activity metadata must be JSON-compatible: " + error.message);
+  }
   if (!isPlainObject(cloned)) throw new TypeError("Activity metadata must be a plain object.");
   return cloned;
 }
