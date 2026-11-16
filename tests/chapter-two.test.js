@@ -23,12 +23,14 @@ import {
 } from "../src/chapters/chapterTwo.js";
 import { chapterOneReward } from "../src/chapters/chapterOne.js";
 import { chapterThreeDefinition, chapterThreeReward } from "../src/chapters/chapterThree.js";
+import { chapterFourDefinition, chapterFourReward } from "../src/chapters/chapterFour.js";
 import { chapterDefinitions, getChapterDefinition } from "../src/chapters/registry.js";
 
 test("Chapter 2 is registered with an Apollo story, two fraction skills, and a Chapter 1 prerequisite", () => {
-  assert.deepEqual(chapterDefinitions.map((chapter) => chapter.id), ["chapter-01", "chapter-02", "chapter-03"]);
+  assert.deepEqual(chapterDefinitions.map((chapter) => chapter.id), ["chapter-01", "chapter-02", "chapter-03", "chapter-04"]);
   assert.equal(getChapterDefinition("chapter-02"), chapterTwoDefinition);
   assert.equal(getChapterDefinition("chapter-03"), chapterThreeDefinition);
+  assert.equal(getChapterDefinition("chapter-04"), chapterFourDefinition);
   assert.equal(validateChapterDefinition(chapterTwoDefinition), true);
   assert.deepEqual(chapterTwoDefinition.prerequisiteChapterIds, ["chapter-01"]);
   assert.deepEqual(chapterTwoDefinition.activities.map((activity) => activity.type), [
@@ -116,7 +118,7 @@ test("Professor Hoot supplies fraction-specific nudges, strategies, and worked e
 
 test("Chapter 2 waits for Chapter 1, resumes its checkpoint, and grants its reward only once", () => {
   const chapterCatalog = createChapterCatalog(chapterDefinitions);
-  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward]);
+  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward]);
   const shopCatalog = createShopCatalog([]);
   const economyActions = createEconomyActionDefinitions({ rewardRegistry, shopCatalog });
   const store = createGameStore({
