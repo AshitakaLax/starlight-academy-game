@@ -106,3 +106,26 @@ test("number shortcuts ignore unavailable choices and unknown keys", () => {
 test("chapter input controller validates callbacks", () => {
   assert.throws(() => createChapterInputController({}), /requires activity, question, answer, and hint callbacks/);
 });
+
+test("shortcuts stay inactive when the chapter is covered by a modal", () => {
+  let modalOpen = false;
+  const answers = [];
+  const hints = [];
+  const activity = { type: "learning" };
+  const question = { choices: [2, 4, 6, 8] };
+  const controller = createChapterInputController({
+    getCurrentActivity: () => modalOpen ? null : activity,
+    getCurrentQuestion: () => question,
+    onAnswer: (answer) => answers.push(answer),
+    onHint: (value) => hints.push(value)
+  });
+  modalOpen = true;
+  const numberEvent = makeEvent("2");
+  const hintEvent = makeEvent("h");
+  assert.equal(controller.handleKeydown(numberEvent), false);
+  assert.equal(controller.handleKeydown(hintEvent), false);
+  assert.equal(numberEvent.wasPrevented, false);
+  assert.equal(hintEvent.wasPrevented, false);
+  assert.deepEqual(answers, []);
+  assert.deepEqual(hints, []);
+});
