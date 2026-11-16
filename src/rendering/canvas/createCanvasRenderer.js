@@ -69,7 +69,7 @@ export function createCanvasRenderer({
   }
   function onVisibilityChange() {
     if (!visible()) { cancelScheduled(); previousTime = null; return; }
-    if (running && active) { resize(); previousTime = null; paint(timeNow(), true); schedule(); }
+    if (running && active) { previousTime = null; resize(); schedule(); }
   }
   function attachObservers() {
     if (observersAttached) return;
@@ -91,7 +91,7 @@ export function createCanvasRenderer({
     if (destroyed) throw new Error("The canvas renderer has been destroyed.");
     if (running) return;
     running = true; active = true; attachObservers(); resize();
-    if (visible()) { previousTime = null; paint(timeNow(), true); schedule(); }
+    if (visible()) { previousTime = null; resize(); schedule(); }
   }
   function stop() {
     if (!running) return;
@@ -104,8 +104,7 @@ export function createCanvasRenderer({
     active = next; previousTime = null;
     if (!running) return;
     if (!active) { cancelScheduled(); return; }
-    resize();
-    if (visible()) { paint(timeNow(), true); schedule(); }
+    if (visible()) { resize(); schedule(); }
   }
   function setReducedMotion(value) {
     if (destroyed) return;
