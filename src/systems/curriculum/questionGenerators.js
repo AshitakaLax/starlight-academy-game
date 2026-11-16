@@ -244,7 +244,8 @@ const BUILT_IN_GENERATORS = Object.freeze({
         title: focus === "prefix" ? "Add a beginning" : "Add an ending",
         instruction: "Read each word part from left to right, then blend the parts together.",
         components: componentOptions,
-        meaning: entry.meaning
+        meaning: entry.meaning,
+        ...(entry.spellingNote ? { spellingNote: entry.spellingNote } : {})
       })
     };
   },
