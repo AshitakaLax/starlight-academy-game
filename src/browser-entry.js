@@ -18,21 +18,7 @@ import { createPetCatalog, defaultPetDefinitions } from "./gameplay/pets/petCata
 import { createInitialPetCollectionState } from "./gameplay/pets/petCollectionState.js";
 import { createPetActionDefinitions } from "./gameplay/pets/petActions.js";
 import { createPetCollectionService } from "./gameplay/pets/createPetCollectionService.js";
-import { chapterDefinitions, createChapterCatalog } from "./chapters/registry.js";
-import { chapterOneActivityDefinitions, chapterOneHintDefinitions, chapterOneReward } from "./chapters/chapterOne.js";
-import { chapterTwoActivityDefinitions, chapterTwoHintDefinitions, chapterTwoReward } from "./chapters/chapterTwo.js";
-import { chapterThreeActivityDefinitions, chapterThreeHintDefinitions, chapterThreeReward } from "./chapters/chapterThree.js";
-import { chapterFourActivityDefinitions, chapterFourHintDefinitions, chapterFourReward } from "./chapters/chapterFour.js";
-import { chapterFiveActivityDefinitions, chapterFiveHintDefinitions, chapterFiveReward } from "./chapters/chapterFive.js";
-import { chapterSixActivityDefinitions, chapterSixHintDefinitions, chapterSixReward } from "./chapters/chapterSix.js";
-import { chapterSevenActivityDefinitions, chapterSevenHintDefinitions, chapterSevenReward } from "./chapters/chapterSeven.js";
-import { chapterEightActivityDefinitions, chapterEightHintDefinitions, chapterEightReward } from "./chapters/chapterEight.js";
-import { chapterNineActivityDefinitions, chapterNineHintDefinitions, chapterNineReward } from "./chapters/chapterNine.js";
-import { chapterTenReward } from "./chapters/chapterTen.js";
-import { sideQuestDefinitions, sideQuestActivityDefinitions, sideQuestHintDefinitions, sideQuestRewardDefinitions } from "./side-quests/registry.js";
-import { createActivityRegistry } from "./systems/curriculum/activityDefinitions.js";
-import { createQuestionGeneratorRegistry } from "./systems/curriculum/questionGenerators.js";
-import { createHintRegistry } from "./systems/hints/createHintRegistry.js";
+import { createAcademyContentRegistries } from "./validation/academyContent.js";
 import { createHintService } from "./systems/hints/createHintService.js";
 import { createInitialChapterRuntimeState } from "./gameplay/chapter-runtime/chapterRuntimeState.js";
 import { createChapterRuntimeActionDefinitions } from "./gameplay/chapter-runtime/chapterRuntimeActions.js";
@@ -81,24 +67,7 @@ async function launch() {
   narrationStatus.setAttribute("aria-live", "polite");
   narrationStatus.textContent = "Narration is optional and turned off.";
 
-  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward, chapterFiveReward, chapterSixReward, chapterSevenReward, chapterEightReward, chapterNineReward, chapterTenReward, ...sideQuestRewardDefinitions]);
-  const activityRegistry = createActivityRegistry([
-    ...chapterOneActivityDefinitions,
-    ...chapterTwoActivityDefinitions,
-    ...chapterThreeActivityDefinitions,
-    ...chapterFourActivityDefinitions,
-    ...chapterFiveActivityDefinitions,
-    ...chapterSixActivityDefinitions,
-    ...chapterSevenActivityDefinitions,
-    ...chapterEightActivityDefinitions,
-    ...chapterNineActivityDefinitions,
-    ...sideQuestActivityDefinitions
-  ]);
-  const questionGeneratorRegistry = createQuestionGeneratorRegistry();
-  const hintRegistry = createHintRegistry({
-    activityRegistry,
-    initialDefinitions: [...chapterOneHintDefinitions, ...chapterTwoHintDefinitions, ...chapterThreeHintDefinitions, ...chapterFourHintDefinitions, ...chapterFiveHintDefinitions, ...chapterSixHintDefinitions, ...chapterSevenHintDefinitions, ...chapterEightHintDefinitions, ...chapterNineHintDefinitions, ...sideQuestHintDefinitions]
-  });
+  const { rewardRegistry, activityRegistry, questionGeneratorRegistry, hintRegistry, chapterCatalog } = createAcademyContentRegistries();
   const wardrobeCatalog = createWardrobeCatalog(defaultWardrobeItems);
   const garmentTemplateRegistry = createGarmentTemplateRegistry(defaultGarmentTemplates);
   const petCatalog = createPetCatalog(defaultPetDefinitions);
