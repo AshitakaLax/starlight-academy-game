@@ -86,7 +86,7 @@ const MARKUP = String.raw`<div class="academy-shell" data-text-scale="normal" da
         <div class="hero-copy"><p class="hero-overline"><span aria-hidden="true">✦</span> LET YOUR CURIOSITY SHINE</p><h2 id="hero-title" data-hero-title>Every great adventure begins with a little wonder.</h2><p data-hero-description>Your chapter path is taking shape. New discoveries and creative challenges are waiting.</p>
           <button class="primary-action" type="button" data-game-action="hub/dock-selected" data-game-payload='{"dockId":"chapters"}'><span data-hero-button>Explore the chapter path</span><span aria-hidden="true">↗</span></button>
         </div>
-        <div class="hero-art" aria-hidden="true"><canvas class="academy-scene-canvas" data-academy-scene aria-hidden="true"></canvas><div class="hero-moon"></div><span class="hero-star star-one">✦</span><span class="hero-star star-two">✧</span><span class="hero-star star-three">✦</span><span class="hero-star star-four">✧</span><div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div><div class="hero-crest" data-hero-crest></div><div class="hero-caption">DREAM • DISCOVER • SHINE</div></div>
+        <div class="hero-art" aria-hidden="true"><canvas class="academy-scene-canvas" data-academy-scene aria-hidden="true"></canvas><div class="academy-companion-stage" data-academy-companion aria-hidden="true" hidden></div><div class="hero-moon"></div><span class="hero-star star-one">✦</span><span class="hero-star star-two">✧</span><span class="hero-star star-three">✦</span><span class="hero-star star-four">✧</span><div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div><div class="hero-crest" data-hero-crest></div><div class="hero-caption">DREAM • DISCOVER • SHINE</div></div>
       </section>
       <section class="quick-paths" aria-labelledby="quick-paths-title">
         <div class="section-heading-row"><div><p class="academy-overline">CHOOSE YOUR NEXT STEP</p><h2 id="quick-paths-title">Explore the academy</h2></div><span aria-hidden="true">✧</span></div>
@@ -486,6 +486,7 @@ export function createAcademyShell({
   const settingsTrigger = requireElement(root, ".settings-trigger");
   const narrationVoiceSelect = requireElement(root, "[data-narration-voice]");
   const academyScene = createAcademyScene({ canvas: requireElement(root, "[data-academy-scene]"), documentRef, windowRef });
+  const academyCompanion = requireElement(root, "[data-academy-companion]");
   let pendingImportText = null;
   let previousFocus = null;
   let lastOverlayId = store.getState()?.ui?.activeOverlayId ?? null;
@@ -554,6 +555,35 @@ export function createAcademyShell({
     narrationVoiceSelect.value = settings.voiceURI;
   }
 
+
+  function getCompanionAccessories() {
+    const equipped = wardrobeService?.getPreview?.().equipped ?? [];
+    return equipped
+      .filter((entry) => ["head", "accessory"].includes(entry?.slot) && entry.item)
+      .map((entry) => ({ slot: entry.slot, theme: entry.item.theme }));
+  }
+
+  function renderAcademyCompanion() {
+    const pet = petCollectionService?.getSnapshot?.().activePet ?? null;
+    if (!pet || pet.unlocked !== true) {
+      academyCompanion.hidden = true;
+      academyCompanion.replaceChildren();
+      academyCompanion.removeAttribute("data-pet-id");
+      academyCompanion.removeAttribute("data-species");
+      academyCompanion.removeAttribute("data-palette-id");
+      return;
+    }
+    const presentation = createPetCharacterPresentation(pet, "idle", getCompanionAccessories());
+    academyCompanion.dataset.petId = pet.id;
+    academyCompanion.dataset.species = presentation.species;
+    academyCompanion.dataset.paletteId = presentation.paletteId;
+    academyCompanion.style.setProperty("--pet-primary", presentation.palette.primaryColor);
+    academyCompanion.style.setProperty("--pet-secondary", presentation.palette.secondaryColor);
+    academyCompanion.style.setProperty("--pet-accent", presentation.palette.accentColor);
+    academyCompanion.innerHTML = presentation.markup;
+    academyCompanion.hidden = false;
+  }
+
   function renderPetCollection(statusMessage = null, reaction = null) {
     if (!petCollectionService) {
       panel.petCollectionGrid.replaceChildren();
@@ -573,7 +603,8 @@ export function createAcademyShell({
       card.dataset.petState = pet.unlocked ? (pet.active ? "active" : "unlocked") : "locked";
       const presentation = createPetCharacterPresentation(
         pet,
-        reaction?.petId === pet.id ? reaction.careType : "idle"
+        reaction?.petId === pet.id ? reaction.careType : "idle",
+        pet.active ? getCompanionAccessories() : []
       );
       const character = documentRef.createElement("div");
       character.className = "pet-character-stage";
@@ -2636,6 +2667,7 @@ export function createAcademyShell({
     const systemReducedMotion = windowRef?.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
     shell.dataset.reducedMotion = String(preferences.reducedMotion || systemReducedMotion);
     academyScene.setReducedMotion(preferences.reducedMotion || systemReducedMotion);
+    renderAcademyCompanion();
     panel.kicker.textContent = destination.kicker;
     panel.title.textContent = destination.title;
     panel.description.textContent = destination.description;

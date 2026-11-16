@@ -22,3 +22,5 @@ The Pets screen uses the presentation-only `src/ui/petCharacter.js` helper to re
 
 
 Appearance selection dispatches the validated `pets/appearance-updated` action. The UI resolves the saved palette ID into a pet-character presentation and applies its primary, secondary, and accent colors to the character stage as well as the inline SVG. This forces every palette-driven part of the artwork to repaint immediately. The selected palette ID is saved with the pet and is verified after an offline browser reload; changing appearance does not affect care or bond progress.
+
+The academy hub places the active animated companion beside the student. It follows the saved active pet and appearance palette. Currently equipped Wardrobe headwear and accessory-slot items are echoed as small, animated pet adornments; unequipped, merely owned, and locked pieces are not shown. Both the hub companion and the Pets collection preview refresh when a pet, palette, or equipped accessory changes.

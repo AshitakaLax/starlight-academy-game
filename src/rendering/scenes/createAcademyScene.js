@@ -28,15 +28,18 @@ function drawBackground(ctx, frame) {
 
 function drawStudent(ctx, frame) {
   const scale = Math.max(.7, Math.min(frame.width / 210, frame.height / 145, 1.15));
-  ctx.save(); ctx.translate(frame.width*.17, frame.height*.98); ctx.scale(scale, scale);
+  const animationTime = frame.deltaMs > 0 ? frame.elapsedMs : 0;
+  const bob = Math.sin(animationTime / 900) * 2.2;
+  ctx.save(); ctx.translate(frame.width*.17, frame.height*.98 - bob); ctx.scale(scale, scale);
   ctx.fillStyle = "#76549a"; ctx.beginPath(); ctx.moveTo(-11,-63);
   ctx.bezierCurveTo(-24,-46,-33,-20,-34,0); ctx.quadraticCurveTo(0,7,33,0);
   ctx.bezierCurveTo(28,-25,20,-49,10,-63); ctx.closePath(); ctx.fill();
   ctx.fillStyle = "#d9b5d9"; ctx.beginPath(); ctx.moveTo(-8,-60); ctx.lineTo(0,-50);
   ctx.lineTo(8,-60); ctx.lineTo(4,-24); ctx.lineTo(-4,-24); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = "#edc6b2"; ctx.lineWidth = 7; ctx.lineCap = "round"; ctx.beginPath();
-  ctx.moveTo(-10,-57); ctx.quadraticCurveTo(-26,-62,-27,-79);
-  ctx.moveTo(10,-57); ctx.quadraticCurveTo(25,-67,27,-78); ctx.stroke();
+  ctx.strokeStyle = "#edc6b2"; ctx.lineWidth = 7; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(-10,-57); ctx.quadraticCurveTo(-26,-62,-27,-79); ctx.stroke();
+  ctx.save(); ctx.translate(10,-57); ctx.rotate(Math.sin(animationTime / 1100) * .045);
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(15,-8,17,-21); ctx.stroke(); ctx.restore();
   ctx.fillStyle = "#edc6b2"; ctx.fillRect(-4,-75,8,13);
   ctx.beginPath(); ctx.ellipse(0,-87,14,17,0,0,Math.PI*2); ctx.fill();
   ctx.fillStyle = "#523755"; ctx.beginPath(); ctx.moveTo(-14,-89);
@@ -44,31 +47,6 @@ function drawStudent(ctx, frame) {
   ctx.quadraticCurveTo(8,-93,3,-95); ctx.quadraticCurveTo(-4,-82,-14,-82); ctx.closePath(); ctx.fill();
   ctx.fillStyle = "#fff0ce"; ctx.fillRect(-14,-17,10,17); ctx.fillRect(4,-17,10,17);
   ctx.fillStyle = "#e7c36f"; ctx.beginPath(); ctx.arc(0,-57,5,0,Math.PI*2); ctx.fill();
-  ctx.restore();
-}
-
-function drawPegasus(ctx, frame) {
-  const scale = Math.max(.62, Math.min(frame.width / 245, frame.height / 155, .98));
-  ctx.save(); ctx.translate(frame.width*.84, frame.height*.91); ctx.scale(scale,scale);
-  ctx.fillStyle = "#fffaf3"; ctx.beginPath(); ctx.ellipse(-3,-29,27,13,-.13,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(13,-34); ctx.quadraticCurveTo(23,-56,19,-69);
-  ctx.quadraticCurveTo(33,-75,38,-64); ctx.quadraticCurveTo(37,-51,25,-42);
-  ctx.lineTo(14,-21); ctx.closePath(); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(36,-66,12,8,-.2,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle = "#a985c4"; ctx.beginPath(); ctx.moveTo(26,-72);
-  ctx.quadraticCurveTo(11,-80,16,-91); ctx.quadraticCurveTo(27,-83,31,-76);
-  ctx.quadraticCurveTo(38,-87,43,-88); ctx.quadraticCurveTo(43,-75,38,-69); ctx.fill();
-  ctx.strokeStyle = "#a985c4"; ctx.lineWidth = 6; ctx.lineCap = "round"; ctx.beginPath();
-  ctx.moveTo(-27,-30); ctx.quadraticCurveTo(-46,-42,-44,-57); ctx.stroke();
-  ctx.fillStyle = "#d5b4dc"; ctx.beginPath(); ctx.moveTo(-12,-37);
-  ctx.quadraticCurveTo(-4,-68,10,-59); ctx.quadraticCurveTo(24,-49,7,-33);
-  ctx.quadraticCurveTo(3,-45,-5,-47); ctx.quadraticCurveTo(-7,-40,-12,-37); ctx.fill();
-  ctx.strokeStyle = "#fffaf3"; ctx.lineWidth = 5; ctx.beginPath();
-  ctx.moveTo(-15,-21); ctx.lineTo(-19,-3); ctx.moveTo(-2,-18); ctx.lineTo(-2,-2);
-  ctx.moveTo(11,-20); ctx.lineTo(15,-3); ctx.stroke();
-  ctx.strokeStyle = "#dfb75d"; ctx.lineWidth = 3; ctx.beginPath();
-  ctx.moveTo(34,-73); ctx.lineTo(42,-88); ctx.stroke();
-  ctx.fillStyle = "#694d75"; ctx.beginPath(); ctx.arc(40,-67,1.5,0,Math.PI*2); ctx.fill();
   ctx.restore();
 }
 
@@ -91,7 +69,6 @@ export function createAcademyScene({ canvas, windowRef = globalThis.window,
   const renderer = createCanvasRenderer({ canvas, windowRef, documentRef, ResizeObserverCtor, onError });
   renderer.addLayer({ id:"background", order:0, draw:drawBackground });
   renderer.addLayer({ id:"student-character", order:20, draw:drawStudent });
-  renderer.addLayer({ id:"pegasus-companion", order:30, draw:drawPegasus });
   renderer.addLayer({ id:"starlight-effects", order:40, draw:drawMagic });
   return Object.freeze({
     start:() => renderer.start(), stop:() => renderer.stop(), destroy:() => renderer.destroy(),

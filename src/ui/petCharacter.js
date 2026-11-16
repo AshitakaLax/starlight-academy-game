@@ -59,6 +59,50 @@ const SPECIES_ART = Object.freeze({
   ].join("")
 });
 
+
+const ACCESSORY_THEME_COLORS = Object.freeze({
+  silver: "#d8cbe5",
+  lavender: "#c8a8de",
+  moonlight: "#d7d1f2",
+  starlight: "#f0c979",
+  moonbeam: "#df9cbd"
+});
+
+const ACCESSORY_HEAD_ANCHORS = Object.freeze({
+  pegasus: "translate(134 31) scale(.68)",
+  phoenix: "translate(121 27) scale(.62)",
+  "nymph-kitten": "translate(96 27) scale(.68)"
+});
+
+const ACCESSORY_NECK_ANCHORS = Object.freeze({
+  pegasus: "translate(111 93)",
+  phoenix: "translate(105 96)",
+  "nymph-kitten": "translate(100 107)"
+});
+
+function createPetAccessoryMarkup(species, accessories) {
+  const selected = new Map();
+  if (Array.isArray(accessories)) {
+    for (const item of accessories) {
+      if (!item || !["head", "accessory"].includes(item.slot)) continue;
+      const color = Object.hasOwn(ACCESSORY_THEME_COLORS, item.theme)
+        ? ACCESSORY_THEME_COLORS[item.theme]
+        : "#e8c879";
+      selected.set(item.slot, color);
+    }
+  }
+  const headColor = selected.get("head");
+  const neckColor = selected.get("accessory");
+  if (!headColor && !neckColor) return "";
+  const head = headColor
+    ? '<g class="pet-character-accessory pet-character-accessory--head" data-pet-accessory="head" transform="' + ACCESSORY_HEAD_ANCHORS[species] + '" stroke="#8b7295" stroke-width="1.8" stroke-linejoin="round"><path d="M-17 7L-13-4L-5 2L0-10L6 2L14-4L18 7Z" fill="' + headColor + '"/><path d="M-17 8H18" fill="none" stroke="#8b7295" stroke-width="2.3"/><circle cx="0" cy="-4" r="2.4" fill="#fff8e8" stroke="none"/></g>'
+    : "";
+  const neck = neckColor
+    ? '<g class="pet-character-accessory pet-character-accessory--neck" data-pet-accessory="accessory" transform="' + ACCESSORY_NECK_ANCHORS[species] + '"><path d="M-10-5Q0 4 10-5" fill="none" stroke="' + neckColor + '" stroke-width="2.8" stroke-linecap="round"/><path d="M0 0L5 6L0 14L-5 6Z" fill="' + neckColor + '" stroke="#8b7295" stroke-width="1.5"/><circle cx="0" cy="5" r="1.5" fill="#fff8e8" stroke="none"/></g>'
+    : "";
+  return '<g class="pet-character-accessories">' + head + neck + '</g>';
+}
+
 const VALID_REACTIONS = new Set(["feeding", "grooming", "play"]);
 const isHexColor = (value) => typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value);
 
@@ -75,7 +119,7 @@ function resolvePalette(species, palette = {}) {
  * Build a self-contained, decorative SVG companion. Reactions are transient
  * presentation only; no animation state is written to the saved game model.
  */
-export function createPetCharacterMarkup({ species, palette, reaction = "idle" } = {}) {
+export function createPetCharacterMarkup({ species, palette, reaction = "idle", accessories = [] } = {}) {
   if (!Object.hasOwn(SPECIES_ART, species)) {
     throw new TypeError("Pet character species is not supported: " + String(species));
   }
@@ -90,6 +134,7 @@ export function createPetCharacterMarkup({ species, palette, reaction = "idle" }
     '<svg class="pet-character-art pet-character-art--', species, '" viewBox="0 0 180 150" data-reaction="', activeReaction, '" style="--pet-primary:', colors.primaryColor, ';--pet-secondary:', colors.secondaryColor, ';--pet-accent:', colors.accentColor, '" aria-hidden="true" focusable="false">',
     '<ellipse cx="91" cy="137" rx="43" ry="6" fill="#76627f" opacity=".12"/>',
     SPECIES_ART[species],
+    createPetAccessoryMarkup(species, accessories),
     effects,
     '</svg>'
   ].join("");
@@ -101,7 +146,7 @@ export function createPetCharacterMarkup({ species, palette, reaction = "idle" }
  * The returned palette ID is mirrored on the character stage for diagnostics
  * and browser-level verification.
  */
-export function createPetCharacterPresentation(pet, reaction = "idle") {
+export function createPetCharacterPresentation(pet, reaction = "idle", accessories = []) {
   if (!pet || typeof pet.id !== "string" || !pet.id.startsWith("pet.")) {
     throw new TypeError("A registered pet is required to create its character presentation.");
   }
@@ -119,6 +164,6 @@ export function createPetCharacterPresentation(pet, reaction = "idle") {
     species,
     paletteId,
     palette: colors,
-    markup: createPetCharacterMarkup({ species, palette: colors, reaction })
+    markup: createPetCharacterMarkup({ species, palette: colors, reaction, accessories })
   });
 }

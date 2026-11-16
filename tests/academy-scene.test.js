@@ -15,7 +15,7 @@ test("academy scene registers its ordered background, student, companion and eff
   const documentRef={visibilityState:"visible"};
   const scene=createAcademyScene({canvas,windowRef,documentRef,ResizeObserverCtor:null});
   assert.deepEqual(scene.getDiagnostics().layerIds,[
-    "background","student-character","pegasus-companion","starlight-effects"
+    "background","student-character","starlight-effects"
   ]);
   scene.setReducedMotion(true);scene.start();
   assert.equal(frames.size,0);

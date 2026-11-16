@@ -85,6 +85,15 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .primary-action:hover { filter: brightness(1.07); }
 .hero-art { position: relative; min-height: 210px; display: grid; place-items: center; overflow: hidden; }
 .academy-scene-canvas { position: absolute; z-index: 0; inset: 0; display: block; width: 100%; height: 100%; pointer-events: none; }
+.academy-companion-stage { position: absolute; z-index: 2; left: 25%; bottom: 18px; display: grid; place-items: center; width: 112px; height: 94px; pointer-events: none; filter: drop-shadow(0 5px 8px rgba(91, 65, 117, .12)); }
+.academy-companion-stage[hidden] { display: none; }
+.academy-companion-stage .pet-character-art { width: 100%; height: 100%; overflow: visible; }
+.pet-character-accessory { filter: drop-shadow(0 1px 2px rgba(89, 61, 112, .2)); }
+.pet-character-accessory--head { transform-box: fill-box; transform-origin: center; animation: pet-accessory-shimmer 3.8s ease-in-out infinite; }
+.pet-character-accessory--neck { transform-box: fill-box; transform-origin: center top; animation: pet-accessory-sway 3.4s ease-in-out infinite; }
+@keyframes pet-accessory-shimmer { 0%, 100% { opacity: .95; } 50% { opacity: .72; } }
+@keyframes pet-accessory-sway { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(1.5px); } }
+@media (max-width: 480px) { .academy-companion-stage { left: 24%; bottom: 15px; width: 92px; height: 78px; } }
 .hero-moon { position: absolute; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle at 35% 32%, #fffdf1 0 20%, #f5e4c1 60%, #e7cda9); opacity: .74; box-shadow: 0 0 48px #ffffffaa; }
 .hero-orbit { position: absolute; width: 220px; height: 78px; border: 1px solid #8967ab55; border-radius: 50%; transform: rotate(-28deg); }
 .orbit-two { width: 240px; height: 100px; transform: rotate(36deg); border-color: #c4965860; }

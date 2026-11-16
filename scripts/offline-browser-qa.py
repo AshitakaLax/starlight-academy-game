@@ -125,6 +125,14 @@ def main() -> None:
                 "The academy shell did not render.")
         require("Chapters" in page.locator("body").inner_text(),
                 "Chapter navigation is missing.")
+        hero_companion = page.locator("[data-academy-companion]")
+        require(not hero_companion.is_hidden()
+                and hero_companion.get_attribute("data-pet-id") == "pet.pegasus"
+                and hero_companion.get_attribute("data-palette-id") == "moonlit",
+                "The academy hero did not place the saved starter pet beside the student.")
+        require(hero_companion.locator('[data-pet-accessory="head"]').count() == 1
+                and hero_companion.locator('[data-pet-accessory="accessory"]').count() == 1,
+                "Equipped headwear and the accessory were not shown on the hub companion.")
 
         # Complete Chapter 1 through the real UI. Request a hint and safely skip
         # the remaining learning/challenge/movement activities.
@@ -293,6 +301,15 @@ def main() -> None:
         ).first.evaluate("(element) => getComputedStyle(element).fill")
         require(restored_primary == "rgb(217, 213, 242)",
                 "The restored Pegasus artwork did not use its selected palette.")
+        click_button(restored_page, "Chapters")
+        restored_hero_companion = restored_page.locator("[data-academy-companion]")
+        require(not restored_hero_companion.is_hidden()
+                and restored_hero_companion.get_attribute("data-pet-id") == "pet.pegasus"
+                and restored_hero_companion.get_attribute("data-palette-id") == "twilight",
+                "The restored academy hero did not use the active pet and saved palette.")
+        require(restored_hero_companion.locator('[data-pet-accessory="head"]').count() == 1
+                and restored_hero_companion.locator('[data-pet-accessory="accessory"]').count() == 1,
+                "The equipped pet adornments did not survive save restoration.")
         click_button(restored_page, "Wardrobe")
         require("Moonbeam Bow" in restored_page.locator("body").inner_text(),
                 "Purchased cosmetic did not survive browser restoration.")
@@ -320,6 +337,7 @@ def main() -> None:
             "chapter_1_completed": True,
             "hint_stage_rendered": 1,
             "pet_care_restored": True,
+            "hero_companion_restored": True,
             "wardrobe_purchase_restored": True,
             "backup_export_import": True,
         }, indent=2))

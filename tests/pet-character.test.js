@@ -55,6 +55,24 @@ test("unknown species are rejected and unsafe palette values fall back to defaul
 });
 
 
+
+test("companion artwork displays equipped headwear and an accessory without trusting item themes", () => {
+  const markup = createPetCharacterMarkup({
+    species: "pegasus",
+    palette,
+    accessories: [
+      { slot: "head", theme: "silver" },
+      { slot: "accessory", theme: "starlight" },
+      { slot: "outfit", theme: 'red" onload="alert(1)' }
+    ]
+  });
+  assert.match(markup, /data-pet-accessory="head"/);
+  assert.match(markup, /data-pet-accessory="accessory"/);
+  assert.match(markup, /fill="#d8cbe5"/);
+  assert.match(markup, /fill="#f0c979"/);
+  assert.doesNotMatch(markup, /onload|alert\(1\)/);
+});
+
 test("changing a saved appearance palette updates the character presentation colors", () => {
   const catalog = createPetCatalog(defaultPetDefinitions);
   const store = createGameStore({
