@@ -944,6 +944,9 @@ export function createAcademyShell({
         }
         figure.append(components);
       }
+      if (stimulus.spellingNote) {
+        appendChapterText(figure, "p", "Spelling note: " + stimulus.spellingNote, "chapter-word-spelling-note");
+      }
       parent.append(figure);
     }
   }

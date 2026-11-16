@@ -2,6 +2,8 @@ import { sideQuestOneDefinition, sideQuestOneActivityDefinitions, sideQuestOneHi
 import { sideQuestTwoDefinition, sideQuestTwoActivityDefinitions, sideQuestTwoHintDefinitions, sideQuestTwoReward } from "./sideQuestTwo.js";
 import { sideQuestThreeDefinition, sideQuestThreeActivityDefinitions, sideQuestThreeHintDefinitions, sideQuestThreeReward } from "./sideQuestThree.js";
 import { sideQuestFourDefinition, sideQuestFourActivityDefinitions, sideQuestFourHintDefinitions, sideQuestFourReward } from "./sideQuestFour.js";
+import { sideQuestFiveDefinition, sideQuestFiveActivityDefinitions, sideQuestFiveHintDefinitions, sideQuestFiveReward } from "./sideQuestFive.js";
+import { sideQuestSixDefinition, sideQuestSixActivityDefinitions, sideQuestSixHintDefinitions, sideQuestSixReward } from "./sideQuestSix.js";
 
 /**
  * Data-driven optional side-quest registry. Quest progress shares the safe
@@ -14,25 +16,33 @@ export const sideQuestDefinitions = Object.freeze([
   sideQuestOneDefinition,
   sideQuestTwoDefinition,
   sideQuestThreeDefinition,
-  sideQuestFourDefinition
+  sideQuestFourDefinition,
+  sideQuestFiveDefinition,
+  sideQuestSixDefinition
 ]);
 export const sideQuestActivityDefinitions = Object.freeze([
   ...sideQuestOneActivityDefinitions,
   ...sideQuestTwoActivityDefinitions,
   ...sideQuestThreeActivityDefinitions,
-  ...sideQuestFourActivityDefinitions
+  ...sideQuestFourActivityDefinitions,
+  ...sideQuestFiveActivityDefinitions,
+  ...sideQuestSixActivityDefinitions
 ]);
 export const sideQuestHintDefinitions = Object.freeze([
   ...sideQuestOneHintDefinitions,
   ...sideQuestTwoHintDefinitions,
   ...sideQuestThreeHintDefinitions,
-  ...sideQuestFourHintDefinitions
+  ...sideQuestFourHintDefinitions,
+  ...sideQuestFiveHintDefinitions,
+  ...sideQuestSixHintDefinitions
 ]);
 export const sideQuestRewardDefinitions = Object.freeze([
   sideQuestOneReward,
   sideQuestTwoReward,
   sideQuestThreeReward,
-  sideQuestFourReward
+  sideQuestFourReward,
+  sideQuestFiveReward,
+  sideQuestSixReward
 ]);
 
 /** @param {string} id */

@@ -691,7 +691,62 @@ const BUILT_IN_GENERATORS = Object.freeze({
       })
     };
   }
-  ,
+  "quests.word-morphology": ({ random, constraints, tier }) => {
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    if (choiceCount !== 4) throw new RangeError("Word morphology questions require exactly four choices.");
+    const entries = getChapterThreeWords(tier);
+    if (entries.length < choiceCount) throw new RangeError("The curated word bank does not have enough entries for tier " + tier + ".");
+    const entry = random.pick(entries);
+    const describeParts = (candidate) => [
+      ...candidate.prefixes.map((part) => part.display),
+      candidate.root.text,
+      ...candidate.suffixes.map((part) => part.display)
+    ].join(" + ");
+    const correctAnswer = describeParts(entry);
+    const distractors = random.shuffle(entries.filter((candidate) => candidate.word !== entry.word))
+      .slice(0, choiceCount - 1);
+    const choices = random.shuffle([correctAnswer, ...distractors.map(describeParts)]);
+    return {
+      prompt: "The word “" + entry.word + "” means “" + entry.meaning
+        + ".” Which sequence shows its prefix, root, and suffix parts in the correct order?",
+      correctAnswer,
+      choices,
+      stimulus: Object.freeze({
+        kind: "context-potion",
+        title: "A word under the looking glass",
+        word: entry.word,
+        sentence: entry.sentence,
+        ...(entry.spellingNote ? { spellingNote: entry.spellingNote } : {})
+      })
+    };
+  },
+  "quests.context-word-rescue": ({ random, constraints, tier }) => {
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    if (choiceCount !== 4) throw new RangeError("Context word-rescue questions require exactly four choices.");
+    const entries = getChapterThreeWords(tier);
+    if (entries.length < choiceCount) throw new RangeError("The curated word bank does not have enough entries for tier " + tier + ".");
+    const entry = random.pick(entries);
+    const matchIndex = entry.sentence.toLocaleLowerCase().indexOf(entry.word.toLocaleLowerCase());
+    if (matchIndex < 0) throw new Error("Curated context sentence is missing its target word: " + entry.word);
+    const maskedSentence = entry.sentence.slice(0, matchIndex)
+      + "________"
+      + entry.sentence.slice(matchIndex + entry.word.length);
+    const distractors = random.shuffle(entries.filter((candidate) => candidate.word !== entry.word))
+      .slice(0, choiceCount - 1);
+    const choices = random.shuffle([entry.word, ...distractors.map((candidate) => candidate.word)]);
+    return {
+      prompt: "A word meaning “" + entry.meaning
+        + "” is missing from this sentence. Which word restores the sentence?",
+      correctAnswer: entry.word,
+      choices,
+      stimulus: Object.freeze({
+        kind: "context-potion",
+        title: "Restore the missing word",
+        word: "Missing word",
+        sentence: maskedSentence
+      })
+    };
+  },
   "language.parts-of-speech": ({ random, constraints, tier }) => {
     const examples = getGrammarExamples(tier);
     const example = random.pick(examples);
