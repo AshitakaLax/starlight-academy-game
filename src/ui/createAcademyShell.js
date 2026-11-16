@@ -1069,7 +1069,7 @@ export function createAcademyShell({
 
   function renderChapterMeasurementStimulus(parent, stimulus) {
     if (!stimulus || ![
-      "measurement-beaker", "measurement-balance", "measurement-conversion", "measurement-elapsed-time"
+      "measurement-beaker", "measurement-balance", "measurement-conversion", "measurement-audit", "measurement-combined-load", "measurement-elapsed-time"
     ].includes(stimulus.kind)) return;
 
     const figure = documentRef.createElement("figure");
@@ -1147,6 +1147,31 @@ export function createAcademyShell({
       appendChapterText(equation, "strong", "? " + stimulus.toUnit, "chapter-conversion-target");
       figure.append(equation);
       appendChapterText(figure, "figcaption", "Convert the measurement without changing what it measures.", "chapter-measurement-caption");
+    } else if (stimulus.kind === "measurement-audit") {
+      appendChapterText(figure, "h5", stimulus.title ?? "Harbor conversion audit", "chapter-measurement-title");
+      const cards = documentRef.createElement("ol");
+      cards.className = "chapter-measurement-audit";
+      for (const card of (stimulus.cards ?? [])) {
+        const item = documentRef.createElement("li");
+        item.className = "chapter-measurement-audit-card";
+        appendChapterText(item, "strong", card.label, "chapter-measurement-note");
+        appendChapterText(item, "span", card.sourceValue + " " + card.fromUnit + " = " + card.reportedValue + " " + card.toUnit, "chapter-conversion-value");
+        cards.append(item);
+      }
+      figure.append(cards);
+      appendChapterText(figure, "figcaption", "Three cards are correct. Find the one reported conversion that does not match the metric relationship.", "chapter-measurement-caption");
+    } else if (stimulus.kind === "measurement-combined-load") {
+      appendChapterText(figure, "h5", stimulus.title ?? "Harbor cargo manifest", "chapter-measurement-title");
+      const cargo = documentRef.createElement("ul");
+      cargo.className = "chapter-cargo-items";
+      for (const item of (stimulus.items ?? [])) {
+        const row = documentRef.createElement("li");
+        appendChapterText(row, "strong", item.object, "chapter-measurement-note");
+        appendChapterText(row, "span", item.mass, "chapter-conversion-value");
+        cargo.append(row);
+      }
+      figure.append(cargo);
+      appendChapterText(figure, "figcaption", "Add the two measured masses to find the combined cargo total in grams.", "chapter-measurement-caption");
     } else {
       appendChapterText(figure, "h5", "Harbor clock", "chapter-measurement-title");
       const timeline = documentRef.createElement("div");

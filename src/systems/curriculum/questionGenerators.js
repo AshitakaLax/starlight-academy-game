@@ -944,6 +944,73 @@ const BUILT_IN_GENERATORS = Object.freeze({
       })
     };
   },
+  "quests.metric-mislabel-audit": ({ random, constraints, tier }) => {
+    const problems = random.shuffle(getUnitConversionProblems(tier)).slice(0, 4);
+    const incorrectIndex = random.integer(0, problems.length - 1);
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    const formatNumber = (value) => Number.isInteger(value)
+      ? value.toLocaleString("en-US")
+      : String(value);
+    const cards = random.shuffle(problems.map((problem, index) => {
+      const incorrect = index === incorrectIndex;
+      const reportedValue = incorrect
+        ? problem.resultValue + (problem.resultValue >= 10 ? 10 : problem.resultValue >= 1 ? 1 : 0.1)
+        : problem.resultValue;
+      return Object.freeze({
+        problemId: problem.id,
+        sourceValue: formatNumber(problem.sourceValue),
+        fromUnit: problem.fromUnit,
+        reportedValue: formatNumber(reportedValue),
+        toUnit: problem.toUnit,
+        isIncorrect: incorrect
+      });
+    })).map((card, index) => Object.freeze({
+      ...card,
+      label: "Card " + (index + 1)
+    }));
+    const incorrectCard = cards.find((card) => card.isIncorrect);
+    return {
+      prompt: "The harbor log contains one incorrect metric conversion. Which card needs fixing?",
+      correctAnswer: incorrectCard.label,
+      choices: makeDistinctChoices(incorrectCard.label, cards.map((card) => card.label), random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "measurement-audit",
+        title: "Harbor conversion audit",
+        cards: Object.freeze(cards)
+      })
+    };
+  },
+  "quests.harbor-cargo-total": ({ random, constraints, tier }) => {
+    const problems = getMassBalanceProblems(tier);
+    const pairs = [];
+    for (let first = 0; first < problems.length; first += 1) {
+      for (let second = first + 1; second < problems.length; second += 1) {
+        pairs.push([problems[first], problems[second]]);
+      }
+    }
+    const pair = random.pick(pairs);
+    const totalGrams = pair[0].massGrams + pair[1].massGrams;
+    const formatGrams = (value) => value.toLocaleString("en-US") + " g";
+    const candidateTotals = pairs.map(([first, second]) =>
+      formatGrams(first.massGrams + second.massGrams)
+    );
+    const correctAnswer = formatGrams(totalGrams);
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    return {
+      prompt: "The harbor crew is packing both objects together. What is their combined mass?",
+      correctAnswer,
+      choices: makeDistinctChoices(correctAnswer, candidateTotals, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "measurement-combined-load",
+        title: "Harbor cargo manifest",
+        items: Object.freeze(pair.map((problem) => Object.freeze({
+          problemId: problem.id,
+          object: problem.object,
+          mass: formatGrams(problem.massGrams)
+        })))
+      })
+    };
+  },
   "language.parts-of-speech": ({ random, constraints, tier }) => {
     const examples = getGrammarExamples(tier);
     const example = random.pick(examples);
