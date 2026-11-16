@@ -851,6 +851,47 @@ export function createAcademyShell({
     return element;
   }
 
+  function renderChapterFractionStimulus(parent, stimulus) {
+    if (stimulus?.kind !== "fraction-bars" || !Array.isArray(stimulus.bars)) return;
+    const figure = documentRef.createElement("figure");
+    figure.className = "chapter-fraction-visual";
+    for (const model of stimulus.bars) {
+      if (!Number.isInteger(model.numerator) || !Number.isInteger(model.denominator)
+          || model.denominator < 2 || model.denominator > 16
+          || model.numerator < 0 || model.numerator > model.denominator) continue;
+      const group = documentRef.createElement("section");
+      group.className = "chapter-fraction-model";
+      if (model.label) appendChapterText(group, "p", model.label, "chapter-fraction-label");
+      const bar = documentRef.createElement("div");
+      bar.className = "chapter-fraction-bar";
+      bar.setAttribute("role", "img");
+      bar.setAttribute(
+        "aria-label",
+        model.numerator + " of " + model.denominator + " equal parts are shaded."
+      );
+      bar.style.gridTemplateColumns = "repeat(" + model.denominator + ", minmax(0, 1fr))";
+      for (let index = 0; index < model.denominator; index += 1) {
+        const part = documentRef.createElement("span");
+        part.className = index < model.numerator
+          ? "chapter-fraction-part is-shaded"
+          : "chapter-fraction-part";
+        part.setAttribute("aria-hidden", "true");
+        bar.append(part);
+      }
+      group.append(bar);
+      if (model.showValue) {
+        appendChapterText(
+          group,
+          "figcaption",
+          model.numerator + "/" + model.denominator,
+          "chapter-fraction-value"
+        );
+      }
+      figure.append(group);
+    }
+    if (figure.childElementCount) parent.append(figure);
+  }
+
   function renderChapterActivity(snapshot, activity) {
     const body = panel.chapterActivityBody;
     body.replaceChildren();
@@ -890,6 +931,7 @@ export function createAcademyShell({
         appendChapterText(card, "p", metadata.lessonLabel, "chapter-question-kicker");
       }
       appendChapterText(card, "h4", question.prompt, "chapter-question-prompt");
+      renderChapterFractionStimulus(card, question.stimulus);
       appendChapterText(card, "p", "Choose with the mouse or press 1–4. Press H whenever you would like a hint.", "chapter-question-help");
       const choices = documentRef.createElement("div");
       choices.className = "chapter-answer-grid";
