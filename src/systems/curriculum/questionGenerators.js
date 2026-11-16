@@ -690,7 +690,7 @@ const BUILT_IN_GENERATORS = Object.freeze({
         ]
       })
     };
-  }
+  },
   "quests.word-morphology": ({ random, constraints, tier }) => {
     const choiceCount = readInteger(constraints, "choiceCount", 4);
     if (choiceCount !== 4) throw new RangeError("Word morphology questions require exactly four choices.");
