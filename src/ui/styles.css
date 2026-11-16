@@ -590,3 +590,114 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   .chapter-fraction-visual { padding: 9px; gap: 7px; }
   .chapter-fraction-model { min-width: min(100%, 190px); flex-basis: 190px; }
 }
+
+/* Word-building and contextual potion learning visuals for Chapter 3. */
+.chapter-word-parts-visual,
+.chapter-potion-visual {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0 18px;
+  padding: 16px;
+  border: 1px solid #dfd2e9;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 90% 12%, #f6e8ff 0, transparent 9rem),
+    linear-gradient(135deg, #fcf8ff, #fffaf1);
+}
+.chapter-word-visual-title {
+  margin: 0;
+  color: #775394;
+  font: 700 1rem/1.25 Georgia, serif;
+  text-align: center;
+}
+.chapter-word-visual-copy {
+  margin: 0;
+  color: #796b86;
+  font-size: .78rem;
+  text-align: center;
+}
+.chapter-word-parts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  gap: 9px;
+}
+.chapter-word-part {
+  min-width: 92px;
+  flex: 1 1 104px;
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid #e3d5ee;
+  border-radius: 12px;
+  background: #fff;
+  text-align: center;
+}
+.chapter-word-part-label {
+  color: #9a86a8;
+  font-size: .62rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.chapter-word-part-text {
+  color: #624181;
+  font: 700 1.2rem/1.2 Georgia, serif;
+}
+.chapter-word-part-meaning {
+  color: #83758f;
+  font-size: .69rem;
+  line-height: 1.35;
+}
+.chapter-word-meaning {
+  margin: 0;
+  color: #725a87;
+  font-size: .78rem;
+  font-weight: 800;
+  text-align: center;
+}
+.chapter-potion-visual {
+  border-color: #d9d7ef;
+  background:
+    radial-gradient(circle at 85% 20%, #e7e4ff 0, transparent 8rem),
+    linear-gradient(135deg, #f8f6ff, #f7fbff);
+}
+.chapter-potion-word {
+  margin: 0;
+  color: #684991;
+  font: 700 1.38rem/1.2 Georgia, serif;
+  text-align: center;
+}
+.chapter-potion-sentence {
+  margin: 0;
+  padding: 12px 14px;
+  border-left: 4px solid #a58bc4;
+  border-radius: 8px;
+  background: #ffffffc9;
+  color: #51455f;
+  font-size: .9rem;
+  line-height: 1.55;
+}
+.chapter-potion-root {
+  margin: 0;
+  color: #79698a;
+  font-size: .75rem;
+  text-align: center;
+}
+.chapter-potion-components {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px 18px;
+  margin: 0;
+  padding: 0;
+  color: #88749b;
+  font-size: .7rem;
+  list-style: none;
+}
+@media (max-width: 720px) {
+  .chapter-word-parts-visual, .chapter-potion-visual { padding: 11px; }
+  .chapter-word-part { min-width: 82px; flex-basis: 84px; padding: 8px; }
+}
