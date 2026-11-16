@@ -20,6 +20,7 @@ import { createPetActionDefinitions } from "./gameplay/pets/petActions.js";
 import { createPetCollectionService } from "./gameplay/pets/createPetCollectionService.js";
 import { chapterDefinitions, createChapterCatalog } from "./chapters/registry.js";
 import { chapterOneActivityDefinitions, chapterOneHintDefinitions, chapterOneReward } from "./chapters/chapterOne.js";
+import { chapterTwoActivityDefinitions, chapterTwoHintDefinitions, chapterTwoReward } from "./chapters/chapterTwo.js";
 import { createActivityRegistry } from "./systems/curriculum/activityDefinitions.js";
 import { createQuestionGeneratorRegistry } from "./systems/curriculum/questionGenerators.js";
 import { createHintRegistry } from "./systems/hints/createHintRegistry.js";
@@ -71,10 +72,16 @@ async function launch() {
   narrationStatus.setAttribute("aria-live", "polite");
   narrationStatus.textContent = "Narration is optional and turned off.";
 
-  const rewardRegistry = createRewardRegistry([chapterOneReward]);
-  const activityRegistry = createActivityRegistry(chapterOneActivityDefinitions);
+  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward]);
+  const activityRegistry = createActivityRegistry([
+    ...chapterOneActivityDefinitions,
+    ...chapterTwoActivityDefinitions
+  ]);
   const questionGeneratorRegistry = createQuestionGeneratorRegistry();
-  const hintRegistry = createHintRegistry({ activityRegistry, initialDefinitions: chapterOneHintDefinitions });
+  const hintRegistry = createHintRegistry({
+    activityRegistry,
+    initialDefinitions: [...chapterOneHintDefinitions, ...chapterTwoHintDefinitions]
+  });
   const wardrobeCatalog = createWardrobeCatalog(defaultWardrobeItems);
   const garmentTemplateRegistry = createGarmentTemplateRegistry(defaultGarmentTemplates);
   const petCatalog = createPetCatalog(defaultPetDefinitions);
