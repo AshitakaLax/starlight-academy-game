@@ -71,6 +71,7 @@ build/
   index.template.html      HTML shell with inline CSS/JS insertion points
 
 tests/                     Node built-in tests for foundation, state, save, input, UI, audio/narration, curriculum, hints, Chapters 1–10, Side Quests 1–20, rendering, build, and integrated academy playthroughs
+scripts/                   Offline packaged-browser QA for Chrome and Edge
 dist/                       Generated, git-ignored HTML deliverable
 ~~~
 
@@ -136,7 +137,7 @@ The build creates:
 dist/starlight-academy.html
 ~~~
 
-The GitHub Actions workflow in `.github/workflows/ci.yml` runs the same syntax check, Node regression suite, and standalone HTML build on pushes to the implementation branch or `main`, and on pull requests targeting `main`.
+The GitHub Actions workflow in `.github/workflows/ci.yml` runs the syntax check, Node regression suite, and standalone HTML build on pushes to the implementation branch or `main`, and on pull requests targeting `main`. A Windows browser-QA job also opens the built HTML by its local `file://` URL in branded Google Chrome and Microsoft Edge with network access disabled, then exercises chapter play, hints, quest unlocks, companion care, wardrobe purchases, save export/import, and restored progress.
 
 Open that file locally in desktop Chrome or Edge. The packaging validator rejects external script references, stylesheet links, remote resource URLs, unexpanded template placeholders, and missing application mount points. The generated dist/ directory is intentionally excluded from source control.
 
@@ -150,3 +151,23 @@ Open that file locally in desktop Chrome or Edge. The packaging validator reject
 - No runtime network requests, CDN dependencies, external fonts, or external asset files are permitted.
 
 The chapter registry contains all ten chapters. The side-quest registry contains two optional quests for each chapter. The same content-registration factory is used by browser startup and automated contract tests, so missing generator, hint, skill, activity, or reward references fail before play begins. The cross-system integration suite runs all chapter and quest completions through the real runtime, verifies reward and cosmetic behavior, saves and restores the academy, and checks hint, mastery, pet-care, and gymnastics flows.
+
+## Offline browser QA
+
+The release build is tested as a local file in Chrome and Edge, not only through Node tests. The Windows CI job launches both browsers with network access disabled and verifies that no external requests or uncaught browser errors occur. It also completes a Chapter 1 run, requests a Professor Hoot hint, checks optional quest unlocks, changes companion care and wardrobe state, exports and imports a JSON backup, and starts a fresh browser context from the saved data.
+
+To run the browser checks locally, install Python Playwright and the desired browser channel:
+
+~~~sh
+python -m pip install playwright
+python -m playwright install chrome
+~~~ 
+
+Then build and run the test against the exact standalone file:
+
+~~~sh
+npm run build
+BROWSER_CHANNEL=chrome HTML_PATH=dist/starlight-academy.html REQUIRE_FILE_URL=1 python scripts/offline-browser-qa.py
+~~~
+
+For Microsoft Edge, use `BROWSER_CHANNEL=msedge` and install it with `python -m playwright install msedge`. The test has an optional `BROWSER_EXECUTABLE` setting for a locally installed Chromium binary. On hosts that block local-file navigation, it can fall back to loading the same built HTML bytes into an offline browser document; the Windows CI job does not permit that fallback.
