@@ -139,8 +139,15 @@ export function createActivityRegistry(initialDefinitions = []) {
 
   return Object.freeze({
     register,
-    get(id) { return definitions.get(id) ?? null; },
-    list() { return [...definitions.values()].sort((left, right) => left.id.localeCompare(right.id)); },
+    get(id) {
+      const definition = definitions.get(id);
+      return definition ? createActivityDefinition(definition) : null;
+    },
+    list() {
+      return [...definitions.values()]
+        .map((definition) => createActivityDefinition(definition))
+        .sort((left, right) => left.id.localeCompare(right.id));
+    },
     has(id) { return definitions.has(id); }
   });
 }
