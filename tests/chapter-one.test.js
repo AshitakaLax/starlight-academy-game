@@ -27,6 +27,9 @@ import {
   chapterOneReward
 } from "../src/chapters/chapterOne.js";
 import { chapterDefinitions, getChapterDefinition } from "../src/chapters/registry.js";
+import { createGymnasticsRoutineCatalog, defaultGymnasticsRoutines } from "../src/gameplay/gymnastics/gymnasticsCatalog.js";
+import { createGymnasticsEngine } from "../src/gameplay/gymnastics/gymnasticsEngine.js";
+import { gameConfig } from "../src/config/gameConfig.js";
 
 test("Chapter 1 is registered as a five-part story, math, challenge, and movement adventure", () => {
   assert.deepEqual(chapterDefinitions.map((chapter) => chapter.id), ["chapter-01"]);
@@ -137,4 +140,30 @@ test("Chapter 1 saves and resumes, then grants its keepsake and chapter wardrobe
   assert.equal(economy.starlightSparkles, 2);
   assert.equal(chapterService.getSnapshot().chapters[0].progress.completedRuns, 2);
   store.destroy();
+});
+
+test("Chapter 1's authored gymnastics step uses the playable ribbon routine and completes on its own rules", () => {
+  const routineCatalog = createGymnasticsRoutineCatalog(defaultGymnasticsRoutines);
+  const routineId = chapterOneDefinition.activities.find((activity) => activity.type === "gymnastics").metadata.routineId;
+  const routine = routineCatalog.get(routineId);
+  assert.ok(routine);
+  const engine = createGymnasticsEngine({ routine, config: gameConfig.gymnastics });
+  const beatInterval = 60000 / routine.bpm;
+  const countInDuration = routine.countInBeats * beatInterval;
+  engine.start(0);
+  assert.equal(engine.update(countInDuration + 1).stage, "tracing");
+  for (const point of routine.tracePath) engine.recordTracePoint(point);
+  const rhythmStart = countInDuration + 2;
+  assert.equal(engine.finishTrace(rhythmStart).stage, "rhythm");
+  for (const beat of routine.beatCheckpoints) {
+    assert.equal(engine.tapBeat(rhythmStart + beat * beatInterval).accepted, true);
+  }
+  const completed = engine.update(
+    rhythmStart + routine.beatCheckpoints.at(-1) * beatInterval + gameConfig.gymnastics.timingWindowMs + 1
+  );
+  assert.equal(completed.stage, "completed");
+  assert.equal(completed.completed, true);
+  assert.equal(completed.traceAccuracyScore, 100);
+  assert.equal(completed.rhythmTimingScore, 100);
+  assert.equal(completed.starRating, 3);
 });
