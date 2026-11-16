@@ -29,15 +29,17 @@ import {
 import { chapterDefinitions, getChapterDefinition } from "../src/chapters/registry.js";
 import { chapterTwoDefinition, chapterTwoReward } from "../src/chapters/chapterTwo.js";
 import { chapterThreeDefinition, chapterThreeReward } from "../src/chapters/chapterThree.js";
+import { chapterFourDefinition, chapterFourReward } from "../src/chapters/chapterFour.js";
 import { createGymnasticsRoutineCatalog, defaultGymnasticsRoutines } from "../src/gameplay/gymnastics/gymnasticsCatalog.js";
 import { createGymnasticsEngine } from "../src/gameplay/gymnastics/gymnasticsEngine.js";
 import { gameConfig } from "../src/config/gameConfig.js";
 
 test("Chapter 1 is registered as a five-part story, math, challenge, and movement adventure", () => {
-  assert.deepEqual(chapterDefinitions.map((chapter) => chapter.id), ["chapter-01", "chapter-02", "chapter-03"]);
+  assert.deepEqual(chapterDefinitions.map((chapter) => chapter.id), ["chapter-01", "chapter-02", "chapter-03", "chapter-04"]);
   assert.equal(getChapterDefinition("chapter-01"), chapterOneDefinition);
   assert.equal(getChapterDefinition("chapter-02"), chapterTwoDefinition);
   assert.equal(getChapterDefinition("chapter-03"), chapterThreeDefinition);
+  assert.equal(getChapterDefinition("chapter-04"), chapterFourDefinition);
   assert.equal(validateChapterDefinition(chapterOneDefinition), true);
   assert.deepEqual(chapterOneDefinition.activities.map((activity) => activity.type), [
     "story", "learning", "challenge", "gymnastics", "story"
@@ -89,7 +91,7 @@ test("Chapter 1 Professor Hoot clues advance through nudge, strategy, and a work
 
 test("Chapter 1 saves and resumes, then grants its keepsake and chapter wardrobe item only once", () => {
   const chapterCatalog = createChapterCatalog(chapterDefinitions);
-  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward]);
+  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward]);
   const shopCatalog = createShopCatalog([]);
   const wardrobeCatalog = createWardrobeCatalog(defaultWardrobeItems);
   const economyActions = createEconomyActionDefinitions({ rewardRegistry, shopCatalog });
