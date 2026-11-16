@@ -4,7 +4,7 @@ import { createAcademyScene } from "../src/rendering/scenes/createAcademyScene.j
 
 test("academy scene registers its ordered background, student, companion and effects layers",()=>{
   const ctx={setTransform(){},clearRect(){},save(){},restore(){},fillRect(){},
-    translate(){},scale(){},createLinearGradient:()=>({addColorStop(){}}),beginPath(){},moveTo(){},lineTo(){},
+    translate(){},scale(){},rotate(){},createLinearGradient:()=>({addColorStop(){}}),beginPath(){},moveTo(){},lineTo(){},
     closePath(){},fill(){},stroke(){},bezierCurveTo(){},quadraticCurveTo(){},arc(){},ellipse(){}};
   const canvas={width:0,height:0,clientWidth:320,clientHeight:210,
     getBoundingClientRect:()=>({width:320,height:210}),getContext:()=>ctx};

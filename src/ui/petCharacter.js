@@ -98,7 +98,7 @@ function createPetAccessoryMarkup(species, accessories) {
     ? '<g class="pet-character-accessory pet-character-accessory--head" data-pet-accessory="head" transform="' + ACCESSORY_HEAD_ANCHORS[species] + '" stroke="#8b7295" stroke-width="1.8" stroke-linejoin="round"><path d="M-17 7L-13-4L-5 2L0-10L6 2L14-4L18 7Z" fill="' + headColor + '"/><path d="M-17 8H18" fill="none" stroke="#8b7295" stroke-width="2.3"/><circle cx="0" cy="-4" r="2.4" fill="#fff8e8" stroke="none"/></g>'
     : "";
   const neck = neckColor
-    ? '<g class="pet-character-accessory pet-character-accessory--neck" data-pet-accessory="accessory"><g transform="' + ACCESSORY_NECK_ANCHORS[species] + '"><path d="M-10-5Q0 4 10-5" fill="none" stroke="' + neckColor + '" stroke-width="2.8" stroke-linecap="round"/><path d="M0 0L5 6L0 14L-5 6Z" fill="' + neckColor + '" stroke="#8b7295" stroke-width="1.5"/><circle cx="0" cy="5" r="1.5" fill="#fff8e8" stroke="none"/></g></g>'
+    ? '<g class="pet-character-accessory pet-character-accessory--neck" data-pet-accessory="accessory" transform="' + ACCESSORY_NECK_ANCHORS[species] + '"><path d="M-10-5Q0 4 10-5" fill="none" stroke="' + neckColor + '" stroke-width="2.8" stroke-linecap="round"/><path d="M0 0L5 6L0 14L-5 6Z" fill="' + neckColor + '" stroke="#8b7295" stroke-width="1.5"/><circle cx="0" cy="5" r="1.5" fill="#fff8e8" stroke="none"/></g>'
     : "";
   return '<g class="pet-character-accessories">' + head + neck + '</g>';
 }
