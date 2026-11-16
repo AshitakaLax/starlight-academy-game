@@ -1360,3 +1360,37 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   .chapter-showcase { padding: .8rem; }
   .chapter-showcase-grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Optional Chapter 1 side quests stay visually separate from the required chapter path. */
+.chapter-optional-quests {
+  margin-top: 1.35rem;
+  padding: 1rem;
+  border: 1px solid #e4d9c8;
+  border-radius: 18px;
+  background: #fffaf1;
+}
+.chapter-optional-quests-title {
+  margin: 0 0 .35rem;
+  color: #765b3e;
+  font: 800 1.15rem/1.35 Georgia, serif;
+}
+.chapter-optional-quests-description {
+  margin: 0 0 .9rem;
+  color: #84745f;
+  font-size: .82rem;
+  line-height: 1.5;
+}
+.chapter-optional-quests-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: .75rem;
+}
+.chapter-optional-quest-card {
+  background: #fff;
+  border-color: #eadcc4;
+}
+.chapter-optional-quest-card .chapter-path-number { color: #9a7549; }
+@media (max-width: 560px) {
+  .chapter-optional-quests { padding: .8rem; }
+  .chapter-optional-quests-grid { grid-template-columns: minmax(0, 1fr); }
+}

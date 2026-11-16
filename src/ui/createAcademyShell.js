@@ -1353,7 +1353,7 @@ export function createAcademyShell({
     }
 
     const completedChapters = chapterRuntimeService?.getSnapshot?.().chapters
-      ?.filter((chapter) => chapter.id !== "chapter-10" && chapter.progress?.status === "completed").length ?? 0;
+      ?.filter((chapter) => chapter.id.startsWith("chapter-") && chapter.id !== "chapter-10" && chapter.progress?.status === "completed").length ?? 0;
     addCard(
       "Your academy character",
       "The Starlight Explorer",
@@ -1626,7 +1626,9 @@ export function createAcademyShell({
       panel.chapterSession.hidden = true;
       return;
     }
-    const chapters = chapterRuntimeService.getSnapshot().chapters;
+    const runtimeEntries = chapterRuntimeService.getSnapshot().chapters;
+    const chapters = runtimeEntries.filter((entry) => entry.id.startsWith("chapter-"));
+    const quests = runtimeEntries.filter((entry) => entry.id.startsWith("quest-"));
     if (!activeChapterSession) {
       panel.chapterSession.hidden = true;
       panel.chapterPathList.hidden = false;
@@ -1676,6 +1678,56 @@ export function createAcademyShell({
         card.append(number, title, description, objectives, details, action);
         fragment.append(card);
       }
+      if (quests.length > 0) {
+        const questSection = documentRef.createElement("section");
+        questSection.className = "chapter-optional-quests";
+        questSection.setAttribute("aria-label", "Optional side quests");
+        appendChapterText(questSection, "h3", "Optional Side Quests", "chapter-optional-quests-title");
+        appendChapterText(
+          questSection,
+          "p",
+          "Extra adventures are always optional. They add practice and rewards, but never stand between you and the next chapter.",
+          "chapter-optional-quests-description"
+        );
+        const questGrid = documentRef.createElement("div");
+        questGrid.className = "chapter-optional-quests-grid";
+        for (const quest of quests) {
+          const card = documentRef.createElement("article");
+          card.className = "chapter-path-card chapter-optional-quest-card";
+          card.dataset.chapterState = quest.progress.status;
+          const number = documentRef.createElement("span");
+          number.className = "chapter-path-number";
+          number.textContent = "OPTIONAL QUEST " + quest.id.slice(-2);
+          const title = documentRef.createElement("h3");
+          title.textContent = quest.title;
+          const description = documentRef.createElement("p");
+          description.textContent = quest.description;
+          const objectives = documentRef.createElement("p");
+          objectives.className = "chapter-path-objectives";
+          objectives.textContent = "Goals: " + quest.objectives.join(" · ");
+          const details = documentRef.createElement("p");
+          details.className = "chapter-path-details";
+          details.textContent = quest.activities.length + " activities · "
+            + (quest.progress.status === "completed"
+              ? "Completed " + quest.progress.completedRuns + (quest.progress.completedRuns === 1 ? " time" : " times")
+              : quest.progress.status === "in-progress"
+                ? "Step " + (quest.progress.currentActivityIndex + 1) + " of " + quest.activities.length
+                : "Ready when Chapter 1 is complete");
+          const action = documentRef.createElement("button");
+          action.type = "button";
+          action.className = "wardrobe-primary-action";
+          action.dataset.chapterAction = "start";
+          action.dataset.chapterId = quest.id;
+          action.disabled = !quest.prerequisitesMet;
+          action.textContent = !quest.prerequisitesMet ? "Complete Chapter 1 to unlock"
+            : quest.progress.status === "completed" ? "Replay optional quest"
+              : quest.progress.status === "in-progress" ? "Continue optional quest" : "Start optional quest";
+          card.append(number, title, description, objectives, details, action);
+          questGrid.append(card);
+        }
+        questSection.append(questGrid);
+        fragment.append(questSection);
+      }
       panel.chapterPathList.replaceChildren(fragment);
       return;
     }
@@ -1685,10 +1737,15 @@ export function createAcademyShell({
     const snapshot = activeChapterSession.getSnapshot();
     const activity = snapshot.currentActivity;
     if (snapshot.isComplete) {
+      const isOptionalQuest = snapshot.chapterId.startsWith("quest-");
       panel.chapterActivityBody.replaceChildren();
       panel.chapterActivityBody.hidden = true;
-      panel.chapterSessionStatus.textContent = "Chapter complete! You finished all " + snapshot.activityCount + " activities.";
-      panel.chapterSessionProgress.textContent = "ADVENTURE COMPLETE";
+      panel.chapterSessionStatus.textContent = isOptionalQuest
+        ? "Optional quest complete! You finished all " + snapshot.activityCount + " activities."
+        : "Chapter complete! You finished all " + snapshot.activityCount + " activities.";
+      panel.chapterSessionProgress.textContent = isOptionalQuest ? "OPTIONAL QUEST COMPLETE" : "ADVENTURE COMPLETE";
+      const completionTitle = panel.chapterSessionCompletion.querySelector("h4");
+      if (completionTitle) completionTitle.textContent = isOptionalQuest ? "Quest complete!" : "Chapter complete!";
       panel.chapterSessionTitle.textContent = snapshot.title;
       panel.chapterSessionDescription.textContent = snapshot.description;
       panel.chapterSessionType.textContent = snapshot.completedActivityCount + " completed · "
@@ -1705,7 +1762,9 @@ export function createAcademyShell({
           ? " Your chapter outfit is already waiting in your Wardrobe."
           : "";
       panel.chapterSessionReward.textContent = (granted > 0
-        ? "Your major chapter reward has been added to your academy progress. Replay is always welcome, but rewards are one-time."
+        ? (isOptionalQuest
+          ? "Your optional quest reward has been added to your academy progress. These extra adventures are separate from chapter completion."
+          : "Your major chapter reward has been added to your academy progress. Replay is always welcome, but rewards are one-time.")
         : "Wonderful work. This replay kept your progress and did not duplicate any one-time rewards.")
         + wardrobeMessage;
       return;

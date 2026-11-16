@@ -2,6 +2,7 @@ import { cloneSerializable } from "../../core/state/stateUtils.js";
 import { getSkillDefinition } from "../../systems/curriculum/skillRegistry.js";
 
 const CHAPTER_ID_PATTERN = /^chapter-[0-9]{2}$/;
+const PROGRESSION_ID_PATTERN = /^(?:chapter|quest)-[0-9]{2}$/;
 const CONTENT_ID_PATTERN = /^[a-z][a-z0-9-]*(?:[.-][a-z][a-z0-9-]*)+$/;
 const ACTIVITY_TYPES = Object.freeze(["story", "learning", "challenge", "gymnastics", "reflection", "custom"]);
 
@@ -34,8 +35,8 @@ function cloneMetadata(value) {
 
 export function validateChapterDefinition(input) {
   if (!isPlainObject(input)) return "A chapter definition must be a plain object.";
-  if (typeof input.id !== "string" || !CHAPTER_ID_PATTERN.test(input.id)) {
-    return "Chapter id must use the chapter-NN format.";
+  if (typeof input.id !== "string" || !PROGRESSION_ID_PATTERN.test(input.id)) {
+    return "Progression id must use the chapter-NN or quest-NN format.";
   }
   if (typeof input.title !== "string" || !input.title.trim() || input.title.length > 120) {
     return "Chapter title must be a non-empty string of at most 120 characters.";

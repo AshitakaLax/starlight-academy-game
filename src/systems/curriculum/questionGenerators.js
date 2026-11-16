@@ -205,6 +205,63 @@ const BUILT_IN_GENERATORS = Object.freeze({
     };
   }
   ,
+  "quests.skip-counting-gap": ({ random, constraints }) => {
+    const startMin = readInteger(constraints, "startMin", 0);
+    const startMax = readInteger(constraints, "startMax", startMin);
+    const stepMin = readInteger(constraints, "stepMin", 1);
+    const stepMax = readInteger(constraints, "stepMax", stepMin);
+    const sequenceLength = readInteger(constraints, "sequenceLength", 4);
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    if (startMax < startMin || stepMax < stepMin || sequenceLength < 4 || sequenceLength > 8) {
+      throw new RangeError("Firefly gap constraints contain an invalid range or sequence length.");
+    }
+    const start = random.integer(startMin, startMax);
+    const step = random.integer(stepMin, stepMax);
+    const sequence = Array.from({ length: sequenceLength }, (_, index) => start + step * index);
+    const missingIndex = random.integer(1, sequenceLength - 2);
+    const correctAnswer = sequence[missingIndex];
+    const display = sequence.map((value, index) => index === missingIndex ? "__" : String(value)).join(", ");
+    return {
+      prompt: "The fireflies keep the same-sized jump. Which number belongs in the gap? " + display,
+      correctAnswer,
+      choices: makeChoices(correctAnswer, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "firefly-gap-sequence",
+        sequence: sequence.map((value, index) => index === missingIndex ? null : value),
+        missingIndex,
+        step
+      })
+    };
+  },
+  "quests.equal-groups-picnic": ({ random, constraints }) => {
+    const groupMin = readInteger(constraints, "groupMin", 2);
+    const groupMax = readInteger(constraints, "groupMax", groupMin);
+    const countMin = readInteger(constraints, "countMin", 2);
+    const countMax = readInteger(constraints, "countMax", countMin);
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    if (groupMax < groupMin || countMax < countMin || groupMax > 20 || countMax > 20) {
+      throw new RangeError("Picnic equal-group constraints contain an invalid range.");
+    }
+    const groups = random.integer(groupMin, groupMax);
+    const itemsEach = random.integer(countMin, countMax);
+    const scenarios = [
+      "At the moonberry picnic, " + groups + " baskets each hold " + itemsEach + " muffins. How many muffins are ready altogether?",
+      "The tiny sprites set " + itemsEach + " star cookies on each of " + groups + " picnic plates. How many cookies do they set out?",
+      "A friendly phoenix plants " + itemsEach + " glowing seeds in each of " + groups + " flower pots. How many seeds are planted?"
+    ];
+    const correctAnswer = groups * itemsEach;
+    return {
+      prompt: random.pick(scenarios),
+      correctAnswer,
+      choices: makeChoices(correctAnswer, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "equal-groups-picnic",
+        groups,
+        itemsEach,
+        total: correctAnswer
+      })
+    };
+  },
   "fractions.identify": ({ random, constraints }) => {
     const denominatorMin = readInteger(constraints, "denominatorMin", 4);
     const denominatorMax = readInteger(constraints, "denominatorMax", denominatorMin);

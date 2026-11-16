@@ -43,7 +43,7 @@ export { createColoringService } from "./gameplay/coloring/createColoringService
 export { renderColoringCanvas } from "./gameplay/coloring/renderColoringCanvas.js";
 export { gameConfig } from "./config/gameConfig.js";
 export { chapterDefinitions, getChapterDefinition } from "./chapters/registry.js";
-export { sideQuestDefinitions, getSideQuestDefinition } from "./side-quests/registry.js";
+export { sideQuestDefinitions, sideQuestActivityDefinitions, sideQuestHintDefinitions, sideQuestRewardDefinitions, getSideQuestDefinition, createSideQuestDefinition, validateSideQuestDefinition } from "./side-quests/registry.js";
 
 export { createPetDefinition, validatePetDefinition, createPetCatalog, defaultPetDefinitions } from "./gameplay/pets/petCatalog.js";
 export { createInitialPetCollectionState, selectPetCollection, selectPet, CARE_TRACKS, CARE_PROGRESS_MAX } from "./gameplay/pets/petCollectionState.js";

@@ -29,6 +29,7 @@ import { chapterSevenActivityDefinitions, chapterSevenHintDefinitions, chapterSe
 import { chapterEightActivityDefinitions, chapterEightHintDefinitions, chapterEightReward } from "./chapters/chapterEight.js";
 import { chapterNineActivityDefinitions, chapterNineHintDefinitions, chapterNineReward } from "./chapters/chapterNine.js";
 import { chapterTenReward } from "./chapters/chapterTen.js";
+import { sideQuestDefinitions, sideQuestActivityDefinitions, sideQuestHintDefinitions, sideQuestRewardDefinitions } from "./side-quests/registry.js";
 import { createActivityRegistry } from "./systems/curriculum/activityDefinitions.js";
 import { createQuestionGeneratorRegistry } from "./systems/curriculum/questionGenerators.js";
 import { createHintRegistry } from "./systems/hints/createHintRegistry.js";
@@ -80,7 +81,7 @@ async function launch() {
   narrationStatus.setAttribute("aria-live", "polite");
   narrationStatus.textContent = "Narration is optional and turned off.";
 
-  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward, chapterFiveReward, chapterSixReward, chapterSevenReward, chapterEightReward, chapterNineReward, chapterTenReward]);
+  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward, chapterFiveReward, chapterSixReward, chapterSevenReward, chapterEightReward, chapterNineReward, chapterTenReward, ...sideQuestRewardDefinitions]);
   const activityRegistry = createActivityRegistry([
     ...chapterOneActivityDefinitions,
     ...chapterTwoActivityDefinitions,
@@ -90,18 +91,19 @@ async function launch() {
     ...chapterSixActivityDefinitions,
     ...chapterSevenActivityDefinitions,
     ...chapterEightActivityDefinitions,
-    ...chapterNineActivityDefinitions
+    ...chapterNineActivityDefinitions,
+    ...sideQuestActivityDefinitions
   ]);
   const questionGeneratorRegistry = createQuestionGeneratorRegistry();
   const hintRegistry = createHintRegistry({
     activityRegistry,
-    initialDefinitions: [...chapterOneHintDefinitions, ...chapterTwoHintDefinitions, ...chapterThreeHintDefinitions, ...chapterFourHintDefinitions, ...chapterFiveHintDefinitions, ...chapterSixHintDefinitions, ...chapterSevenHintDefinitions, ...chapterEightHintDefinitions, ...chapterNineHintDefinitions]
+    initialDefinitions: [...chapterOneHintDefinitions, ...chapterTwoHintDefinitions, ...chapterThreeHintDefinitions, ...chapterFourHintDefinitions, ...chapterFiveHintDefinitions, ...chapterSixHintDefinitions, ...chapterSevenHintDefinitions, ...chapterEightHintDefinitions, ...chapterNineHintDefinitions, ...sideQuestHintDefinitions]
   });
   const wardrobeCatalog = createWardrobeCatalog(defaultWardrobeItems);
   const garmentTemplateRegistry = createGarmentTemplateRegistry(defaultGarmentTemplates);
   const petCatalog = createPetCatalog(defaultPetDefinitions);
   const gymnasticsRoutineCatalog = createGymnasticsRoutineCatalog(defaultGymnasticsRoutines);
-  const chapterCatalog = createChapterCatalog(chapterDefinitions);
+  const chapterCatalog = createChapterCatalog([...chapterDefinitions, ...sideQuestDefinitions]);
   const shopCatalog = createShopCatalog(createWardrobeShopCatalog(wardrobeCatalog));
   const economyActionDefinitions = createEconomyActionDefinitions({ rewardRegistry, shopCatalog });
   const wardrobeActionDefinitions = createWardrobeActionDefinitions({ wardrobeCatalog, economyActionDefinitions });
