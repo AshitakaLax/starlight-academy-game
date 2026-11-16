@@ -999,11 +999,35 @@ export function createAcademyShell({
 
 
   function renderChapterLanguageStimulus(parent, stimulus) {
-    if (!stimulus || !["grammar-target", "reading-passage"].includes(stimulus.kind)) return;
+    if (!stimulus || !["grammar-target", "grammar-pair", "reading-passage"].includes(stimulus.kind)) return;
     const figure = documentRef.createElement("figure");
     figure.className = "chapter-language-visual";
 
-    if (stimulus.kind === "grammar-target") {
+    if (stimulus.kind === "grammar-pair") {
+      appendChapterText(figure, "h5", stimulus.title ?? "Compare two word clues", "chapter-language-title");
+      for (const [index, example] of (stimulus.examples ?? []).entries()) {
+        const section = documentRef.createElement("section");
+        section.className = "chapter-language-pair-item";
+        appendChapterText(section, "p", "Sentence clue " + (index + 1), "chapter-language-caption");
+        const sentence = documentRef.createElement("p");
+        sentence.className = "chapter-language-sentence";
+        const source = String(example.sentence ?? "");
+        const target = String(example.targetWord ?? "");
+        const start = target ? source.toLocaleLowerCase().indexOf(target.toLocaleLowerCase()) : -1;
+        if (start >= 0) {
+          sentence.append(documentRef.createTextNode(source.slice(0, start)));
+          const mark = documentRef.createElement("mark");
+          mark.textContent = source.slice(start, start + target.length);
+          sentence.append(mark);
+          sentence.append(documentRef.createTextNode(source.slice(start + target.length)));
+        } else {
+          sentence.textContent = source;
+        }
+        section.append(sentence);
+        figure.append(section);
+      }
+      appendChapterText(figure, "figcaption", "Compare the highlighted words' jobs in their own sentences.", "chapter-language-caption");
+    } else if (stimulus.kind === "grammar-target") {
       appendChapterText(figure, "h5", "Word study", "chapter-language-title");
       const sentence = documentRef.createElement("p");
       sentence.className = "chapter-language-sentence";
@@ -1029,9 +1053,14 @@ export function createAcademyShell({
         "figcaption",
         stimulus.focus === "main-idea"
           ? "Notice how the details connect to one central idea."
-          : "Use details from the passage to support your conclusion.",
+          : stimulus.focus === "evidence"
+            ? "Look for the detail that best supports the stated conclusion."
+            : "Use details from the passage to support your conclusion.",
         "chapter-language-caption"
       );
+      if (stimulus.focus === "evidence" && stimulus.claim) {
+        appendChapterText(figure, "p", "Conclusion to support: " + stimulus.claim, "chapter-reading-claim");
+      }
     }
 
     parent.append(figure);

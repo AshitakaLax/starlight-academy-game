@@ -893,6 +893,57 @@ const BUILT_IN_GENERATORS = Object.freeze({
       })
     };
   },
+  "quests.grammar-pair-detective": ({ random, constraints, tier }) => {
+    const examples = getGrammarExamples(tier);
+    const categories = ["noun", "verb", "adjective", "adverb"];
+    const category = random.pick(categories.filter((partOfSpeech) =>
+      examples.filter((example) => example.partOfSpeech === partOfSpeech).length >= 2
+    ));
+    const pair = random.shuffle(examples.filter((example) =>
+      example.partOfSpeech === category
+    )).slice(0, 2);
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    return {
+      prompt: "Both highlighted words share a part of speech. Which category do they both show?",
+      correctAnswer: category,
+      choices: makeDistinctChoices(category, categories, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "grammar-pair",
+        title: "Two word clues",
+        examples: Object.freeze(pair.map((example) => Object.freeze({
+          sentence: example.sentence,
+          targetWord: example.targetWord
+        })))
+      })
+    };
+  },
+  "quests.reading-evidence-match": ({ random, constraints, tier }) => {
+    const passages = getReadingPassages(tier).filter((passage) =>
+      typeof passage.inferenceEvidence === "string"
+      && Array.isArray(passage.inferenceEvidenceChoices)
+      && passage.inferenceEvidenceChoices.length >= 4
+    );
+    const passage = random.pick(passages);
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    return {
+      prompt: "Which detail from the passage best supports this conclusion?",
+      correctAnswer: passage.inferenceEvidence,
+      choices: makeDistinctChoices(
+        passage.inferenceEvidence,
+        passage.inferenceEvidenceChoices,
+        random,
+        choiceCount
+      ),
+      stimulus: Object.freeze({
+        kind: "reading-passage",
+        passageId: passage.id,
+        title: passage.title,
+        passage: passage.passage,
+        focus: "evidence",
+        claim: passage.evidenceClaim
+      })
+    };
+  },
   "language.parts-of-speech": ({ random, constraints, tier }) => {
     const examples = getGrammarExamples(tier);
     const example = random.pick(examples);

@@ -56,7 +56,15 @@ const readingPassages = [
       "Mira plans to remove the picture books from the library.",
       "Mira is preparing to close the library permanently."
     ],
-    inferenceExplanation: "Mira organizes books and recommends stories, which suggests that she wants other students to enjoy reading."
+    inferenceExplanation: "Mira organizes books and recommends stories, which suggests that she wants other students to enjoy reading.",
+    evidenceClaim: "Mira is encouraging students to discover books they might enjoy.",
+    inferenceEvidence: "set a basket of story recommendations near the door",
+    inferenceEvidenceChoices: [
+      "returned the books that had been left on the reading tables",
+      "placed picture books on low shelves",
+      "set a basket of story recommendations near the door",
+      "At the end of each school day"
+    ]
   },
   {
     id: "rainy-day-garden", tier: "foundation", title: "The Rainy-Day Garden",
@@ -76,7 +84,15 @@ const readingPassages = [
       "Noah is moving the trays because the garden is too sunny.",
       "Noah plans to take the empty pots home."
     ],
-    inferenceExplanation: "He notices dark clouds and moves the trays under a roof just before rain begins."
+    inferenceExplanation: "He notices dark clouds and moves the trays under a roof just before rain begins.",
+    evidenceClaim: "Noah is moving the young seedlings to a sheltered place.",
+    inferenceEvidence: "carried the smallest seedling trays beneath the porch roof",
+    inferenceEvidenceChoices: [
+      "looked across the garden",
+      "noticed a row of dark clouds moving toward the school",
+      "carried the smallest seedling trays beneath the porch roof",
+      "set empty pots beside the wall"
+    ]
   },
   {
     id: "missing-map", tier: "core", title: "The Missing Map",
@@ -96,7 +112,15 @@ const readingPassages = [
       "Lila plans to leave the map beneath the atlases.",
       "The ribbon belongs to one of the atlases."
     ],
-    inferenceExplanation: "The open pocket, clean rectangle, and ribbon on the desk are clues that the tube was moved recently."
+    inferenceExplanation: "The open pocket, clean rectangle, and ribbon on the desk are clues that the tube was moved recently.",
+    evidenceClaim: "The map tube had been removed from its usual wall pocket.",
+    inferenceEvidence: "A clean rectangle showed where the map tube had rested",
+    inferenceEvidenceChoices: [
+      "the old star map",
+      "its ribbon lay across the desk",
+      "A clean rectangle showed where the map tube had rested",
+      "beneath two atlases"
+    ]
   },
   {
     id: "rehearsal-adjustment", tier: "core", title: "A Quieter Rehearsal",
@@ -116,7 +140,15 @@ const readingPassages = [
       "The actors would rather stop rehearsing.",
       "The back row is empty during every performance."
     ],
-    inferenceExplanation: "The group changes where narrators stand and adds pauses so the words are easier for the audience to understand."
+    inferenceExplanation: "The group changes where narrators stand and adds pauses so the words are easier for the audience to understand.",
+    evidenceClaim: "The group changed its plan to help the audience follow the performance.",
+    inferenceEvidence: "The group moved the narrators closer to the audience and paused between scenes",
+    inferenceEvidenceChoices: [
+      "During the first rehearsal, every spoken line echoed across the empty auditorium",
+      "the words became difficult to follow from the back row",
+      "The group moved the narrators closer to the audience and paused between scenes",
+      "At the next rehearsal, the story was much easier to understand"
+    ]
   },
   {
     id: "conservatory-clock", tier: "stretch", title: "The Conservatory Clock",
@@ -136,7 +168,15 @@ const readingPassages = [
       "Rowan thinks the shutters should remain closed all day.",
       "Rowan has decided to stop recording observations."
     ],
-    inferenceExplanation: "The clock behaves differently as the room warms, and Rowan responds by tracking temperature and changing the shutters."
+    inferenceExplanation: "The clock behaves differently as the room warms, and Rowan responds by tracking temperature and changing the shutters.",
+    evidenceClaim: "Rowan suspects that the room's temperature affects how the clock works.",
+    inferenceEvidence: "the clock's hands moved more smoothly after the room warmed",
+    inferenceEvidenceChoices: [
+      "The clock in the conservatory ran several minutes slow on cold mornings",
+      "Rowan recorded the room temperature beside each time reading for a week",
+      "the clock's hands moved more smoothly after the room warmed",
+      "She asked the caretaker to keep the shutters open during the day"
+    ]
   },
   {
     id: "footbridge-journal", tier: "stretch", title: "The Footbridge Journal",
@@ -156,7 +196,15 @@ const readingPassages = [
       "The bridge supports cause the rain to begin.",
       "The water level rises each day without ever dropping."
     ],
-    inferenceExplanation: "Inez's repeated notes show higher water after heavy rain and a gradual drop over the following days."
+    inferenceExplanation: "Inez's repeated notes show higher water after heavy rain and a gradual drop over the following days.",
+    evidenceClaim: "Heavy rain is followed by a rise in the stream, then a gradual drop.",
+    inferenceEvidence: "after heavy rain, the water reached the lower painted mark, then slowly dropped over the next few days",
+    inferenceEvidenceChoices: [
+      "For a month, Inez wrote the stream's height in a notebook each Friday",
+      "The pages showed a pattern",
+      "after heavy rain, the water reached the lower painted mark, then slowly dropped over the next few days",
+      "Inez copied the dates and water levels onto a chart"
+    ]
   }
 ];
 
