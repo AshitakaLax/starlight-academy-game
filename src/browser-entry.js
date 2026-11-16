@@ -72,7 +72,6 @@ async function launch() {
   const garmentTemplateRegistry = createGarmentTemplateRegistry(defaultGarmentTemplates);
   const petCatalog = createPetCatalog(defaultPetDefinitions);
   const gymnasticsRoutineCatalog = createGymnasticsRoutineCatalog(defaultGymnasticsRoutines);
-  const chapterCatalog = createChapterCatalog([...chapterDefinitions, ...sideQuestDefinitions]);
   const shopCatalog = createShopCatalog(createWardrobeShopCatalog(wardrobeCatalog));
   const economyActionDefinitions = createEconomyActionDefinitions({ rewardRegistry, shopCatalog });
   const wardrobeActionDefinitions = createWardrobeActionDefinitions({ wardrobeCatalog, economyActionDefinitions });
