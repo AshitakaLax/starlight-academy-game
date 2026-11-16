@@ -37,6 +37,12 @@ jobs:
       - name: Build the standalone HTML
         run: npm run build
 
+      - name: Package versioned release
+        run: node scripts/package-release.mjs
+
+      - name: Verify release files and checksums
+        run: npm run verify-release
+
       - name: Upload standalone HTML artifact
         uses: actions/upload-artifact@v4
         with:
@@ -44,6 +50,14 @@ jobs:
           path: dist/starlight-academy.html
           if-no-files-found: error
           retention-days: 14
+
+      - name: Upload versioned release bundle and source project
+        uses: actions/upload-artifact@v4
+        with:
+          name: starlight-academy-release-v0.1.0
+          path: dist/release-v0.1.0/*
+          if-no-files-found: error
+          retention-days: 90
 
   offline-browser:
     name: Offline browser QA (Chrome and Edge)

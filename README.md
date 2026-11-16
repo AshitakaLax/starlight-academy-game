@@ -171,3 +171,26 @@ BROWSER_CHANNEL=chrome HTML_PATH=dist/starlight-academy.html REQUIRE_FILE_URL=1 
 ~~~
 
 For Microsoft Edge, use `BROWSER_CHANNEL=msedge` and install it with `python -m playwright install msedge`. The test has an optional `BROWSER_EXECUTABLE` setting for a locally installed Chromium binary. On hosts that block local-file navigation, it can fall back to loading the same built HTML bytes into an offline browser document; the Windows CI job does not permit that fallback.
+
+
+## Versioned release packaging
+
+The current source release version is **0.1.0**. Create the standalone game and complete release folder with:
+
+~~~sh
+npm install
+npm run check
+npm test
+npm run package
+npm run verify-release
+~~~
+
+The release folder is written to `dist/release-v0.1.0/` and contains:
+
+- `starlight-academy-v0.1.0.html` — the complete, self-contained offline game.
+- `starlight-academy-source-v0.1.0.zip` — a ZIP snapshot of the exact source commit.
+- `release-manifest.json` — version, source commit, browser targets, content counts, sizes, and SHA-256 hashes.
+- `SHA256SUMS.txt` — checksums for the HTML, source archive, manifest, and release notes.
+- `RELEASE-README.txt` — local opening and rebuild instructions.
+
+The CI release artifact is named `starlight-academy-release-v0.1.0`. Verify the checksums from the release folder with `sha256sum -c SHA256SUMS.txt` on Linux/macOS or an equivalent SHA-256 tool on Windows.
