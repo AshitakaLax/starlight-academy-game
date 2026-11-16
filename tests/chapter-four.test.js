@@ -160,7 +160,7 @@ test("Chapter 4 waits for Chapter 3, resumes its beam-course checkpoint, and awa
 
   const resumed = chapterService.createSession("chapter-04");
   assert.equal(resumed.start().currentActivity.id, "chapter-04.mirror-garden");
-  for (let index = 0; index < 6; index += 1) resumed.completeActivity();
+  for (let index = 0; index < 5; index += 1) resumed.completeActivity();
   const completed = resumed.getSnapshot();
   assert.equal(completed.isComplete, true);
   assert.equal(completed.completedActivityCount, 7);
