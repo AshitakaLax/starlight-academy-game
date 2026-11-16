@@ -90,8 +90,12 @@ export function createCanvasRenderer({
   function start() {
     if (destroyed) throw new Error("The canvas renderer has been destroyed.");
     if (running) return;
-    running = true; active = true; attachObservers(); resize();
-    if (visible()) { previousTime = null; resize(); schedule(); }
+    running = true;
+    active = true;
+    attachObservers();
+    previousTime = null;
+    resize();
+    if (visible()) schedule();
   }
   function stop() {
     if (!running) return;
