@@ -78,6 +78,74 @@ function readInteger(constraints, key, minimum) {
   return value;
 }
 
+
+const GEOMETRY_SHAPES = Object.freeze([
+  Object.freeze({ name: "triangle", label: "equilateral triangle", sideCount: 3, sideClue: "3 equal sides", angleClue: "3 corners", symmetryLines: 3 }),
+  Object.freeze({ name: "square", label: "square", sideCount: 4, sideClue: "4 equal sides", angleClue: "4 right angles", symmetryLines: 4 }),
+  Object.freeze({ name: "rectangle", label: "rectangle", sideCount: 4, sideClue: "4 sides with opposite sides equal", angleClue: "4 right angles", symmetryLines: 2 }),
+  Object.freeze({ name: "rhombus", label: "rhombus", sideCount: 4, sideClue: "4 equal sides", angleClue: "no right angles", symmetryLines: 2 }),
+  Object.freeze({ name: "pentagon", label: "regular pentagon", sideCount: 5, sideClue: "5 equal sides", angleClue: "5 corners", symmetryLines: 5 }),
+  Object.freeze({ name: "hexagon", label: "regular hexagon", sideCount: 6, sideClue: "6 equal sides", angleClue: "6 corners", symmetryLines: 6 })
+]);
+const GEOMETRY_SHAPE_TIERS = Object.freeze({
+  foundation: ["triangle", "square", "rectangle", "pentagon"],
+  core: ["triangle", "square", "rectangle", "rhombus", "pentagon", "hexagon"],
+  stretch: ["triangle", "square", "rectangle", "rhombus", "pentagon", "hexagon"]
+});
+const GEOMETRY_ANGLE_DEGREES = Object.freeze({
+  foundation: [35, 45, 60, 90, 120, 135],
+  core: [25, 55, 75, 90, 105, 125, 150],
+  stretch: [15, 40, 80, 90, 100, 130, 155, 180]
+});
+function makeDistinctChoices(correctAnswer, candidates, random, count = 4) {
+  if (!Number.isInteger(count) || count < 2 || count > 6) {
+    throw new RangeError("choiceCount must be an integer from 2 to 6.");
+  }
+  const choices = [correctAnswer];
+  for (const candidate of random.shuffle([...new Set(candidates)])) {
+    if (choices.length >= count) break;
+    if (candidate !== correctAnswer) choices.push(candidate);
+  }
+  if (choices.length !== count) {
+    throw new RangeError("The geometry question does not have enough distinct answer choices.");
+  }
+  return random.shuffle(choices);
+}
+function getGeometryShapes(tier) {
+  const allowed = GEOMETRY_SHAPE_TIERS[tier];
+  if (!allowed) throw new RangeError("Unknown geometry difficulty tier: " + tier);
+  return allowed.map((name) => GEOMETRY_SHAPES.find((shape) => shape.name === name));
+}
+function createRectangleMeasurementQuestion({ random, constraints, focus }) {
+  const widthMin = readInteger(constraints, "widthMin", 1);
+  const widthMax = readInteger(constraints, "widthMax", widthMin);
+  const heightMin = readInteger(constraints, "heightMin", 1);
+  const heightMax = readInteger(constraints, "heightMax", heightMin);
+  const choiceCount = readInteger(constraints, "choiceCount", 2);
+  if (widthMax < widthMin || heightMax < heightMin || widthMax > 20 || heightMax > 20) {
+    throw new RangeError("Rectangle measurement bounds must be ordered and no greater than 20.");
+  }
+  const width = random.integer(widthMin, widthMax);
+  const height = random.integer(heightMin, heightMax);
+  const correctAnswer = focus === "perimeter" ? 2 * (width + height) : width * height;
+  const likelyErrors = focus === "perimeter"
+    ? [width * height, width + height, 2 * width + height, width + 2 * height]
+    : [2 * (width + height), width + height, width * 2, height * 2];
+  const distractors = [
+    ...likelyErrors, correctAnswer - 2, correctAnswer - 1,
+    correctAnswer + 1, correctAnswer + 2, correctAnswer + 3
+  ].filter((value) => Number.isInteger(value) && value >= 0 && value !== correctAnswer);
+  return {
+    prompt: focus === "perimeter"
+      ? "What is the perimeter of this rectangle, in centimeters?"
+      : "What is the area of this rectangle, in square centimeters?",
+    correctAnswer,
+    choices: makeDistinctChoices(correctAnswer, distractors, random, choiceCount),
+    stimulus: Object.freeze({ kind: "geometry-rectangle", focus, width, height, unit: "cm" })
+  };
+}
+
+
 const BUILT_IN_GENERATORS = Object.freeze({
   "arithmetic.multiplication": ({ random, constraints }) => {
     const factorMin = readInteger(constraints, "factorMin", 1);
@@ -201,6 +269,54 @@ const BUILT_IN_GENERATORS = Object.freeze({
       })
     };
   },
+  "geometry.shape-properties": ({ random, constraints, tier }) => {
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    const shapes = getGeometryShapes(tier);
+    const shape = random.pick(shapes);
+    return {
+      prompt: "Which shape has " + shape.sideClue + " and " + shape.angleClue + "?",
+      correctAnswer: shape.label,
+      choices: makeDistinctChoices(shape.label, shapes.map((candidate) => candidate.label), random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "geometry-shape", focus: "shape", shape: shape.name, label: shape.label,
+        sideCount: shape.sideCount, symmetryLines: shape.symmetryLines,
+        properties: shape.sideClue + " · " + shape.angleClue
+      })
+    };
+  },
+  "geometry.symmetry": ({ random, constraints, tier }) => {
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    const shapes = getGeometryShapes(tier);
+    const shape = random.pick(shapes);
+    return {
+      prompt: "How many lines of symmetry does a " + shape.label + " have?",
+      correctAnswer: shape.symmetryLines,
+      choices: makeDistinctChoices(shape.symmetryLines, shapes.map((candidate) => candidate.symmetryLines), random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "geometry-shape", focus: "symmetry", shape: shape.name, label: shape.label,
+        sideCount: shape.sideCount, symmetryLines: shape.symmetryLines,
+        properties: "Imagine folding the shape so both halves match exactly."
+      })
+    };
+  },
+  "geometry.angles": ({ random, constraints, tier }) => {
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    const degrees = random.pick(GEOMETRY_ANGLE_DEGREES[tier]);
+    const correctAnswer = degrees < 90 ? "acute"
+      : degrees === 90 ? "right"
+      : degrees < 180 ? "obtuse" : "straight";
+    const categories = ["acute", "right", "obtuse", "straight"];
+    return {
+      prompt: "What kind of angle measures " + degrees + "°?",
+      correctAnswer,
+      choices: makeDistinctChoices(correctAnswer, categories, random, choiceCount),
+      stimulus: Object.freeze({ kind: "geometry-angle", degrees, angleType: correctAnswer })
+    };
+  },
+  "geometry.perimeter": ({ random, constraints }) =>
+    createRectangleMeasurementQuestion({ random, constraints, focus: "perimeter" }),
+  "geometry.area": ({ random, constraints }) =>
+    createRectangleMeasurementQuestion({ random, constraints, focus: "area" }),
   "language.word-building": ({ random, constraints, tier }) => {
     const focus = constraints.focus;
     if (!["prefix", "suffix"].includes(focus)) {
