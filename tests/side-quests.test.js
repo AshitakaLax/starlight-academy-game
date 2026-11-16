@@ -19,6 +19,7 @@ import { chapterOneDefinition, chapterOneReward } from "../src/chapters/chapterO
 import { chapterTwoDefinition, chapterTwoReward } from "../src/chapters/chapterTwo.js";
 import { chapterThreeDefinition, chapterThreeReward } from "../src/chapters/chapterThree.js";
 import { chapterFourDefinition, chapterFourReward } from "../src/chapters/chapterFour.js";
+import { chapterFiveDefinition, chapterFiveReward } from "../src/chapters/chapterFive.js";
 import { getChapterThreeWords } from "../src/data/wordBuildingLexicon.js";
 import {
   sideQuestDefinitions, sideQuestActivityDefinitions, sideQuestHintDefinitions,
@@ -27,51 +28,56 @@ import {
 
 const tiers = ["foundation", "core", "stretch"];
 
-test("the first six optional side quests have chapter-specific objectives and rewards", () => {
+test("the first eight optional side quests have chapter-specific objectives and rewards", () => {
   assert.deepEqual(sideQuestDefinitions.map((quest) => quest.id), [
-    "quest-01", "quest-02", "quest-03", "quest-04", "quest-05", "quest-06"
+    "quest-01", "quest-02", "quest-03", "quest-04", "quest-05", "quest-06", "quest-07", "quest-08"
   ]);
-  for (const [index, id] of ["quest-01", "quest-02", "quest-03", "quest-04", "quest-05", "quest-06"].entries()) {
-    assert.equal(getSideQuestDefinition(id), sideQuestDefinitions[index]);
-  }
+  for (const [index, id] of [
+    "quest-01", "quest-02", "quest-03", "quest-04", "quest-05", "quest-06", "quest-07", "quest-08"
+  ].entries()) assert.equal(getSideQuestDefinition(id), sideQuestDefinitions[index]);
   assert.equal(getSideQuestDefinition("quest-missing"), null);
   assert.deepEqual(sideQuestDefinitions.map((quest) => quest.questType), [
-    "mastery", "application", "mastery", "application", "mastery", "application"
+    "mastery", "application", "mastery", "application", "mastery", "application", "mastery", "application"
   ]);
   assert.deepEqual(sideQuestDefinitions.map((quest) => quest.sourceChapterId), [
-    "chapter-01", "chapter-01", "chapter-02", "chapter-02", "chapter-03", "chapter-03"
+    "chapter-01", "chapter-01", "chapter-02", "chapter-02",
+    "chapter-03", "chapter-03", "chapter-04", "chapter-04"
   ]);
   assert.deepEqual(sideQuestDefinitions.map((quest) => quest.prerequisiteChapterIds), [
-    ["chapter-01"], ["chapter-01"], ["chapter-02"], ["chapter-02"], ["chapter-03"], ["chapter-03"]
+    ["chapter-01"], ["chapter-01"], ["chapter-02"], ["chapter-02"],
+    ["chapter-03"], ["chapter-03"], ["chapter-04"], ["chapter-04"]
   ]);
-  assert.notDeepEqual(sideQuestDefinitions[0].objectives, sideQuestDefinitions[1].objectives);
-  assert.notDeepEqual(sideQuestDefinitions[2].objectives, sideQuestDefinitions[3].objectives);
-  assert.notDeepEqual(sideQuestDefinitions[4].objectives, sideQuestDefinitions[5].objectives);
+  for (const pairStart of [0, 2, 4, 6]) {
+    assert.notDeepEqual(sideQuestDefinitions[pairStart].objectives, sideQuestDefinitions[pairStart + 1].objectives);
+  }
   assert.deepEqual(sideQuestDefinitions.map((quest) => quest.majorRewardIds), [
     ["reward.quest-01-firefly-pattern-pin"], ["reward.quest-02-moonberry-basket"],
     ["reward.quest-03-fraction-family-prism"], ["reward.quest-04-celestial-measure-book"],
-    ["reward.quest-05-wordsmith-prism"], ["reward.quest-06-storykeepers-quill"]
+    ["reward.quest-05-wordsmith-prism"], ["reward.quest-06-storykeepers-quill"],
+    ["reward.quest-07-sky-gallery-compass"], ["reward.quest-08-builders-toolkit"]
   ]);
   assert.equal(validateSideQuestDefinition({
     ...sideQuestDefinitions[0], id: "chapter-99", sourceChapterId: "chapter-01", questType: "mastery"
   }).includes("quest-NN"), true);
   for (const [index, quest] of sideQuestDefinitions.entries()) {
-    assert.equal(quest.activities[0].id.startsWith("quest-0" + (index + 1) + "."), true);
+    assert.equal(quest.activities[0].id.startsWith("quest-" + String(index + 1).padStart(2, "0") + "."), true);
   }
-  assert.equal(sideQuestActivityDefinitions.length, 6);
-  assert.equal(sideQuestHintDefinitions.length, 6);
-  assert.equal(sideQuestRewardDefinitions.length, 6);
+  assert.equal(sideQuestActivityDefinitions.length, 8);
+  assert.equal(sideQuestHintDefinitions.length, 8);
+  assert.equal(sideQuestRewardDefinitions.length, 8);
   assert.deepEqual(sideQuestRewardDefinitions.map((reward) => reward.replayPolicy),
-    Array.from({ length: 6 }, () => ({ type: "once" })));
+    Array.from({ length: 8 }, () => ({ type: "once" })));
   assert.deepEqual(sideQuestRewardDefinitions.map((reward) => reward.sourceId),
-    ["quest-01", "quest-02", "quest-03", "quest-04", "quest-05", "quest-06"]);
-  assert.equal(new Set(sideQuestActivityDefinitions.map((activity) => activity.generatorId)).size, 6);
+    ["quest-01", "quest-02", "quest-03", "quest-04", "quest-05", "quest-06", "quest-07", "quest-08"]);
+  assert.equal(new Set(sideQuestActivityDefinitions.map((activity) => activity.generatorId)).size, 8);
   assert.equal(chapterOneDefinition.activities.length, 5);
   assert.equal(chapterOneDefinition.activities.every((activity) => activity.id.startsWith("chapter-01.")), true);
   assert.equal(chapterTwoDefinition.activities.length, 4);
   assert.equal(chapterTwoDefinition.activities.every((activity) => activity.id.startsWith("chapter-02.")), true);
   assert.equal(chapterThreeDefinition.activities.length, 5);
   assert.equal(chapterThreeDefinition.activities.every((activity) => activity.id.startsWith("chapter-03.")), true);
+  assert.equal(chapterFourDefinition.activities.length, 7);
+  assert.equal(chapterFourDefinition.activities.every((activity) => activity.id.startsWith("chapter-04.")), true);
 });
 test("the Firefly Gap Maze generates verified missing terms at every tier", () => {
   const activityRegistry = createActivityRegistry(sideQuestActivityDefinitions);
@@ -221,6 +227,71 @@ test("The Missing Word Library restores a curated word from its meaning and sent
   }
 });
 
+test("The Sky Gallery Shape Riddles combine side, angle, and symmetry clues at every tier", () => {
+  const activityRegistry = createActivityRegistry(sideQuestActivityDefinitions);
+  const generators = createQuestionGeneratorRegistry();
+  const activity = activityRegistry.get("quest-07.shape-riddle");
+  assert.deepEqual(activity.skillIds, ["math.shape-recognition", "math.symmetry", "math.angles"]);
+  assert.equal(activity.generatorId, "quests.geometry-shape-riddle");
+  const shapes = {
+    triangle: { label: "equilateral triangle", sides: 3, angle: "3 corners", lines: 3 },
+    square: { label: "square", sides: 4, angle: "4 right angles", lines: 4 },
+    rectangle: { label: "rectangle", sides: 4, angle: "4 right angles", lines: 2 },
+    rhombus: { label: "rhombus", sides: 4, angle: "no right angles", lines: 2 },
+    pentagon: { label: "regular pentagon", sides: 5, angle: "5 corners", lines: 5 },
+    hexagon: { label: "regular hexagon", sides: 6, angle: "6 corners", lines: 6 }
+  };
+  for (const tier of tiers) {
+    const options = { seed: "sky-gallery-riddles:" + tier, tier };
+    const question = generators.generate(activity, options);
+    assert.deepEqual(generators.generate(activity, options), question);
+    assert.equal(question.choices.length, 4);
+    assert.equal(new Set(question.choices).size, 4);
+    assert.equal(question.choices.includes(question.correctAnswer), true);
+    const shape = shapes[question.stimulus.shape];
+    assert.ok(shape);
+    assert.equal(question.correctAnswer, shape.label);
+    assert.equal(question.stimulus.label, "mystery shape");
+    assert.equal(question.prompt.includes(String(shape.sides) + " sides"), true);
+    assert.equal(question.prompt.includes(shape.angle), true);
+    assert.equal(question.prompt.includes(String(shape.lines) + " lines of symmetry"), true);
+    assert.equal(question.stimulus.properties.includes(shape.angle), true);
+    assert.equal(checkActivityAnswer(question.correctAnswer, question.correctAnswer, question.answerRules), true);
+  }
+});
+
+test("The Balance Beam Builders apply perimeter and area to rectangular platform stories", () => {
+  const activityRegistry = createActivityRegistry(sideQuestActivityDefinitions);
+  const generators = createQuestionGeneratorRegistry();
+  const activity = activityRegistry.get("quest-08.measurement-stories");
+  assert.deepEqual(activity.skillIds, ["math.perimeter", "math.area"]);
+  assert.equal(activity.generatorId, "quests.geometry-measurement-stories");
+  const seenFocus = new Set();
+  for (const tier of tiers) {
+    for (let index = 0; index < 24; index += 1) {
+      const options = { seed: "beam-builders:" + tier + ":" + index, tier };
+      const question = generators.generate(activity, options);
+      if (index === 0) assert.deepEqual(generators.generate(activity, options), question);
+      const { width, height, focus, storyTitle, storyText } = question.stimulus;
+      assert.ok(["perimeter", "area"].includes(focus));
+      seenFocus.add(focus);
+      assert.ok(storyTitle.length > 0);
+      assert.ok(storyText.length > 0);
+      assert.ok(question.prompt.includes(String(width) + " cm"));
+      assert.ok(question.prompt.includes(String(height) + " cm"));
+      assert.equal(
+        question.correctAnswer,
+        focus === "perimeter" ? 2 * (width + height) : width * height
+      );
+      assert.equal(question.choices.length, 4);
+      assert.equal(new Set(question.choices).size, 4);
+      assert.equal(question.choices.includes(question.correctAnswer), true);
+      assert.equal(checkActivityAnswer(question.correctAnswer, question.correctAnswer, question.answerRules), true);
+    }
+  }
+  assert.deepEqual([...seenFocus].sort(), ["area", "perimeter"]);
+});
+
 test("Professor Hoot gives each side quest three skill-matched hint stages", () => {
   const activityRegistry = createActivityRegistry(sideQuestActivityDefinitions);
   const hintRegistry = createHintRegistry({ activityRegistry, initialDefinitions: sideQuestHintDefinitions });
@@ -247,10 +318,12 @@ test("Professor Hoot gives each side quest three skill-matched hint stages", () 
 
 test("side quests unlock after their source chapter and never block the next chapter or duplicate rewards on replay", () => {
   const chapterCatalog = createChapterCatalog([
-    chapterOneDefinition, chapterTwoDefinition, chapterThreeDefinition, chapterFourDefinition, ...sideQuestDefinitions
+    chapterOneDefinition, chapterTwoDefinition, chapterThreeDefinition,
+    chapterFourDefinition, chapterFiveDefinition, ...sideQuestDefinitions
   ]);
   const rewardRegistry = createRewardRegistry([
-    chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward, ...sideQuestRewardDefinitions
+    chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward, chapterFiveReward,
+    ...sideQuestRewardDefinitions
   ]);
   const shopCatalog = createShopCatalog([]);
   const store = createGameStore({
@@ -310,7 +383,21 @@ test("side quests unlock after their source chapter and never block the next cha
   }
   const chapterFour = runtime.createSession("chapter-04");
   assert.equal(chapterFour.start().prerequisitesMet, true);
-  chapterFour.exit();
+  for (let index = 0; index < chapterFourDefinition.activities.length; index += 1) {
+    chapterFour.completeActivity();
+  }
+  assert.equal(chapterFour.getSnapshot().isComplete, true);
+  const afterChapterFour = runtime.getSnapshot().chapters;
+  for (const quest of sideQuestDefinitions) {
+    const entry = afterChapterFour.find((item) => item.id === quest.id);
+    assert.equal(entry.prerequisitesMet, true);
+  }
+  for (const id of ["quest-07", "quest-08"]) {
+    assert.equal(afterChapterFour.find((item) => item.id === id).progress.status, "not-started");
+  }
+  const chapterFive = runtime.createSession("chapter-05");
+  assert.equal(chapterFive.start().prerequisitesMet, true);
+  chapterFive.exit();
 
   for (const quest of sideQuestDefinitions) {
     const interrupted = runtime.createSession(quest.id);
@@ -337,7 +424,8 @@ test("side quests unlock after their source chapter and never block the next cha
   assert.equal(economy.rewardClaims[chapterOneReward.id], 1);
   for (const reward of sideQuestRewardDefinitions) assert.equal(economy.rewardClaims[reward.id], 1);
   assert.equal(economy.rewardClaims[chapterTwoReward.id], 1);
-  assert.equal(economy.starGems, 415);
-  assert.equal(economy.starlightSparkles, 26);
+  assert.equal(economy.rewardClaims[chapterFourReward.id], 1);
+  assert.equal(economy.starGems, 600);
+  assert.equal(economy.starlightSparkles, 38);
   store.destroy();
 });
