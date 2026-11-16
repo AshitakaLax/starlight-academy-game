@@ -41,6 +41,6 @@ test("release validator rejects external scripts, stylesheets, images, and remot
 
 test("release validator rejects template markers, missing content, or incomplete release counts", () => {
   assert.throws(() => validateStandaloneHtml(validHtml().replace("<script>", "%INLINE_JS%<script>")), /template marker/);
-  assert.throws(() => validateStandaloneHtml(validHtml().replace("The Grand Starlight Championship", "Finale")), /missing required finale/);
+  assert.throws(() => validateStandaloneHtml(validHtml().replace("The Grand Starlight Championship", "X".repeat("The Grand Starlight Championship".length))), /missing required finale/);
   assert.throws(() => validateStandaloneHtml(validHtml(), { chapterCount: 9, sideQuestCount: 20 }), /must declare all 10 chapters/);
 });
