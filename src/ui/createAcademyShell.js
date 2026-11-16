@@ -890,17 +890,18 @@ export function createAcademyShell({
         appendChapterText(card, "p", metadata.lessonLabel, "chapter-question-kicker");
       }
       appendChapterText(card, "h4", question.prompt, "chapter-question-prompt");
+      appendChapterText(card, "p", "Choose with the mouse or press 1–4. Press H whenever you would like a hint.", "chapter-question-help");
       const choices = documentRef.createElement("div");
       choices.className = "chapter-answer-grid";
       choices.setAttribute("role", "group");
       choices.setAttribute("aria-label", "Choose an answer");
-      for (const choice of question.choices ?? []) {
+      for (const [choiceIndex, choice] of (question.choices ?? []).entries()) {
         const button = documentRef.createElement("button");
         button.type = "button";
         button.className = "chapter-answer-choice";
         button.dataset.chapterAnswer = String(choice);
-        button.textContent = String(choice);
-        button.setAttribute("aria-label", "Answer " + choice);
+        button.textContent = (choiceIndex + 1) + ". " + String(choice);
+        button.setAttribute("aria-label", "Choice " + (choiceIndex + 1) + ", answer " + choice);
         choices.append(button);
       }
       card.append(choices);
@@ -1037,7 +1038,9 @@ export function createAcademyShell({
   }
 
   const chapterInputController = createChapterInputController({
-    getCurrentActivity: () => activeChapterSession?.getSnapshot?.().currentActivity ?? null,
+    getCurrentActivity: () => (store.getState()?.ui?.activeOverlayId ?? null) === null
+      ? activeChapterSession?.getSnapshot?.().currentActivity ?? null
+      : null,
     getCurrentQuestion: () => chapterQuestion,
     onAnswer: (answer) => submitChapterAnswer(answer),
     onHint: (question) => {
