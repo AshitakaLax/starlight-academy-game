@@ -21,7 +21,7 @@ export function validateStandaloneHtml(html, { chapterCount = 10, sideQuestCount
   if (!/^<!doctype html>/i.test(html.trimStart())) {
     throw new Error("Release HTML must begin with a doctype.");
   }
-  if (!/<title>Starlight Academy: Studio of Magic & Motion<\/title>/i.test(html)) {
+  if (!/<title>Starlight Academy: Studio of Magic &(?:amp;)? Motion<\/title>/i.test(html)) {
     throw new Error("Release HTML is missing the Starlight Academy document title.");
   }
   if (!/id=["']app["']/.test(html)) {

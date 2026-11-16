@@ -5,7 +5,7 @@ import { validateStandaloneHtml } from "../scripts/package-release.mjs";
 function validHtml() {
   return `<!doctype html>
 <html lang="en">
-<head><title>Starlight Academy: Studio of Magic & Motion</title><style>body{margin:0}</style></head>
+<head><title>Starlight Academy: Studio of Magic &amp; Motion</title><style>body{margin:0}</style></head>
 <body><main id="app"></main><script>
 const chapters = 10;
 const quests = 20;
