@@ -23,7 +23,7 @@
 
 ## Not yet verified
 
-This review did **not** launch the packaged HTML in Chrome or Edge and did not include observation of a child or other representative learner. No GitHub Actions workflow run was available for this branch. The following remain open before treating the vertical slice as playtested:
+This review did **not** launch the packaged HTML in Chrome or Edge and did not include observation of a child or other representative learner. A GitHub Actions workflow was added after this review; no workflow run has been observed for this branch yet. The following remain open before treating the vertical slice as playtested:
 
 1. Run npm run check, npm test, and npm run build locally.
 2. Open the built HTML in desktop Chrome and Edge; exercise mouse, Tab/Enter, 1–4, and H across story, learning, challenge, gymnastics, and Settings.
