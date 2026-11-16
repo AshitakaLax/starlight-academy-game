@@ -23,12 +23,11 @@
 
 ## Not yet verified
 
-This review did **not** launch the packaged HTML in Chrome or Edge and did not include observation of a child or other representative learner. A GitHub Actions workflow was added after this review; no workflow run has been observed for this branch yet. The following remain open before treating the vertical slice as playtested:
+This review did **not** launch the packaged HTML in Chrome or Edge and did not include observation of a child or other representative learner. The GitHub Actions workflow has now passed on the current implementation branch: JavaScript syntax check passed, all 234 Node tests passed, and the standalone HTML build passed its single-file/offline-resource validation. The following remain open before treating the vertical slice as playtested:
 
-1. Run npm run check, npm test, and npm run build locally.
-2. Open the built HTML in desktop Chrome and Edge; exercise mouse, Tab/Enter, 1–4, and H across story, learning, challenge, gymnastics, and Settings.
-3. Observe whether the learner understands the skip-counting pattern, equal-groups prompt, hint stages, and completion reward without coaching.
-4. Check the chapter and gymnastics panels at normal and enlarged text sizes, reduced motion, and representative desktop window sizes.
-5. Confirm count-in and beat audio clarity, trace interaction reliability, save/reload behavior, and wardrobe reward visibility.
+1. Download the `starlight-academy-html` artifact from the successful GitHub Actions run and open the built HTML in desktop Chrome and Edge; exercise mouse, Tab/Enter, 1–4, and H across story, learning, challenge, gymnastics, and Settings.
+2. Observe whether the learner understands the skip-counting pattern, equal-groups prompt, hint stages, and completion reward without coaching.
+3. Check the chapter and gymnastics panels at normal and enlarged text sizes, reduced motion, and representative desktop window sizes.
+4. Confirm count-in and beat audio clarity, trace interaction reliability, save/reload behavior, and wardrobe reward visibility.
 
-**Gate:** The source-level review and corrective fixes are complete. STEP-22 remains partially complete until live desktop and learner observations are recorded. Do not treat the chapter as approved for mass content production yet.
+**Gate:** Source review, automated checks, regression tests, and single-file build are complete. STEP-22 remains partially complete until live desktop and learner observations are recorded. Do not treat the chapter as approved for mass content production yet.
