@@ -1139,6 +1139,66 @@ export function createAcademyShell({
   }
 
 
+  function renderChapterChimeraStimulus(parent, stimulus) {
+    if (!stimulus || ![
+      "chimera-division", "chimera-arithmetic", "chimera-multi-step"
+    ].includes(stimulus.kind)) return;
+
+    const figure = documentRef.createElement("figure");
+    figure.className = "chapter-chimera-visual";
+
+    if (stimulus.kind === "chimera-division") {
+      appendChapterText(figure, "h5", "Equal groups", "chapter-chimera-title");
+      const groups = documentRef.createElement("div");
+      groups.className = "chapter-chimera-division";
+      const total = documentRef.createElement("div");
+      total.className = "chapter-chimera-number";
+      appendChapterText(total, "span", "TOTAL", "chapter-chimera-kicker");
+      appendChapterText(total, "strong", String(stimulus.total), "chapter-chimera-value");
+      appendChapterText(total, "small", stimulus.itemLabel ?? "items", "chapter-chimera-caption");
+      const divisor = documentRef.createElement("div");
+      divisor.className = "chapter-chimera-number";
+      appendChapterText(divisor, "span", "EQUAL GROUPS", "chapter-chimera-kicker");
+      appendChapterText(divisor, "strong", String(stimulus.divisor), "chapter-chimera-value");
+      appendChapterText(divisor, "small", stimulus.groupLabel ?? "groups", "chapter-chimera-caption");
+      const questionMark = documentRef.createElement("div");
+      questionMark.className = "chapter-chimera-number is-question";
+      appendChapterText(questionMark, "span", "IN EACH", "chapter-chimera-kicker");
+      appendChapterText(questionMark, "strong", "?", "chapter-chimera-value");
+      groups.append(total, divisor, questionMark);
+      figure.append(groups);
+      appendChapterText(figure, "figcaption", "Divide the total equally among the groups.", "chapter-chimera-footnote");
+    } else if (stimulus.kind === "chimera-arithmetic") {
+      appendChapterText(figure, "h5", "The place-value forge", "chapter-chimera-title");
+      const equation = documentRef.createElement("div");
+      equation.className = "chapter-chimera-equation";
+      appendChapterText(equation, "strong", stimulus.left, "chapter-chimera-operand");
+      appendChapterText(equation, "span", stimulus.symbol, "chapter-chimera-operation");
+      appendChapterText(equation, "strong", stimulus.right, "chapter-chimera-operand");
+      appendChapterText(equation, "span", "=", "chapter-chimera-operation");
+      appendChapterText(equation, "strong", "?", "chapter-chimera-result");
+      equation.setAttribute("aria-label", stimulus.left + " " + stimulus.operation + " " + stimulus.right + " equals question mark");
+      figure.append(equation);
+      appendChapterText(figure, "figcaption", "Keep the place values organized and check your result.", "chapter-chimera-footnote");
+    } else {
+      appendChapterText(figure, "h5", stimulus.title ?? "A path through the clues", "chapter-chimera-title");
+      appendChapterText(figure, "p", stimulus.story ?? "", "chapter-chimera-story");
+      appendChapterText(figure, "p", stimulus.question ?? "", "chapter-chimera-question");
+      const steps = documentRef.createElement("ol");
+      steps.className = "chapter-chimera-step-prompts";
+      steps.setAttribute("aria-label", "A plan for solving the word problem");
+      for (const prompt of (stimulus.stepPrompts ?? [])) {
+        const item = documentRef.createElement("li");
+        item.textContent = prompt;
+        steps.append(item);
+      }
+      figure.append(steps);
+    }
+
+    parent.append(figure);
+  }
+
+
   function renderChapterHabitatStimulus(parent, stimulus) {
     if (!stimulus || !["habitat-creature", "adaptation-clue", "ecosystem-connection"].includes(stimulus.kind)) return;
     const figure = documentRef.createElement("figure");
@@ -1324,6 +1384,7 @@ export function createAcademyShell({
       renderChapterPlantStimulus(card, question.stimulus);
       renderChapterLanguageStimulus(card, question.stimulus);
       renderChapterMeasurementStimulus(card, question.stimulus);
+      renderChapterChimeraStimulus(card, question.stimulus);
       appendChapterText(card, "p", "Choose with the mouse or press 1–4. Press H whenever you would like a hint.", "chapter-question-help");
       const choices = documentRef.createElement("div");
       choices.className = "chapter-answer-grid";

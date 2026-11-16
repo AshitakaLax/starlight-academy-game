@@ -23,6 +23,7 @@ import { chapterFiveReward } from "../src/chapters/chapterFive.js";
 import { chapterSixActivityDefinitions, chapterSixDefinition, chapterSixHintDefinitions, chapterSixReward } from "../src/chapters/chapterSix.js";
 import { chapterSevenReward } from "../src/chapters/chapterSeven.js";
 import { chapterEightReward } from "../src/chapters/chapterEight.js";
+import { chapterNineReward } from "../src/chapters/chapterNine.js";
 import { chapterDefinitions, getChapterDefinition } from "../src/chapters/registry.js";
 import {
   plantLifecycleStages, getPlantLifecycleTransitions, getPlantResourceScenarios,
@@ -33,7 +34,7 @@ const tiers = ["foundation", "core", "stretch"];
 
 test("Chapter 6 is registered after Chapter 5 with lifecycle, resource, and photosynthesis activities", () => {
   assert.deepEqual(chapterDefinitions.map((chapter) => chapter.id), [
-    "chapter-01", "chapter-02", "chapter-03", "chapter-04", "chapter-05", "chapter-06", "chapter-07", "chapter-08"
+    "chapter-01", "chapter-02", "chapter-03", "chapter-04", "chapter-05", "chapter-06", "chapter-07", "chapter-08", "chapter-09"
   ]);
   assert.equal(getChapterDefinition("chapter-06"), chapterSixDefinition);
   assert.equal(validateChapterDefinition(chapterSixDefinition), true);
@@ -160,7 +161,7 @@ test("Professor Hoot provides three explanatory hint stages for every greenhouse
 test("Chapter 6 waits for Chapter 5, resumes its checkpoint, and grants the Sunrise Seed Satchel only once", () => {
   const chapterCatalog = createChapterCatalog(chapterDefinitions);
   const rewardRegistry = createRewardRegistry([
-    chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward, chapterFiveReward, chapterSixReward, chapterSevenReward, chapterEightReward
+    chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward, chapterFiveReward, chapterSixReward, chapterSevenReward, chapterEightReward, chapterNineReward
   ]);
   const shopCatalog = createShopCatalog([]);
   const economyActions = createEconomyActionDefinitions({ rewardRegistry, shopCatalog });

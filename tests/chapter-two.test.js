@@ -28,10 +28,11 @@ import { chapterFiveReward } from "../src/chapters/chapterFive.js";
 import { chapterSixReward } from "../src/chapters/chapterSix.js";
 import { chapterSevenReward } from "../src/chapters/chapterSeven.js";
 import { chapterEightReward } from "../src/chapters/chapterEight.js";
+import { chapterNineReward } from "../src/chapters/chapterNine.js";
 import { chapterDefinitions, getChapterDefinition } from "../src/chapters/registry.js";
 
 test("Chapter 2 is registered with an Apollo story, two fraction skills, and a Chapter 1 prerequisite", () => {
-  assert.deepEqual(chapterDefinitions.map((chapter) => chapter.id), ["chapter-01", "chapter-02", "chapter-03", "chapter-04", "chapter-05", "chapter-06", "chapter-07", "chapter-08"]);
+  assert.deepEqual(chapterDefinitions.map((chapter) => chapter.id), ["chapter-01", "chapter-02", "chapter-03", "chapter-04", "chapter-05", "chapter-06", "chapter-07", "chapter-08", "chapter-09"]);
   assert.equal(getChapterDefinition("chapter-02"), chapterTwoDefinition);
   assert.equal(getChapterDefinition("chapter-03"), chapterThreeDefinition);
   assert.equal(getChapterDefinition("chapter-04"), chapterFourDefinition);
@@ -122,7 +123,7 @@ test("Professor Hoot supplies fraction-specific nudges, strategies, and worked e
 
 test("Chapter 2 waits for Chapter 1, resumes its checkpoint, and grants its reward only once", () => {
   const chapterCatalog = createChapterCatalog(chapterDefinitions);
-  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward, chapterFiveReward, chapterSixReward, chapterSevenReward, chapterEightReward]);
+  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward, chapterFiveReward, chapterSixReward, chapterSevenReward, chapterEightReward, chapterNineReward]);
   const shopCatalog = createShopCatalog([]);
   const economyActions = createEconomyActionDefinitions({ rewardRegistry, shopCatalog });
   const store = createGameStore({

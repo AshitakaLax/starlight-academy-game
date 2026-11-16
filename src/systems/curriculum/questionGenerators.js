@@ -5,6 +5,7 @@ import { getHabitatCreatures, getHabitatAdaptations, getHabitatEcosystemConnecti
 import { getPlantLifecycleStages, getPlantLifecycleTransitions, getPlantResourceScenarios, photosynthesisChoiceBank, PHOTOSYNTHESIS_INPUTS_ANSWER } from "../../data/plantLexicon.js";
 import { getGrammarExamples, getReadingPassages } from "../../data/languageArtsLexicon.js";
 import { getVolumeScale, getMassBalanceProblems, getUnitConversionProblems, getElapsedTimeOptions } from "../../data/measurementLexicon.js";
+import { getDivisionSettings, getMultiStepProblems } from "../../data/chimeraChallengeLexicon.js";
 
 function hashSeed(seed) {
   if (typeof seed === "number" && Number.isFinite(seed)) return seed >>> 0;
@@ -659,6 +660,125 @@ const BUILT_IN_GENERATORS = Object.freeze({
         startTime: formatClockTime(startMinutes),
         finishTime: formatClockTime(finishMinutes),
         elapsedMinutes
+      })
+    };
+  }
+  ,
+  "reasoning.division": ({ random, constraints, tier }) => {
+    const settings = getDivisionSettings(tier);
+    const divisor = random.integer(settings.divisorMin, settings.divisorMax);
+    const quotient = random.integer(settings.quotientMin, settings.quotientMax);
+    const total = divisor * quotient;
+    const items = ["pearls", "shells", "star tokens", "glass beads"];
+    const groups = ["baskets", "boxes", "teams", "trays"];
+    const itemLabel = random.pick(items);
+    const groupLabel = random.pick(groups);
+    const correctAnswer = String(quotient);
+    const candidates = Array.from({ length: 12 }, (_, index) => Math.max(1, quotient + index - 5));
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "Share the collection equally. How many go in each group?",
+      correctAnswer,
+      choices: makeDistinctChoices(quotient, candidates, random, choiceCount).map(String),
+      stimulus: Object.freeze({
+        kind: "chimera-division",
+        total,
+        divisor,
+        itemLabel,
+        groupLabel
+      })
+    };
+  },
+  "reasoning.multi-digit-arithmetic": ({ random, constraints, tier }) => {
+    let left;
+    let right;
+    let operation;
+    if (tier === "foundation") {
+      operation = random.pick(["addition", "subtraction"]);
+      if (operation === "addition") {
+        const leftTens = random.integer(2, 4);
+        const rightTens = random.integer(1, 4);
+        const leftOnes = random.integer(0, 4);
+        const rightOnes = random.integer(0, 9 - leftOnes);
+        left = leftTens * 10 + leftOnes;
+        right = rightTens * 10 + rightOnes;
+      } else {
+        const leftTens = random.integer(4, 9);
+        const rightTens = random.integer(1, leftTens - 1);
+        const leftOnes = random.integer(1, 9);
+        const rightOnes = random.integer(0, leftOnes);
+        left = leftTens * 10 + leftOnes;
+        right = rightTens * 10 + rightOnes;
+      }
+    } else if (tier === "core") {
+      operation = random.pick(["addition", "subtraction", "multiplication"]);
+      if (operation === "addition") {
+        left = random.integer(125, 499);
+        right = random.integer(125, 399);
+      } else if (operation === "subtraction") {
+        left = random.integer(600, 899);
+        right = random.integer(150, 399);
+      } else {
+        left = random.integer(12, 49);
+        right = random.integer(2, 9);
+      }
+    } else {
+      operation = random.pick(["addition", "subtraction", "multiplication"]);
+      if (operation === "addition") {
+        left = random.integer(1200, 4800);
+        right = random.integer(1100, 3900);
+      } else if (operation === "subtraction") {
+        left = random.integer(3500, 8999);
+        right = random.integer(1000, 2999);
+      } else {
+        left = random.integer(24, 99);
+        right = random.integer(12, 39);
+      }
+    }
+    const symbols = { addition: "+", subtraction: "−", multiplication: "×" };
+    const correctValue = operation === "addition" ? left + right
+      : operation === "subtraction" ? left - right : left * right;
+    const candidates = [
+      correctValue + 1, correctValue - 1, correctValue + 10, correctValue - 10,
+      correctValue + 100, correctValue - 100, correctValue + 1000, correctValue - 1000,
+      left + right, Math.abs(left - right), left * right
+    ].filter((value) => Number.isInteger(value) && value >= 0 && value !== correctValue);
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "Solve the multi-digit calculation.",
+      correctAnswer: correctValue.toLocaleString("en-US"),
+      choices: makeDistinctChoices(correctValue, candidates, random, choiceCount).map((value) => value.toLocaleString("en-US")),
+      stimulus: Object.freeze({
+        kind: "chimera-arithmetic",
+        left: left.toLocaleString("en-US"),
+        right: right.toLocaleString("en-US"),
+        leftValue: left,
+        rightValue: right,
+        operation,
+        symbol: symbols[operation]
+      })
+    };
+  },
+  "reasoning.multi-step": ({ random, constraints, tier }) => {
+    const problem = random.pick(getMultiStepProblems(tier));
+    const correctAnswer = String(problem.answer);
+    const candidates = [
+      problem.answer + 1, problem.answer - 1, problem.answer + 2, problem.answer - 2,
+      problem.answer + 5, problem.answer - 5, problem.answer + 10, problem.answer - 10,
+      problem.answer + 20, problem.answer - 20, problem.answer + 25
+    ].filter((value) => Number.isInteger(value) && value >= 0 && value !== problem.answer);
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: problem.question,
+      correctAnswer,
+      choices: makeDistinctChoices(problem.answer, candidates, random, choiceCount).map(String),
+      stimulus: Object.freeze({
+        kind: "chimera-multi-step",
+        problemId: problem.id,
+        title: problem.title,
+        story: problem.story,
+        question: problem.question,
+        stepPrompts: problem.stepPrompts.slice()
       })
     };
   }
