@@ -110,9 +110,9 @@ test("treat feeding, sparkle grooming, and ribbon play increase separate care tr
   const play = service.performCare("pet.pegasus", "play");
   const pet = service.getPet("pet.pegasus");
   assert.equal(feeding.progressAfter, 25);
-  assert.equal(grooming.progressAfter, 25);
+  assert.equal(grooming.progressAfter, 35);
   assert.equal(play.progressAfter, 25);
-  assert.deepEqual(pet.careProgress, { feeding: 25, grooming: 25, play: 25 });
+  assert.deepEqual(pet.careProgress, { feeding: 25, grooming: 35, play: 25 });
   assert.equal(pet.bondExperience, 15);
   assert.equal(pet.careMoments, 3);
 });
@@ -212,7 +212,7 @@ test("care moments, meters, and bond survive save serialization and active-pet s
   const pegasus = snapshot.pets.find((pet) => pet.id === "pet.pegasus");
   const phoenix = snapshot.pets.find((pet) => pet.id === "pet.phoenix");
   assert.equal(snapshot.activePetId, "pet.phoenix");
-  assert.equal(pegasus.careProgress.grooming, 25);
+  assert.equal(pegasus.careProgress.grooming, 35);
   assert.equal(pegasus.bondExperience, 5);
   assert.equal(pegasus.careMoments, 1);
   assert.equal(phoenix.careProgress.play, 25);
