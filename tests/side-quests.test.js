@@ -55,9 +55,10 @@ test("the first four optional side quests have chapter-specific objectives and r
   assert.equal(sideQuestActivityDefinitions.length, 4);
   assert.equal(sideQuestHintDefinitions.length, 4);
   assert.equal(sideQuestRewardDefinitions.length, 4);
-  assert.deepEqual(sideQuestRewardDefinitions.map((reward) => reward.replayPolicy), [
-    { type: "once" }, { type: "once" }
-  ]);
+  assert.deepEqual(
+    sideQuestRewardDefinitions.map((reward) => reward.replayPolicy),
+    Array.from({ length: 4 }, () => ({ type: "once" }))
+  );
   assert.deepEqual(sideQuestRewardDefinitions.map((reward) => reward.sourceId), ["quest-01", "quest-02", "quest-03", "quest-04"]);
   assert.equal(new Set(sideQuestActivityDefinitions.map((activity) => activity.generatorId)).size, 4);
   assert.equal(chapterOneDefinition.activities.length, 5);
@@ -183,7 +184,7 @@ test("Professor Hoot gives each side quest three skill-matched hint stages", () 
   }
 });
 
-test("side quests unlock after Chapter 1 but never block its completion or duplicate rewards on replay", () => {
+test("side quests unlock after their source chapter and never block the next chapter or duplicate rewards on replay", () => {
   const chapterCatalog = createChapterCatalog([chapterOneDefinition, chapterTwoDefinition, chapterThreeDefinition, ...sideQuestDefinitions]);
   const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, ...sideQuestRewardDefinitions]);
   const shopCatalog = createShopCatalog([]);
