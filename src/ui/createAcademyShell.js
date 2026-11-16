@@ -968,10 +968,10 @@ export function createAcademyShell({
     };
     if (stimulus.kind === "geometry-shape") {
       const points = {
-        triangle: "150,20 220,178 80,178",
+        triangle: "150,56 220,177 80,177",
         square: "95,45 205,45 205,155 95,155",
         rectangle: "65,65 235,65 235,135 65,135",
-        rhombus: "150,25 225,110 150,195 75,110",
+        rhombus: "150,45 240,105 150,165 60,105",
         pentagon: "150,25 225,80 197,170 103,170 75,80",
         hexagon: "150,20 215,58 215,142 150,180 85,142 85,58"
       }[stimulus.shape];
@@ -980,10 +980,10 @@ export function createAcademyShell({
       addSvg("polygon", { points, fill: "#f7effd", stroke: "#76539a", "stroke-width": 4, "stroke-linejoin": "round" });
       if (stimulus.focus === "symmetry" && Number.isInteger(stimulus.symmetryLines)) {
         const axes = {
-          triangle: { x: 150, y: 99, degrees: [30, 90, 150] },
+          triangle: { x: 150, y: 137, degrees: [30, 90, 150] },
           square: { x: 150, y: 100, degrees: [0, 45, 90, 135] },
           rectangle: { x: 150, y: 100, degrees: [0, 90] },
-          rhombus: { x: 150, y: 110, degrees: [0, 90] },
+          rhombus: { x: 150, y: 105, degrees: [0, 90] },
           pentagon: { x: 150, y: 105, degrees: [18, 54, 90, 126, 162] },
           hexagon: { x: 150, y: 100, degrees: [0, 30, 60, 90, 120, 150] }
         }[stimulus.shape];
