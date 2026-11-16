@@ -262,6 +262,123 @@ const BUILT_IN_GENERATORS = Object.freeze({
       })
     };
   },
+  "quests.fraction-outlier": ({ random, constraints }) => {
+    const denominatorMin = readInteger(constraints, "denominatorMin", 2);
+    const denominatorMax = readInteger(constraints, "denominatorMax", denominatorMin);
+    if (denominatorMax < denominatorMin || denominatorMin < 2 || denominatorMax > 4) {
+      throw new RangeError("Fraction outlier denominator range must be ordered from two through four.");
+    }
+    const denominator = random.integer(denominatorMin, denominatorMax);
+    const numerator = random.integer(1, denominator - 1);
+    const equivalentOptions = [2, 3, 4].map((factor) => ({
+      numerator: numerator * factor,
+      denominator: denominator * factor
+    }));
+    const first = equivalentOptions[0];
+    const outlier = {
+      numerator: first.numerator + 1,
+      denominator: first.denominator
+    };
+    const optionValues = random.shuffle([
+      ...equivalentOptions.map((option) => option.numerator + "/" + option.denominator),
+      outlier.numerator + "/" + outlier.denominator
+    ]);
+    const bars = [
+      {
+        label: "Starting amount: " + numerator + "/" + denominator,
+        numerator,
+        denominator,
+        showValue: true
+      },
+      ...optionValues.map((value, index) => {
+        const [optionNumerator, optionDenominator] = value.split("/").map(Number);
+        return {
+          label: "Choice " + String.fromCharCode(65 + index) + ": " + value,
+          numerator: optionNumerator,
+          denominator: optionDenominator,
+          showValue: true
+        };
+      })
+    ];
+    return {
+      prompt: "Three fraction tiles name the same amount as "
+        + numerator + "/" + denominator
+        + ". Which choice is the outlier and does NOT name the same amount?",
+      correctAnswer: outlier.numerator + "/" + outlier.denominator,
+      choices: optionValues,
+      stimulus: Object.freeze({
+        kind: "fraction-bars",
+        base: Object.freeze({ numerator, denominator }),
+        outlier: Object.freeze({ ...outlier }),
+        bars: Object.freeze(bars.map((bar) => Object.freeze(bar)))
+      })
+    };
+  },
+  "quests.fraction-story": ({ random, constraints }) => {
+    const denominatorMin = readInteger(constraints, "denominatorMin", 4);
+    const denominatorMax = readInteger(constraints, "denominatorMax", denominatorMin);
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    if (denominatorMax < denominatorMin || denominatorMin < 4 || denominatorMax > 12
+        || choiceCount !== 4) {
+      throw new RangeError("Fraction story constraints need denominators from four through twelve and four choices.");
+    }
+    const denominator = random.integer(denominatorMin, denominatorMax);
+    const numerator = random.integer(1, denominator - 1);
+    const stories = [
+      {
+        kind: "music",
+        subject: "the music measure",
+        prompt: "A music measure has " + denominator + " equal beats. "
+          + numerator + " beats are played by the silver flute. What fraction of the measure does the flute play?"
+      },
+      {
+        kind: "ribbon",
+        subject: "the ribbon",
+        prompt: "A moonstone ribbon is split into " + denominator + " equal panels. "
+          + numerator + " panels glow silver. What fraction of the ribbon glows silver?"
+      },
+      {
+        kind: "tart",
+        subject: "the moonberry tart",
+        prompt: "A moonberry tart is divided into " + denominator + " equal slices. "
+          + numerator + " slices have star sprinkles. What fraction of the tart has star sprinkles?"
+      },
+      {
+        kind: "star-chart",
+        subject: "the star chart",
+        prompt: "A star chart is divided into " + denominator + " equal sections. "
+          + numerator + " sections show a bright constellation. What fraction of the chart shows constellations?"
+      }
+    ];
+    const story = random.pick(stories);
+    const correctAnswer = numerator + "/" + denominator;
+    const distractorNumerators = random.shuffle(
+      Array.from({ length: denominator }, (_, index) => index + 1)
+        .filter((value) => value !== numerator)
+    ).slice(0, choiceCount - 1);
+    const choices = random.shuffle([
+      correctAnswer,
+      ...distractorNumerators.map((value) => value + "/" + denominator)
+    ]);
+    return {
+      prompt: story.prompt,
+      correctAnswer,
+      choices,
+      stimulus: Object.freeze({
+        kind: "fraction-bars",
+        storyKind: story.kind,
+        storySubject: story.subject,
+        numerator,
+        denominator,
+        bars: Object.freeze([Object.freeze({
+          label: story.subject + ": " + numerator + " of " + denominator + " equal parts",
+          numerator,
+          denominator,
+          showValue: false
+        })])
+      })
+    };
+  },
   "fractions.identify": ({ random, constraints }) => {
     const denominatorMin = readInteger(constraints, "denominatorMin", 4);
     const denominatorMax = readInteger(constraints, "denominatorMax", denominatorMin);

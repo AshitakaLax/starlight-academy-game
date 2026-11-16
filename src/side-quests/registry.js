@@ -1,5 +1,7 @@
 import { sideQuestOneDefinition, sideQuestOneActivityDefinitions, sideQuestOneHintDefinitions, sideQuestOneReward } from "./sideQuestOne.js";
 import { sideQuestTwoDefinition, sideQuestTwoActivityDefinitions, sideQuestTwoHintDefinitions, sideQuestTwoReward } from "./sideQuestTwo.js";
+import { sideQuestThreeDefinition, sideQuestThreeActivityDefinitions, sideQuestThreeHintDefinitions, sideQuestThreeReward } from "./sideQuestThree.js";
+import { sideQuestFourDefinition, sideQuestFourActivityDefinitions, sideQuestFourHintDefinitions, sideQuestFourReward } from "./sideQuestFour.js";
 
 /**
  * Data-driven optional side-quest registry. Quest progress shares the safe
@@ -10,19 +12,27 @@ export { createSideQuestDefinition, validateSideQuestDefinition } from "./sideQu
 
 export const sideQuestDefinitions = Object.freeze([
   sideQuestOneDefinition,
-  sideQuestTwoDefinition
+  sideQuestTwoDefinition,
+  sideQuestThreeDefinition,
+  sideQuestFourDefinition
 ]);
 export const sideQuestActivityDefinitions = Object.freeze([
   ...sideQuestOneActivityDefinitions,
-  ...sideQuestTwoActivityDefinitions
+  ...sideQuestTwoActivityDefinitions,
+  ...sideQuestThreeActivityDefinitions,
+  ...sideQuestFourActivityDefinitions
 ]);
 export const sideQuestHintDefinitions = Object.freeze([
   ...sideQuestOneHintDefinitions,
-  ...sideQuestTwoHintDefinitions
+  ...sideQuestTwoHintDefinitions,
+  ...sideQuestThreeHintDefinitions,
+  ...sideQuestFourHintDefinitions
 ]);
 export const sideQuestRewardDefinitions = Object.freeze([
   sideQuestOneReward,
-  sideQuestTwoReward
+  sideQuestTwoReward,
+  sideQuestThreeReward,
+  sideQuestFourReward
 ]);
 
 /** @param {string} id */
