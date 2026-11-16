@@ -72,9 +72,6 @@ jobs:
       - name: Install Playwright
         run: python -m pip install --upgrade pip playwright
 
-      - name: Install branded Chrome and Edge
-        run: python -m playwright install chrome msedge
-
       - name: Verify offline Chrome
         env:
           BROWSER_CHANNEL: chrome
