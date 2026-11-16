@@ -9,6 +9,7 @@ import { buildQuestBoardSnapshot } from "../gameplay/chapter-runtime/questBoard.
 import { gameConfig } from "../config/gameConfig.js";
 import { renderColoringCanvas } from "../gameplay/coloring/renderColoringCanvas.js";
 import { createAcademyScene } from "../rendering/scenes/createAcademyScene.js";
+import { createPetCharacterMarkup } from "./petCharacter.js";
 
 const DESTINATIONS = Object.freeze({
   chapters: Object.freeze({
@@ -553,7 +554,7 @@ export function createAcademyShell({
     narrationVoiceSelect.value = settings.voiceURI;
   }
 
-  function renderPetCollection(statusMessage = null) {
+  function renderPetCollection(statusMessage = null, reaction = null) {
     if (!petCollectionService) {
       panel.petCollectionGrid.replaceChildren();
       panel.petCollectionStatus.textContent = "Pet collection is not connected.";
@@ -570,19 +571,25 @@ export function createAcademyShell({
       const card = documentRef.createElement("article");
       card.className = "pet-collection-card";
       card.dataset.petState = pet.unlocked ? (pet.active ? "active" : "unlocked") : "locked";
-      const symbol = documentRef.createElement("span");
-      symbol.className = "pet-collection-symbol";
-      symbol.textContent = pet.symbol;
-      symbol.setAttribute("aria-hidden", "true");
+      const palette = pet.appearancePalettes.find((entry) => entry.id === pet.appearance.paletteId)
+        ?? pet.appearancePalettes[0];
+      const character = documentRef.createElement("div");
+      character.className = "pet-character-stage";
+      character.dataset.species = pet.id.slice("pet.".length);
+      character.setAttribute("aria-hidden", "true");
+      character.innerHTML = createPetCharacterMarkup({
+        species: pet.id.slice("pet.".length),
+        palette,
+        reaction: reaction?.petId === pet.id ? reaction.careType : "idle"
+      });
       const title = documentRef.createElement("h3");
       title.textContent = pet.title;
       const description = documentRef.createElement("p");
       description.textContent = pet.description;
       const appearance = documentRef.createElement("p");
-      const palette = pet.appearancePalettes.find((entry) => entry.id === pet.appearance.paletteId);
       appearance.className = "pet-collection-detail";
       appearance.textContent = pet.unlocked ? "Look: " + (palette?.label ?? "Classic") : "A new friend to discover";
-      card.append(symbol, title, description, appearance);
+      card.append(character, title, description, appearance);
       const action = documentRef.createElement("button");
       action.type = "button";
       action.className = pet.active ? "wardrobe-secondary-action" : "wardrobe-primary-action";
@@ -698,7 +705,7 @@ export function createAcademyShell({
         const message = result.meterFull
           ? petName + " loved that " + careName + " moment! The " + trackName.toLowerCase() + " meter is full, and your friendship still grows." + abilityMessage
           : petName + " enjoyed that " + careName + " moment! " + trackName + " progress is now " + result.progressAfter + "%." + abilityMessage;
-        renderPetCollection(message);
+        renderPetCollection(message, { petId: control.dataset.petId, careType: result.careType });
       }
     } catch (error) {
       renderPetCollection(error?.message || "That companion could not be cared for.");

@@ -1,7 +1,7 @@
 # Starlight Academy: Studio of Magic & Motion
 ## Revised Engineering Implementation Ledger
 
-This ledger operationalizes the Revised Gameplay, Architecture & Engineering Implementation Plan. Acceptance criteria are required test outcomes, not merely descriptions of features. Status reflects verified implementation progress on the active branch. STEP-06 through STEP-46 implementation is pushed; automated verification for committed increments is recorded in GitHub Actions. Manual learner playtests remain open.
+This ledger operationalizes the Revised Gameplay, Architecture & Engineering Implementation Plan. Acceptance criteria are required test outcomes, not merely descriptions of features. Status reflects verified implementation progress on the active branch. STEP-06 through STEP-47 implementation is pushed; automated verification for committed increments is recorded in GitHub Actions. Manual learner playtests remain open.
 
 **Release requirement:** All 10 chapters and 20 side quests ship in one self-contained HTML file. Multiple source files are allowed during development. Target browsers are desktop Chrome and Edge.
 
@@ -65,3 +65,4 @@ This ledger operationalizes the Revised Gameplay, Architecture & Engineering Imp
 5. **No pet decay:** no code path may reduce pet care or bond values due to elapsed time, inactivity, or app closure.
 6. **Offline final build:** all player-facing runtime resources are embedded in the delivered HTML file.
 7. **Test the release artifact:** final acceptance is based on the built standalone HTML in Chrome and Edge, not only the development environment.
+| STEP-47 | Companion character animation | Add animated Pegasus, Phoenix, and Nymph Kitten characters to the Pets destination, with distinct care reactions. | STEP-16 through STEP-18 | Each species has a recognizable vector character, idle motion, palette-aware colors, and temporary feeding/grooming/play reactions; reactions respect reduced motion and remain presentation-only; automated tests cover the character markup without changing pet progression rules. | Implemented; added offline SVG character art, species-specific idle movement, transient treat/sparkle/ribbon reactions, palette-aware styling, reduced-motion compatibility, and focused rendering tests; human visual review remains pending |

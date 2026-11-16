@@ -1435,3 +1435,44 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   .quest-board-section { padding: .8rem; }
 }
 @media (max-width: 380px) { .quest-board-summary { grid-template-columns: minmax(0, 1fr); } }
+
+
+/* Tiny animated companions live entirely in the offline UI bundle. */
+.pet-character-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 142px;
+  height: 126px;
+  margin: 1px 0 3px;
+  border-radius: 48% 52% 47% 53%;
+  background: radial-gradient(ellipse at 50% 55%, #fff 0%, #f8f1fc 66%, #f1e9f7 100%);
+  box-shadow: inset 0 0 0 1px rgba(190, 166, 210, .2);
+}
+.pet-character-stage[data-species="phoenix"] { background: radial-gradient(ellipse at 50% 55%, #fff 0%, #fff3e7 67%, #f9e9df 100%); }
+.pet-character-stage[data-species="nymph-kitten"] { background: radial-gradient(ellipse at 50% 55%, #fff 0%, #f0f6ed 67%, #e7f0e5 100%); }
+.pet-character-art { position: relative; display: block; width: 100%; height: 100%; overflow: visible; }
+.pet-character-body { transform-box: fill-box; transform-origin: 50% 90%; animation: pet-character-idle 3.6s ease-in-out infinite; }
+.pet-character-wing { transform-box: fill-box; transform-origin: 16% 70%; animation: pet-character-wing-flutter 3.9s ease-in-out infinite; }
+.pet-character-wing--near { animation-delay: -.8s; }
+.pet-character-tail { transform-box: fill-box; transform-origin: 100% 50%; animation: pet-character-tail-sway 3.2s ease-in-out infinite; }
+.pet-character-eye { transform-box: fill-box; transform-origin: 50% 50%; animation: pet-character-blink 5.2s ease-in-out infinite; }
+.pet-character-effect { opacity: 0; pointer-events: none; }
+.pet-character-art[data-reaction="feeding"] .pet-character-body { animation: pet-character-happy-hop .78s ease-in-out 2; }
+.pet-character-art[data-reaction="grooming"] .pet-character-body { animation: pet-character-groom-glow 1.15s ease-in-out 2; }
+.pet-character-art[data-reaction="play"] .pet-character-body { animation: pet-character-play-hop .82s ease-in-out 2; }
+.pet-character-art[data-reaction="feeding"] .pet-character-effect--feeding { opacity: 1; transform-box: fill-box; transform-origin: center; animation: pet-character-effect-pop .75s ease-out 2; }
+.pet-character-art[data-reaction="grooming"] .pet-character-effect--grooming { opacity: 1; transform-box: fill-box; transform-origin: center; animation: pet-character-sparkle .9s ease-in-out 2; }
+.pet-character-art[data-reaction="play"] .pet-character-effect--play { opacity: 1; transform-box: fill-box; transform-origin: center; animation: pet-character-ribbon .9s ease-in-out 2; }
+@keyframes pet-character-idle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes pet-character-wing-flutter { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-7deg); } }
+@keyframes pet-character-tail-sway { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(7deg); } }
+@keyframes pet-character-blink { 0%, 91%, 95%, 100% { transform: scaleY(1); } 93% { transform: scaleY(.12); } }
+@keyframes pet-character-happy-hop { 0%, 100% { transform: translateY(0) scale(1); } 35% { transform: translateY(-13px) scale(1.035, .97); } 66% { transform: translateY(1px) scale(.98, 1.03); } }
+@keyframes pet-character-groom-glow { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(232, 201, 121, 0)); } 50% { transform: scale(1.055); filter: drop-shadow(0 0 8px rgba(232, 201, 121, .72)); } }
+@keyframes pet-character-play-hop { 0%, 100% { transform: translate(0, 0) rotate(0); } 30% { transform: translate(-4px, -10px) rotate(-5deg); } 65% { transform: translate(5px, 0) rotate(5deg); } }
+@keyframes pet-character-effect-pop { 0% { transform: translateY(9px) scale(.55); opacity: 0; } 35%, 75% { transform: translateY(-4px) scale(1.05); opacity: 1; } 100% { transform: translateY(-13px) scale(.7); opacity: 0; } }
+@keyframes pet-character-sparkle { 0%, 100% { transform: rotate(-8deg) scale(.8); opacity: .45; } 50% { transform: rotate(10deg) scale(1.12); opacity: 1; } }
+@keyframes pet-character-ribbon { 0% { transform: rotate(-12deg) scale(.75); opacity: .2; } 45% { transform: rotate(8deg) scale(1.08); opacity: 1; } 100% { transform: rotate(18deg) scale(.85); opacity: .35; } }
+.pet-collection-card[data-pet-state="locked"] .pet-character-art { filter: grayscale(.5) opacity(.8); }
+@media (max-width: 480px) { .pet-character-stage { width: 132px; height: 118px; } }
