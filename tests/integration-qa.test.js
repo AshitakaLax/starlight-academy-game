@@ -217,7 +217,7 @@ test("full academy journey integrates all chapters, optional quests, replay, rew
   assert.equal(restoredEconomy.rewardClaims["reward.chapter-01-starfall-circlet"], 1);
   assert.equal(restored.petCollectionService.getSnapshot().activePetId, "pet.nymph-kitten");
   assert.equal(restored.petCollectionService.getPet("pet.phoenix").appearance.paletteId, "ember");
-  assert.equal(restored.wardrobeService.getEquipped().accessory, "wardrobe.moonbeam-bow");
+  assert.equal(restored.wardrobeService.getEquipped().find((slot) => slot.slot === "accessory").itemId, "wardrobe.moonbeam-bow");
   assert.equal(restored.chapterRuntimeService.getSnapshot().chapters.filter((item) => item.progress.status === "completed").length, 30);
 
   // Lower-quality replays must not erase the all-complete personal best or pay
