@@ -45,11 +45,11 @@ test("application rejects ambiguous or malformed service registrations", () => {
   ] }), /Duplicate application service name/);
 });
 
-test("release defaults and empty content registries match STEP-01 scope", () => {
+test("release defaults and incremental content registries match implemented scope", () => {
   assert.deepEqual(gameConfig.platform.targetBrowsers, ["Chrome", "Edge"]);
   assert.equal(gameConfig.release.chapterCount, 10);
   assert.equal(gameConfig.release.sideQuestCount, 20);
   assert.equal(gameConfig.release.offlineRuntime, true);
-  assert.equal(chapterDefinitions.length, 0);
+  assert.equal(chapterDefinitions.length, 2);
   assert.equal(sideQuestDefinitions.length, 0);
 });
