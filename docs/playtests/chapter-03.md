@@ -23,7 +23,7 @@
 
 ## Automated verification
 
-The branch's GitHub Actions workflow runs JavaScript syntax checks, the full Node regression suite, the single-file/offline build, and uploads the built HTML artifact. Record the run linked from the current branch after it completes.
+The current branch's GitHub Actions run [43784693111](https://github.com/AshitakaLax/starlight-academy-game/actions/runs/43784693111) passed JavaScript syntax checks, all 240 Node tests, the single-file/offline build, and HTML artifact upload.
 
 ## Still required before mass content production
 
@@ -33,4 +33,4 @@ The branch's GitHub Actions workflow runs JavaScript syntax checks, the full Nod
 4. Check text scaling, reduced motion, focus order, and narrow desktop window sizes; verify that the potion sentence and word-part visuals remain readable.
 5. Confirm chapter checkpoint/resume, reward clarity, save/reload, and replay behavior in the packaged HTML.
 
-**Gate:** Chapter 3 is implemented and has targeted source-level checks. It is not yet approved for mass content production until the current CI run and live desktop/learner playtest are recorded.
+**Gate:** Chapter 3 is implemented and its automated checks pass. It is not yet approved for mass content production until live desktop and learner observations are recorded.
