@@ -91,7 +91,7 @@ export const chapterThreeWordBank = Object.freeze([
     root: { text: "care", meaning: "attention and thought" },
     suffixes: [{ text: "less", display: "-less", meaning: "without" }],
     meaning: "not careful; paying too little attention",
-    sentence: "A careless spill left blue paint across the table."
+    sentence: "The careless cook spilled blue paint across the table."
   }),
   defineWord({
     tier: "core",
@@ -147,6 +147,8 @@ export const chapterThreeWordBank = Object.freeze([
     prefixes: [{ text: "re", display: "re-", meaning: "again" }],
     root: { text: "use", meaning: "to put something to work" },
     suffixes: [{ text: "able", display: "-able", meaning: "able or suitable to be" }],
+    spellingRule: "drop-final-e",
+    spellingNote: "Drop the final e in use before adding -able.",
     meaning: "able to be used again",
     sentence: "The reusable bottle can be washed and filled tomorrow."
   }),
