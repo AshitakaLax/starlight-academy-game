@@ -924,7 +924,10 @@ export function createAcademyShell({
       const questionCount = Math.max(1, Number.isInteger(metadata.questionCount) ? metadata.questionCount : 1);
       const card = documentRef.createElement("section");
       card.className = "chapter-question-card";
-      card.setAttribute("aria-label", activity.type === "challenge" ? "Lantern challenge question" : "Learning question");
+      card.setAttribute(
+        "aria-label",
+        activity.type === "challenge" ? activity.title + " question" : activity.title + " learning question"
+      );
       if (activity.type === "challenge") {
         appendChapterText(card, "p", (metadata.challengeLabel ?? "Challenge progress") + ": " + (chapterQuestionIndex + 1) + " of " + questionCount);
       } else if (metadata.lessonLabel) {
