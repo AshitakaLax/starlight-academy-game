@@ -26,6 +26,7 @@ import {
   chapterEightActivityDefinitions, chapterEightDefinition, chapterEightHintDefinitions, chapterEightReward
 } from "../src/chapters/chapterEight.js";
 import { chapterNineReward } from "../src/chapters/chapterNine.js";
+import { chapterTenReward } from "../src/chapters/chapterTen.js";
 import { chapterDefinitions, getChapterDefinition } from "../src/chapters/registry.js";
 import {
   massBalanceProblems, unitConversionProblems, getVolumeScale, getMassBalanceProblems,
@@ -54,7 +55,7 @@ function displayDuration(value) {
 test("Chapter 8 is registered after Chapter 7 with volume, mass, conversion, and elapsed-time activities", () => {
   assert.deepEqual(chapterDefinitions.map((chapter) => chapter.id), [
     "chapter-01", "chapter-02", "chapter-03", "chapter-04",
-    "chapter-05", "chapter-06", "chapter-07", "chapter-08", "chapter-09"
+    "chapter-05", "chapter-06", "chapter-07", "chapter-08", "chapter-09", "chapter-10"
   ]);
   assert.equal(getChapterDefinition("chapter-08"), chapterEightDefinition);
   assert.equal(validateChapterDefinition(chapterEightDefinition), true);
@@ -264,7 +265,7 @@ test("Chapter 8 waits for Chapter 7, resumes its checkpoint, and grants Poseidon
   const chapterCatalog = createChapterCatalog(chapterDefinitions);
   const rewardRegistry = createRewardRegistry([
     chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward,
-    chapterFiveReward, chapterSixReward, chapterSevenReward, chapterEightReward, chapterNineReward
+    chapterFiveReward, chapterSixReward, chapterSevenReward, chapterEightReward, chapterNineReward, chapterTenReward
   ]);
   const shopCatalog = createShopCatalog([]);
   const economyActions = createEconomyActionDefinitions({ rewardRegistry, shopCatalog });

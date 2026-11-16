@@ -71,10 +71,12 @@ export { chapterSixActivityDefinitions, chapterSixHintDefinitions, chapterSixRew
 export { chapterSevenActivityDefinitions, chapterSevenHintDefinitions, chapterSevenReward, chapterSevenDefinition } from "./chapters/chapterSeven.js";
 export { chapterEightActivityDefinitions, chapterEightHintDefinitions, chapterEightReward, chapterEightDefinition } from "./chapters/chapterEight.js";
 export { chapterNineActivityDefinitions, chapterNineHintDefinitions, chapterNineReward, chapterNineDefinition } from "./chapters/chapterNine.js";
+export { chapterTenReward, chapterTenDefinition } from "./chapters/chapterTen.js";
 export { chapterThreeWordBank, getChapterThreeWords } from "./data/wordBuildingLexicon.js";
 export { habitatCreatureLexicon, habitatEcosystemConnections, getHabitatCreatures, getHabitatAdaptations, getHabitatEcosystemConnections } from "./data/habitatLexicon.js";
 export { plantLifecycleStages, getPlantLifecycleStages, getPlantLifecycleTransitions, plantResourceScenarios, getPlantResourceScenarios, PHOTOSYNTHESIS_INPUTS_ANSWER, photosynthesisChoiceBank } from "./data/plantLexicon.js";
 export { grammarSentenceBank, readingPassageBank, getGrammarExamples, getReadingPassages } from "./data/languageArtsLexicon.js";
 export { massBalanceProblems, unitConversionProblems, getVolumeScale, getMassBalanceProblems, getUnitConversionProblems, getElapsedTimeOptions } from "./data/measurementLexicon.js";
 export { multiStepProblemBank, getDivisionSettings, getMultiStepProblems } from "./data/chimeraChallengeLexicon.js";
+export { grandStarlightSampler, grandStarlightSubjectOrder, getGrandStarlightSampler } from "./data/championshipSampler.js";
 export { createChapterInputController } from "./gameplay/chapter-runtime/chapterInput.js";

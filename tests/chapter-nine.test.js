@@ -26,6 +26,7 @@ import { chapterEightReward } from "../src/chapters/chapterEight.js";
 import {
   chapterNineActivityDefinitions, chapterNineDefinition, chapterNineHintDefinitions, chapterNineReward
 } from "../src/chapters/chapterNine.js";
+import { chapterTenReward } from "../src/chapters/chapterTen.js";
 import { chapterDefinitions, getChapterDefinition } from "../src/chapters/registry.js";
 import { getDivisionSettings, getMultiStepProblems } from "../src/data/chimeraChallengeLexicon.js";
 
@@ -47,7 +48,7 @@ function calculateProblem(problem) {
 test("Chapter 9 is registered after Chapter 8 with division, multi-digit, and multi-step activities", () => {
   assert.deepEqual(chapterDefinitions.map((chapter) => chapter.id), [
     "chapter-01", "chapter-02", "chapter-03", "chapter-04", "chapter-05",
-    "chapter-06", "chapter-07", "chapter-08", "chapter-09"
+    "chapter-06", "chapter-07", "chapter-08", "chapter-09", "chapter-10"
   ]);
   assert.equal(getChapterDefinition("chapter-09"), chapterNineDefinition);
   assert.equal(validateChapterDefinition(chapterNineDefinition), true);
@@ -230,7 +231,7 @@ test("Chapter 9 waits for Chapter 8, resumes its checkpoint, and grants the Chim
   const chapterCatalog = createChapterCatalog(chapterDefinitions);
   const rewardRegistry = createRewardRegistry([
     chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward,
-    chapterFiveReward, chapterSixReward, chapterSevenReward, chapterEightReward, chapterNineReward
+    chapterFiveReward, chapterSixReward, chapterSevenReward, chapterEightReward, chapterNineReward, chapterTenReward
   ]);
   const shopCatalog = createShopCatalog([]);
   const economyActions = createEconomyActionDefinitions({ rewardRegistry, shopCatalog });

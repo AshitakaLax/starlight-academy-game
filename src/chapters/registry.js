@@ -8,13 +8,14 @@ import { chapterSixDefinition } from "./chapterSix.js";
 import { chapterSevenDefinition } from "./chapterSeven.js";
 import { chapterEightDefinition } from "./chapterEight.js";
 import { chapterNineDefinition } from "./chapterNine.js";
+import { chapterTenDefinition } from "./chapterTen.js";
 
 /**
  * Data-driven chapter registry. New chapter files can add authored content
  * without changing the runtime's activity or progression contracts.
  */
 export { createChapterCatalog, createChapterDefinition, validateChapterDefinition };
-export const chapterDefinitions = Object.freeze([chapterOneDefinition, chapterTwoDefinition, chapterThreeDefinition, chapterFourDefinition, chapterFiveDefinition, chapterSixDefinition, chapterSevenDefinition, chapterEightDefinition, chapterNineDefinition]);
+export const chapterDefinitions = Object.freeze([chapterOneDefinition, chapterTwoDefinition, chapterThreeDefinition, chapterFourDefinition, chapterFiveDefinition, chapterSixDefinition, chapterSevenDefinition, chapterEightDefinition, chapterNineDefinition, chapterTenDefinition]);
 
 export function getChapterDefinition(id) {
   return chapterDefinitions.find((chapter) => chapter.id === id) ?? null;

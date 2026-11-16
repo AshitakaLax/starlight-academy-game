@@ -29,6 +29,7 @@ import { chapterSixReward } from "../src/chapters/chapterSix.js";
 import { chapterSevenReward } from "../src/chapters/chapterSeven.js";
 import { chapterEightReward } from "../src/chapters/chapterEight.js";
 import { chapterNineReward } from "../src/chapters/chapterNine.js";
+import { chapterTenReward } from "../src/chapters/chapterTen.js";
 import { chapterDefinitions, getChapterDefinition } from "../src/chapters/registry.js";
 import { chapterThreeWordBank, getChapterThreeWords } from "../src/data/wordBuildingLexicon.js";
 
@@ -42,7 +43,7 @@ function assembleCuratedWord(entry) {
 
 test("Chapter 3 is registered after Chapter 2 with prefix, suffix, potion, and story activities", () => {
   assert.deepEqual(chapterDefinitions.map((chapter) => chapter.id), [
-    "chapter-01", "chapter-02", "chapter-03", "chapter-04", "chapter-05", "chapter-06", "chapter-07", "chapter-08", "chapter-09"
+    "chapter-01", "chapter-02", "chapter-03", "chapter-04", "chapter-05", "chapter-06", "chapter-07", "chapter-08", "chapter-09", "chapter-10"
   ]);
   assert.equal(getChapterDefinition("chapter-03"), chapterThreeDefinition);
   assert.equal(getChapterDefinition("chapter-04"), chapterFourDefinition);
@@ -170,7 +171,7 @@ test("Professor Hoot offers prefix, suffix, and context-specific three-stage ass
 
 test("Chapter 3 waits for Chapter 2, resumes its checkpoint, and grants its Lexicon Lantern only once", () => {
   const chapterCatalog = createChapterCatalog(chapterDefinitions);
-  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward, chapterFiveReward, chapterSixReward, chapterSevenReward, chapterEightReward, chapterNineReward]);
+  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward, chapterFiveReward, chapterSixReward, chapterSevenReward, chapterEightReward, chapterNineReward, chapterTenReward]);
   const shopCatalog = createShopCatalog([]);
   const economyActions = createEconomyActionDefinitions({ rewardRegistry, shopCatalog });
   const store = createGameStore({

@@ -26,6 +26,7 @@ import {
 } from "../src/chapters/chapterSeven.js";
 import { chapterEightReward } from "../src/chapters/chapterEight.js";
 import { chapterNineReward } from "../src/chapters/chapterNine.js";
+import { chapterTenReward } from "../src/chapters/chapterTen.js";
 import { chapterDefinitions, getChapterDefinition } from "../src/chapters/registry.js";
 import {
   grammarSentenceBank, readingPassageBank, getGrammarExamples, getReadingPassages
@@ -41,7 +42,7 @@ function wholeWordCount(sentence, word) {
 
 test("Chapter 7 is registered after Chapter 6 with grammar, main-idea, and inference activities", () => {
   assert.deepEqual(chapterDefinitions.map((chapter) => chapter.id), [
-    "chapter-01", "chapter-02", "chapter-03", "chapter-04", "chapter-05", "chapter-06", "chapter-07", "chapter-08", "chapter-09"
+    "chapter-01", "chapter-02", "chapter-03", "chapter-04", "chapter-05", "chapter-06", "chapter-07", "chapter-08", "chapter-09", "chapter-10"
   ]);
   assert.equal(getChapterDefinition("chapter-07"), chapterSevenDefinition);
   assert.equal(validateChapterDefinition(chapterSevenDefinition), true);
@@ -177,7 +178,7 @@ test("Chapter 7 waits for Chapter 6, resumes its checkpoint, and grants Athena's
   const chapterCatalog = createChapterCatalog(chapterDefinitions);
   const rewardRegistry = createRewardRegistry([
     chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward,
-    chapterFiveReward, chapterSixReward, chapterSevenReward, chapterEightReward, chapterNineReward
+    chapterFiveReward, chapterSixReward, chapterSevenReward, chapterEightReward, chapterNineReward, chapterTenReward
   ]);
   const shopCatalog = createShopCatalog([]);
   const economyActions = createEconomyActionDefinitions({ rewardRegistry, shopCatalog });

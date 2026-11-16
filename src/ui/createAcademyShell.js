@@ -1335,6 +1335,68 @@ export function createAcademyShell({
     parent.append(figure);
   }
 
+  function renderGrandStarlightShowcase(parent, routineId) {
+    const showcase = documentRef.createElement("section");
+    showcase.className = "chapter-showcase";
+    showcase.setAttribute("aria-label", "Your academy progress showcase");
+    appendChapterText(showcase, "h3", "Your championship keepsakes", "chapter-showcase-title");
+    const grid = documentRef.createElement("div");
+    grid.className = "chapter-showcase-grid";
+
+    function addCard(title, value, detail) {
+      const card = documentRef.createElement("article");
+      card.className = "chapter-showcase-card";
+      appendChapterText(card, "h4", title);
+      appendChapterText(card, "p", value, "chapter-showcase-value");
+      appendChapterText(card, "p", detail, "chapter-showcase-detail");
+      grid.append(card);
+    }
+
+    const completedChapters = chapterRuntimeService?.getSnapshot?.().chapters
+      ?.filter((chapter) => chapter.id !== "chapter-10" && chapter.progress?.status === "completed").length ?? 0;
+    addCard(
+      "Your academy character",
+      "The Starlight Explorer",
+      "Your character has completed " + completedChapters + " earlier chapters and reached the Grand Starlight Championship."
+    );
+
+    const equipped = wardrobeService?.getPreview?.().equipped ?? [];
+    const outfit = equipped
+      .filter((entry) => entry.item)
+      .map((entry) => entry.slot.charAt(0).toUpperCase() + entry.slot.slice(1) + ": " + entry.item.title);
+    addCard(
+      "Your chosen outfit",
+      outfit.length ? outfit.join(" · ") : "Ready for a new look",
+      outfit.length ? "These are the pieces currently equipped in your Wardrobe Studio." : "Visit the Wardrobe Studio whenever you would like to choose an outfit."
+    );
+
+    const activePet = petCollectionService?.getSnapshot?.().activePet ?? null;
+    if (activePet) {
+      const palette = activePet.appearancePalettes?.find((entry) => entry.id === activePet.appearance?.paletteId);
+      addCard(
+        "Your companion",
+        (activePet.symbol ? activePet.symbol + " " : "") + activePet.title,
+        (palette ? palette.label + " palette · " : "")
+          + activePet.careMoments + " care moments · " + activePet.bondExperience + " bond experience"
+      );
+    } else {
+      addCard("Your companion", "A friend is waiting", "Companions are optional. Visit Pets whenever you are ready.");
+    }
+
+    const routine = gymnasticsService?.getSnapshot?.().routines
+      ?.find((entry) => entry.id === routineId) ?? null;
+    const progress = routine?.progress;
+    const gymnasticsDetail = progress?.completedRuns
+      ? progress.completedRuns + " completed practice" + (progress.completedRuns === 1 ? "" : "s")
+        + " · best score " + progress.personalBest.combinedScore + "% · "
+        + "★".repeat(progress.personalBest.starRating) + "☆".repeat(3 - progress.personalBest.starRating)
+      : "No saved score yet. Your first routine can be just for exploring.";
+    addCard("Your ribbon progress", routine?.title ?? "Starlight Ribbon Waltz", gymnasticsDetail);
+
+    showcase.append(grid);
+    parent.append(showcase);
+  }
+
   function renderChapterActivity(snapshot, activity) {
     const body = panel.chapterActivityBody;
     body.replaceChildren();
@@ -1345,6 +1407,9 @@ export function createAcademyShell({
       scene.className = "chapter-story-scene";
       for (const paragraph of Array.isArray(metadata.paragraphs) ? metadata.paragraphs : [activity.description]) {
         appendChapterText(scene, "p", paragraph);
+      }
+      if (metadata.showcase === "grand-starlight") {
+        renderGrandStarlightShowcase(scene, metadata.routineId);
       }
       if (narrationService && metadata.paragraphs?.length) {
         const readButton = documentRef.createElement("button");

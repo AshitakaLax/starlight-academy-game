@@ -1307,3 +1307,56 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   .chapter-chimera-number { min-height: 98px; padding: 8px 4px; }
   .chapter-chimera-kicker { font-size: .54rem; }
 }
+
+/* Chapter 10: live learner, wardrobe, companion, and gymnastics progress showcase. */
+.chapter-showcase {
+  width: 100%;
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid #ded2ed;
+  border-radius: 18px;
+  background: #fbf8ff;
+  text-align: left;
+}
+.chapter-showcase-title {
+  margin: 0 0 .75rem;
+  color: #59466f;
+  font: 800 1rem/1.3 Georgia, serif;
+}
+.chapter-showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: .7rem;
+}
+.chapter-showcase-card {
+  min-width: 0;
+  padding: .85rem;
+  border: 1px solid #e8dff0;
+  border-radius: 13px;
+  background: #fff;
+}
+.chapter-showcase-card h4 {
+  margin: 0 0 .45rem;
+  color: #8a6a9f;
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.chapter-showcase-value {
+  margin: 0 0 .35rem;
+  color: #554064;
+  font-weight: 850;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.chapter-showcase-detail {
+  margin: 0;
+  color: #766b80;
+  font-size: .78rem;
+  line-height: 1.5;
+}
+@media (max-width: 560px) {
+  .chapter-showcase { padding: .8rem; }
+  .chapter-showcase-grid { grid-template-columns: minmax(0, 1fr); }
+}

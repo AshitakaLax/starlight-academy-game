@@ -28,6 +28,7 @@ import { chapterSixActivityDefinitions, chapterSixHintDefinitions, chapterSixRew
 import { chapterSevenActivityDefinitions, chapterSevenHintDefinitions, chapterSevenReward } from "./chapters/chapterSeven.js";
 import { chapterEightActivityDefinitions, chapterEightHintDefinitions, chapterEightReward } from "./chapters/chapterEight.js";
 import { chapterNineActivityDefinitions, chapterNineHintDefinitions, chapterNineReward } from "./chapters/chapterNine.js";
+import { chapterTenReward } from "./chapters/chapterTen.js";
 import { createActivityRegistry } from "./systems/curriculum/activityDefinitions.js";
 import { createQuestionGeneratorRegistry } from "./systems/curriculum/questionGenerators.js";
 import { createHintRegistry } from "./systems/hints/createHintRegistry.js";
@@ -79,7 +80,7 @@ async function launch() {
   narrationStatus.setAttribute("aria-live", "polite");
   narrationStatus.textContent = "Narration is optional and turned off.";
 
-  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward, chapterFiveReward, chapterSixReward, chapterSevenReward, chapterEightReward, chapterNineReward]);
+  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward, chapterFiveReward, chapterSixReward, chapterSevenReward, chapterEightReward, chapterNineReward, chapterTenReward]);
   const activityRegistry = createActivityRegistry([
     ...chapterOneActivityDefinitions,
     ...chapterTwoActivityDefinitions,
