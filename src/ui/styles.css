@@ -708,3 +708,36 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   .chapter-word-parts-visual, .chapter-potion-visual { padding: 11px; }
   .chapter-word-part { min-width: 82px; flex-basis: 84px; padding: 8px; }
 }
+
+
+/* Geometry diagrams and measurement grids for Chapter 4. */
+.chapter-geometry-visual {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin: 16px 0 18px;
+  padding: 14px;
+  border: 1px solid #dfd2e9;
+  border-radius: 16px;
+  background: radial-gradient(circle at 88% 12%, #f4e9ff 0, transparent 10rem), linear-gradient(135deg, #fcf8ff, #fffaf1);
+}
+.chapter-geometry-svg {
+  display: block;
+  width: min(100%, 330px);
+  max-height: 250px;
+  overflow: visible;
+}
+.chapter-geometry-svg polygon { vector-effect: non-scaling-stroke; }
+.chapter-geometry-caption {
+  max-width: 34rem;
+  margin: 0;
+  color: #725a87;
+  font-size: .76rem;
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: center;
+}
+@media (max-width: 720px) {
+  .chapter-geometry-visual { padding: 10px; }
+  .chapter-geometry-svg { max-height: 215px; }
+}
