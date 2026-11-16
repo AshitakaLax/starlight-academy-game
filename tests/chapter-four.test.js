@@ -24,9 +24,10 @@ import {
 import { chapterDefinitions, getChapterDefinition } from "../src/chapters/registry.js";
 import { chapterFiveReward } from "../src/chapters/chapterFive.js";
 import { chapterSixReward } from "../src/chapters/chapterSix.js";
+import { chapterSevenReward } from "../src/chapters/chapterSeven.js";
 
 test("Chapter 4 is registered after Chapter 3 with five geometry skills and the correct prerequisite", () => {
-  assert.deepEqual(chapterDefinitions.map((chapter) => chapter.id), ["chapter-01", "chapter-02", "chapter-03", "chapter-04", "chapter-05", "chapter-06"]);
+  assert.deepEqual(chapterDefinitions.map((chapter) => chapter.id), ["chapter-01", "chapter-02", "chapter-03", "chapter-04", "chapter-05", "chapter-06", "chapter-07"]);
   assert.equal(getChapterDefinition("chapter-04"), chapterFourDefinition);
   assert.equal(validateChapterDefinition(chapterFourDefinition), true);
   assert.deepEqual(chapterFourDefinition.prerequisiteChapterIds, ["chapter-03"]);
@@ -133,7 +134,7 @@ test("Professor Hoot supplies shape, symmetry, angle, perimeter, and area demons
 
 test("Chapter 4 waits for Chapter 3, resumes its beam-course checkpoint, and awards its pin only once", () => {
   const chapterCatalog = createChapterCatalog(chapterDefinitions);
-  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward, chapterFiveReward, chapterSixReward]);
+  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward, chapterFiveReward, chapterSixReward, chapterSevenReward]);
   const shopCatalog = createShopCatalog([]);
   const economyActions = createEconomyActionDefinitions({ rewardRegistry, shopCatalog });
   const store = createGameStore({

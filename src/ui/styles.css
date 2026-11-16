@@ -910,3 +910,60 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   .chapter-photosynthesis-roles { grid-template-columns: 1fr; }
   .chapter-photosynthesis-roles li { min-height: 40px; }
 }
+
+ 
+/* Athena's grammar and reading cards keep the learning text readable and focused. */
+.chapter-language-visual {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: min(100%, 42rem);
+  margin: 16px auto 18px;
+  padding: 18px 20px;
+  border: 1px solid #ddd1ec;
+  border-radius: 18px;
+  background: radial-gradient(circle at 90% 8%, #f0e8fb 0, transparent 12rem), linear-gradient(135deg, #fbf8ff, #fffaf2);
+  text-align: center;
+}
+.chapter-language-title {
+  margin: 0;
+  color: #624a82;
+  font-size: .96rem;
+}
+.chapter-language-sentence {
+  max-width: 36rem;
+  margin: 4px 0;
+  color: #403a4e;
+  font-size: 1.05rem;
+  font-weight: 650;
+  line-height: 1.65;
+}
+.chapter-language-sentence mark {
+  padding: 2px 5px;
+  border-radius: 6px;
+  background: #f6e6a9;
+  color: #483a1d;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.chapter-reading-passage {
+  max-width: 38rem;
+  margin: 4px 0;
+  color: #454052;
+  font-size: .91rem;
+  line-height: 1.75;
+  text-align: left;
+}
+.chapter-language-caption {
+  max-width: 36rem;
+  margin: 0;
+  color: #776b87;
+  font-size: .76rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+@media (max-width: 720px) {
+  .chapter-language-visual { padding: 14px; }
+  .chapter-language-sentence { font-size: .96rem; }
+  .chapter-reading-passage { font-size: .86rem; }
+}

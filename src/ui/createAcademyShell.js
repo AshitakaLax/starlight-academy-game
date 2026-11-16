@@ -994,6 +994,46 @@ export function createAcademyShell({
   }
 
 
+  function renderChapterLanguageStimulus(parent, stimulus) {
+    if (!stimulus || !["grammar-target", "reading-passage"].includes(stimulus.kind)) return;
+    const figure = documentRef.createElement("figure");
+    figure.className = "chapter-language-visual";
+
+    if (stimulus.kind === "grammar-target") {
+      appendChapterText(figure, "h5", "Word study", "chapter-language-title");
+      const sentence = documentRef.createElement("p");
+      sentence.className = "chapter-language-sentence";
+      const source = String(stimulus.sentence ?? "");
+      const target = String(stimulus.targetWord ?? "");
+      const start = target ? source.toLocaleLowerCase().indexOf(target.toLocaleLowerCase()) : -1;
+      if (start >= 0) {
+        sentence.append(documentRef.createTextNode(source.slice(0, start)));
+        const mark = documentRef.createElement("mark");
+        mark.textContent = source.slice(start, start + target.length);
+        sentence.append(mark);
+        sentence.append(documentRef.createTextNode(source.slice(start + target.length)));
+      } else {
+        sentence.textContent = source;
+      }
+      figure.append(sentence);
+      appendChapterText(figure, "figcaption", "Study the highlighted word in its sentence.", "chapter-language-caption");
+    } else {
+      appendChapterText(figure, "h5", stimulus.title ?? "Reading passage", "chapter-language-title");
+      appendChapterText(figure, "p", stimulus.passage ?? "", "chapter-reading-passage");
+      appendChapterText(
+        figure,
+        "figcaption",
+        stimulus.focus === "main-idea"
+          ? "Notice how the details connect to one central idea."
+          : "Use details from the passage to support your conclusion.",
+        "chapter-language-caption"
+      );
+    }
+
+    parent.append(figure);
+  }
+
+
   function renderChapterHabitatStimulus(parent, stimulus) {
     if (!stimulus || !["habitat-creature", "adaptation-clue", "ecosystem-connection"].includes(stimulus.kind)) return;
     const figure = documentRef.createElement("figure");
@@ -1177,6 +1217,7 @@ export function createAcademyShell({
       renderChapterGeometryStimulus(card, question.stimulus);
       renderChapterHabitatStimulus(card, question.stimulus);
       renderChapterPlantStimulus(card, question.stimulus);
+      renderChapterLanguageStimulus(card, question.stimulus);
       appendChapterText(card, "p", "Choose with the mouse or press 1–4. Press H whenever you would like a hint.", "chapter-question-help");
       const choices = documentRef.createElement("div");
       choices.className = "chapter-answer-grid";

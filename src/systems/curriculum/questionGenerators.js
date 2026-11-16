@@ -3,6 +3,7 @@ import { gameConfig } from "../../config/gameConfig.js";
 import { getChapterThreeWords } from "../../data/wordBuildingLexicon.js";
 import { getHabitatCreatures, getHabitatAdaptations, getHabitatEcosystemConnections } from "../../data/habitatLexicon.js";
 import { getPlantLifecycleStages, getPlantLifecycleTransitions, getPlantResourceScenarios, photosynthesisChoiceBank, PHOTOSYNTHESIS_INPUTS_ANSWER } from "../../data/plantLexicon.js";
+import { getGrammarExamples, getReadingPassages } from "../../data/languageArtsLexicon.js";
 
 function hashSeed(seed) {
   if (typeof seed === "number" && Number.isFinite(seed)) return seed >>> 0;
@@ -511,6 +512,56 @@ const BUILT_IN_GENERATORS = Object.freeze({
             meaning: part.meaning
           }))
         ]
+      })
+    };
+  }
+  ,
+  "language.parts-of-speech": ({ random, constraints, tier }) => {
+    const examples = getGrammarExamples(tier);
+    const example = random.pick(examples);
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    const categories = ["noun", "verb", "adjective", "adverb"];
+    return {
+      prompt: "What part of speech is the highlighted word?",
+      correctAnswer: example.partOfSpeech,
+      choices: makeDistinctChoices(example.partOfSpeech, categories, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "grammar-target",
+        exampleId: example.id,
+        sentence: example.sentence,
+        targetWord: example.targetWord
+      })
+    };
+  },
+  "language.reading-main-idea": ({ random, constraints, tier }) => {
+    const passage = random.pick(getReadingPassages(tier));
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "Which statement best expresses the main idea of this passage?",
+      correctAnswer: passage.mainIdea,
+      choices: makeDistinctChoices(passage.mainIdea, passage.mainIdeaChoices, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "reading-passage",
+        passageId: passage.id,
+        title: passage.title,
+        passage: passage.passage,
+        focus: "main-idea"
+      })
+    };
+  },
+  "language.reading-inference": ({ random, constraints, tier }) => {
+    const passage = random.pick(getReadingPassages(tier));
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "Which conclusion can you reasonably infer from the passage?",
+      correctAnswer: passage.inference,
+      choices: makeDistinctChoices(passage.inference, passage.inferenceChoices, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "reading-passage",
+        passageId: passage.id,
+        title: passage.title,
+        passage: passage.passage,
+        focus: "inference"
       })
     };
   }
