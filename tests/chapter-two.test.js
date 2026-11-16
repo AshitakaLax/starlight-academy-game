@@ -154,7 +154,6 @@ test("Chapter 2 waits for Chapter 1, resumes its checkpoint, and grants its rewa
   const resumed = chapterService.createSession("chapter-02");
   assert.equal(resumed.start().currentActivity.id, "chapter-02.harmony-lens");
   resumed.completeActivity();
-  resumed.completeActivity();
   const completed = resumed.completeActivity();
   assert.equal(completed.isComplete, true);
   assert.equal(completed.completedActivityCount, 4);
