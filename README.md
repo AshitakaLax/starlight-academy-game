@@ -70,7 +70,7 @@ build/
   build.mjs                Bundles and validates the offline HTML
   index.template.html      HTML shell with inline CSS/JS insertion points
 
-tests/                     Node built-in tests for foundation, state, save, input, UI, audio/narration, curriculum, hints, Chapters 1–10, Side Quests 1–20, rendering, and build
+tests/                     Node built-in tests for foundation, state, save, input, UI, audio/narration, curriculum, hints, Chapters 1–10, Side Quests 1–20, rendering, build, and integrated academy playthroughs
 dist/                       Generated, git-ignored HTML deliverable
 ~~~
 
@@ -149,4 +149,4 @@ Open that file locally in desktop Chrome or Edge. The packaging validator reject
 - Runtime modules reachable from the browser entry are bundled automatically, including the synthesized Web Audio engine and optional Web Speech narration.
 - No runtime network requests, CDN dependencies, external fonts, or external asset files are permitted.
 
-The chapter registry contains all ten chapters. The side-quest registry contains two optional quests for each chapter. The same content-registration factory is used by browser startup and automated contract tests, so missing generator, hint, skill, activity, or reward references fail before play begins.
+The chapter registry contains all ten chapters. The side-quest registry contains two optional quests for each chapter. The same content-registration factory is used by browser startup and automated contract tests, so missing generator, hint, skill, activity, or reward references fail before play begins. The cross-system integration suite runs all chapter and quest completions through the real runtime, verifies reward and cosmetic behavior, saves and restores the academy, and checks hint, mastery, pet-care, and gymnastics flows.
