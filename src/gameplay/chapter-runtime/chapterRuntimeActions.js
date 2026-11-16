@@ -1,6 +1,6 @@
 import { isPlainObject } from "../../core/state/stateUtils.js";
 import { gameConfig } from "../../config/gameConfig.js";
-import { selectChapterRuntimeProgress } from "./chapterRuntimeState.js";
+import { compareChapterRunQuality, createChapterRunRecord, selectChapterRuntimeProgress } from "./chapterRuntimeState.js";
 
 function hasOnlyKeys(value, allowed) {
   return Object.keys(value).every((key) => allowed.includes(key));
@@ -129,11 +129,11 @@ export function createChapterRuntimeActionDefinitions({ chapterCatalog } = {}) {
               payload.activityResults[index]?.activityId !== entry.activityId
               || payload.activityResults[index]?.status !== entry.status)) return state;
         const activityResults = payload.activityResults.map((entry) => Object.freeze({ ...entry }));
-        const run = Object.freeze({
-          completedActivityCount: activityResults.filter((entry) => entry.status === "completed").length,
-          skippedActivityCount: activityResults.filter((entry) => entry.status === "skipped").length,
-          activityResults: Object.freeze(activityResults)
-        });
+        const chapter = chapterCatalog.get(payload.chapterId);
+        const run = createChapterRunRecord(activityResults, chapter);
+        const personalBest = compareChapterRunQuality(run, progress.personalBest) > 0
+          ? run
+          : progress.personalBest ?? run;
         return copyProgress(state, payload.chapterId, {
           ...progress,
           status: "completed",
@@ -141,6 +141,7 @@ export function createChapterRuntimeActionDefinitions({ chapterCatalog } = {}) {
           activityResults,
           completedRuns: Math.min(Number.MAX_SAFE_INTEGER, progress.completedRuns + 1),
           lastRun: run,
+          personalBest,
           recentRuns: Object.freeze([...progress.recentRuns, run].slice(-gameConfig.chapterRuntime.completedHistoryLimit)),
           lastExitActivityIndex: null
         });

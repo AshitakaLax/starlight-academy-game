@@ -228,6 +228,45 @@ test("replaying preserves the previous run and cannot claim a chapter reward twi
   assert.equal(economyService.getState().rewardClaims["reward.chapter-01-star-crown"], 1);
 });
 
+test("replay stars and lifetime personal best improve without being overwritten by a lower run", () => {
+  const first = harness();
+  const initial = first.service.createSession("chapter-01");
+  initial.start();
+  initial.skipActivity();
+  initial.completeActivity();
+  const firstBest = initial.completeActivity().completionReceipt;
+  assert.equal(firstBest.personalBestImproved, true);
+  assert.equal(firstBest.personalBest.scorePercent, 67);
+  assert.equal(firstBest.personalBest.starRating, 1);
+
+  const replay = first.service.createSession("chapter-01");
+  replay.start();
+  replay.completeActivity();
+  replay.completeActivity();
+  const improved = replay.completeActivity().completionReceipt;
+  assert.equal(improved.personalBestImproved, true);
+  assert.equal(improved.personalBest.scorePercent, 100);
+  assert.equal(improved.personalBest.starRating, 3);
+
+  const lowerReplay = first.service.createSession("chapter-01");
+  lowerReplay.start();
+  lowerReplay.skipActivity();
+  lowerReplay.skipActivity();
+  const lowerReceipt = lowerReplay.skipActivity().completionReceipt;
+  assert.equal(lowerReceipt.personalBestImproved, false);
+  assert.equal(lowerReceipt.personalBest.scorePercent, 100);
+  assert.equal(lowerReceipt.rewards[0].granted, false);
+
+  const saved = JSON.parse(JSON.stringify(first.store.getState()));
+  const restored = harness(saved);
+  const progress = restored.service.getProgress().chapters["chapter-01"];
+  assert.equal(progress.completedRuns, 3);
+  assert.equal(progress.lastRun.scorePercent, 0);
+  assert.equal(progress.personalBest.scorePercent, 100);
+  assert.equal(progress.personalBest.starRating, 3);
+  assert.equal(restored.economyService.getBalance().starGems, 25);
+});
+
 test("a completed prerequisite unlocks the next chapter", () => {
   const { service } = harness();
   const first = service.createSession("chapter-01");

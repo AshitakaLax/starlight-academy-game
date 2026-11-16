@@ -61,6 +61,8 @@ export { createChapterCatalog, createChapterDefinition, validateChapterDefinitio
 export { createInitialChapterRuntimeState, selectChapterRuntimeProgress } from "./gameplay/chapter-runtime/chapterRuntimeState.js";
 export { createChapterRuntimeActionDefinitions } from "./gameplay/chapter-runtime/chapterRuntimeActions.js";
 export { createChapterRuntimeService } from "./gameplay/chapter-runtime/createChapterRuntimeService.js";
+export { buildQuestBoardSnapshot } from "./gameplay/chapter-runtime/questBoard.js";
+export { createChapterRunRecord, compareChapterRunQuality } from "./gameplay/chapter-runtime/chapterRuntimeState.js";
 
 export { chapterOneActivityDefinitions, chapterOneHintDefinitions, chapterOneReward, chapterOneDefinition } from "./chapters/chapterOne.js";
 export { chapterTwoActivityDefinitions, chapterTwoHintDefinitions, chapterTwoReward, chapterTwoDefinition } from "./chapters/chapterTwo.js";

@@ -25,3 +25,8 @@ A chapter defines its own ordered `activities`. Each activity has a stable chapt
 - `createChapterRuntimeService.js` coordinates sessions, resumes, completion, and reward claims.
 - `src/chapters/registry.js` exports the shared registry and current authored definitions.
 - `tests/chapter-runtime.test.js` covers sequence differences, prerequisites, replay, checkpoint integrity, reward idempotency, and save restoration.
+
+
+## Lifetime replay records
+
+Completed chapter and quest runs are scored by the percentage of activities completed rather than skipped. The configured chapter-runtime star thresholds map that percentage to a zero-to-three-star rating. Each progression record stores its lifetime personal best separately from the bounded recent-run list, so replay history can remain small without losing achievements. Restored older saves derive an initial best from their valid recent and last-run records.

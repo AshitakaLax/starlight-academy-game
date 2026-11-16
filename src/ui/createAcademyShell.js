@@ -5,6 +5,7 @@ import { checkActivityAnswer } from "../systems/curriculum/answerRules.js";
 import { selectSupportedSkillTier } from "../systems/curriculum/adaptiveDifficulty.js";
 import { createChapterInputController } from "../gameplay/chapter-runtime/chapterInput.js";
 import { selectEconomy } from "../systems/economy/economyState.js";
+import { buildQuestBoardSnapshot } from "../gameplay/chapter-runtime/questBoard.js";
 import { gameConfig } from "../config/gameConfig.js";
 import { renderColoringCanvas } from "../gameplay/coloring/renderColoringCanvas.js";
 import { createAcademyScene } from "../rendering/scenes/createAcademyScene.js";
@@ -44,10 +45,10 @@ const DESTINATIONS = Object.freeze({
   }),
   quests: Object.freeze({
     kicker: "LITTLE EXTRA ADVENTURES",
-    title: "There is always more to discover.",
-    description: "Optional side quests add playful ways to practice, experiment, and explore beyond the main chapter path.",
-    heroTitle: "Follow a curious little side path.",
-    heroDescription: "Twenty side quests are planned across the academy. They will offer extra challenges and discoveries without ever blocking the main adventure.",
+    title: "Your adventures, stars, and discoveries.",
+    description: "See every chapter and optional quest in one place, celebrate skill mastery, and replay to improve your personal best.",
+    heroTitle: "Every little achievement adds to your constellation.",
+    heroDescription: "Your quest board gathers chapter progress, optional adventures, skill records, and your best star ratings.",
     button: "Return to the chapter path"
   })
 });
@@ -116,6 +117,23 @@ const MARKUP = String.raw`<div class="academy-shell" data-text-scale="normal" da
             <p data-chapter-session-reward>Wonderful work. Your chapter reward has been recorded.</p>
             <button class="wardrobe-primary-action" type="button" data-chapter-action="exit">Back to chapter path</button>
           </section>
+        </section>
+      </section>
+      <section class="quest-board-panel" data-quest-board-panel hidden aria-labelledby="quest-board-title">
+        <div class="quest-board-heading">
+          <div><p class="academy-overline">YOUR ACADEMY RECORD</p><h2 id="quest-board-title">Quest Board &amp; Stars</h2>
+            <p>Track all ten chapter adventures and twenty optional quests. Replay any unlocked adventure to improve its personal-best score without losing earlier achievements.</p></div>
+          <span aria-hidden="true">✧</span>
+        </div>
+        <div class="quest-board-summary" data-quest-board-summary aria-label="Academy progress summary"></div>
+        <section class="quest-board-section" aria-labelledby="quest-board-chapters-title">
+          <div class="quest-board-section-heading"><h3 id="quest-board-chapters-title">Chapter adventures</h3><span>10 chapters</span></div>
+          <div class="quest-board-grid" data-quest-chapter-grid></div>
+        </section>
+        <section class="quest-board-section quest-board-optional" aria-labelledby="quest-board-quests-title">
+          <div class="quest-board-section-heading"><h3 id="quest-board-quests-title">Optional side quests</h3><span>20 quests</span></div>
+          <p class="quest-board-note">Side quests are extra practice. They never block the next chapter.</p>
+          <div class="quest-board-grid" data-quest-quest-grid></div>
         </section>
       </section>
       <section class="gymnastics-panel" data-gymnastics-panel hidden aria-labelledby="gymnastics-panel-title">
@@ -382,6 +400,10 @@ export function createAcademyShell({
     quickPaths: requireElement(root, ".quick-paths"),
     chapterPathPanel: requireElement(root, "[data-chapter-path-panel]"),
     chapterPathList: requireElement(root, "[data-chapter-path-list]"),
+    questBoardPanel: requireElement(root, "[data-quest-board-panel]"),
+    questBoardSummary: requireElement(root, "[data-quest-board-summary]"),
+    questChapterGrid: requireElement(root, "[data-quest-chapter-grid]"),
+    questQuestGrid: requireElement(root, "[data-quest-quest-grid]"),
     chapterSession: requireElement(root, "[data-chapter-session]"),
     chapterSessionStatus: requireElement(root, "[data-chapter-session-status]"),
     chapterSessionProgress: requireElement(root, "[data-chapter-session-progress]"),
@@ -473,6 +495,7 @@ export function createAcademyShell({
   let coloringStatusMessage = "Your design saves automatically as you paint.";
   let activeChapterSession = null;
   let activeChapterId = null;
+  let activeChapterReturnDock = null;
   let chapterQuestion = null;
   let chapterQuestionForActivity = null;
   let chapterQuestionIndex = 0;
@@ -1892,8 +1915,14 @@ export function createAcademyShell({
       if (completionTitle) completionTitle.textContent = isOptionalQuest ? "Quest complete!" : "Chapter complete!";
       panel.chapterSessionTitle.textContent = snapshot.title;
       panel.chapterSessionDescription.textContent = snapshot.description;
+      const currentRun = snapshot.completionReceipt?.currentRun;
+      const personalBest = snapshot.completionReceipt?.personalBest;
       panel.chapterSessionType.textContent = snapshot.completedActivityCount + " completed · "
-        + snapshot.skippedActivityCount + " skipped · " + (snapshot.completionReceipt?.rewards?.filter((reward) => reward.granted).length ?? 0) + " new rewards";
+        + snapshot.skippedActivityCount + " skipped · "
+        + (currentRun?.scorePercent ?? 0) + "% this run · "
+        + (currentRun?.starRating ?? 0) + " stars · "
+        + "Personal best " + (personalBest?.scorePercent ?? 0) + "% · "
+        + (snapshot.completionReceipt?.rewards?.filter((reward) => reward.granted).length ?? 0) + " new rewards";
       panel.chapterSessionActions.hidden = true;
       panel.chapterSessionCompletion.hidden = false;
       const granted = snapshot.completionReceipt?.rewards?.filter((reward) => reward.granted).length ?? 0;
@@ -1905,12 +1934,15 @@ export function createAcademyShell({
         : wardrobeReceipt?.alreadyOwnedItemIds?.length
           ? " Your chapter outfit is already waiting in your Wardrobe."
           : "";
+      const bestMessage = snapshot.completionReceipt?.personalBestImproved
+        ? " You earned a new personal best!"
+        : " Your previous personal best remains saved.";
       panel.chapterSessionReward.textContent = (granted > 0
         ? (isOptionalQuest
           ? "Your optional quest reward has been added to your academy progress. These extra adventures are separate from chapter completion."
           : "Your major chapter reward has been added to your academy progress. Replay is always welcome, but rewards are one-time.")
         : "Wonderful work. This replay kept your progress and did not duplicate any one-time rewards.")
-        + wardrobeMessage;
+        + bestMessage + wardrobeMessage;
       return;
     }
     panel.chapterSessionStatus.textContent = "Your place is saved automatically after each activity. You can safely exit at any time.";
@@ -1931,6 +1963,108 @@ export function createAcademyShell({
     panel.chapterSessionCompletion.hidden = true;
   }
 
+  function renderQuestBoard() {
+    if (!chapterRuntimeService) {
+      panel.questBoardSummary.textContent = "The chapter and quest runtime is not connected.";
+      panel.questChapterGrid.replaceChildren();
+      panel.questQuestGrid.replaceChildren();
+      return;
+    }
+
+    const board = buildQuestBoardSnapshot({
+      progressionEntries: chapterRuntimeService.getSnapshot().chapters,
+      state: store.getState()
+    });
+    const summaryCards = [
+      ["Completed", board.summary.completed + " of " + board.summary.totalCount],
+      ["In progress", String(board.summary.inProgress)],
+      ["Ready to begin", String(board.summary.available)],
+      ["Waiting to unlock", String(board.summary.locked)],
+      ["Stars earned", board.summary.starsEarned + " of " + board.summary.starsPossible],
+      ["Skills mastered", String(board.summary.masteredSkillCount)]
+    ];
+    const summaryFragment = documentRef.createDocumentFragment();
+    for (const [label, value] of summaryCards) {
+      const card = documentRef.createElement("article");
+      card.className = "quest-board-summary-card";
+      appendChapterText(card, "span", label, "quest-board-summary-label");
+      appendChapterText(card, "strong", value, "quest-board-summary-value");
+      summaryFragment.append(card);
+    }
+    panel.questBoardSummary.replaceChildren(summaryFragment);
+
+    function createBoardCard(entry) {
+      const card = documentRef.createElement("article");
+      card.className = "quest-board-card";
+      card.dataset.boardState = entry.status;
+      appendChapterText(
+        card,
+        "span",
+        entry.type === "quest" ? "OPTIONAL QUEST " + entry.id.slice(-2) : "CHAPTER " + entry.id.slice(-2),
+        "quest-board-number"
+      );
+      appendChapterText(card, "h4", entry.title, "quest-board-card-title");
+      appendChapterText(card, "p", entry.description, "quest-board-description");
+
+      const statusLabel = entry.status === "completed" ? "Completed"
+        : entry.status === "in-progress" ? "In progress · Activity " + Math.min(entry.currentActivityIndex + 1, entry.activityCount) + " of " + entry.activityCount
+          : entry.status === "locked" ? "Locked" : "Ready to begin";
+      appendChapterText(card, "p", statusLabel, "quest-board-status");
+
+      const starLine = documentRef.createElement("p");
+      starLine.className = "quest-board-stars";
+      starLine.setAttribute("aria-label", "Personal best: " + entry.stars + " of 3 stars");
+      starLine.textContent = entry.starsLabel + "  " + (entry.personalBestScore === null
+        ? "No personal best yet" : "Personal best " + entry.personalBestScore + "%");
+      card.append(starLine);
+
+      const mastery = entry.mastery.skillCount
+        ? "Mastery: " + entry.mastery.masteredSkillCount + " of " + entry.mastery.skillCount
+          + " skills demonstrated" + (entry.mastery.practicedSkillCount
+            ? " · " + entry.mastery.practicedSkillCount + " in practice" : "")
+        : "No curriculum skill record is attached to these activities.";
+      appendChapterText(card, "p", mastery, "quest-board-mastery");
+
+      if (entry.skills.length) {
+        const details = documentRef.createElement("details");
+        details.className = "quest-board-skill-details";
+        const summary = documentRef.createElement("summary");
+        summary.textContent = "View skill record";
+        const list = documentRef.createElement("ul");
+        for (const skill of entry.skills) {
+          const status = skill.masteryStatus === "demonstrated" ? "mastered"
+            : skill.masteryStatus === "in-progress" ? "in practice" : "not started";
+          appendChapterText(list, "li", skill.title + " — " + status);
+        }
+        details.append(summary, list);
+        card.append(details);
+      }
+
+      const action = documentRef.createElement("button");
+      action.type = "button";
+      action.className = "wardrobe-primary-action";
+      action.dataset.chapterAction = "start";
+      action.dataset.chapterId = entry.id;
+      if (entry.type === "quest") action.dataset.returnDock = "quests";
+      action.disabled = entry.status === "locked";
+      const sourceChapter = entry.prerequisiteChapterId
+        ? "Chapter " + entry.prerequisiteChapterId.slice(-2) : "an earlier chapter";
+      action.textContent = entry.status === "locked" ? "Complete " + sourceChapter + " to unlock"
+        : entry.status === "completed" ? (entry.type === "quest" ? "Replay optional quest" : "Replay chapter")
+          : entry.status === "in-progress" ? (entry.type === "quest" ? "Continue optional quest" : "Continue chapter")
+            : (entry.type === "quest" ? "Begin optional quest" : "Begin chapter");
+      card.append(action);
+      if (entry.completedRuns > 0) {
+        appendChapterText(card, "p", entry.completedRuns + " completed run" + (entry.completedRuns === 1 ? "" : "s")
+          + " · replay keeps your best stars and once-only rewards", "quest-board-run-history");
+      }
+      return card;
+    }
+
+    panel.questChapterGrid.replaceChildren(...board.chapters.map(createBoardCard));
+    panel.questQuestGrid.replaceChildren(...board.quests.map(createBoardCard));
+  }
+
   function handleChapterAction(event) {
     const answerControl = event.target?.closest?.("[data-chapter-answer]");
     if (answerControl && root.contains(answerControl)) {
@@ -1948,6 +2082,10 @@ export function createAcademyShell({
     const action = control.dataset.chapterAction;
     try {
       if (action === "start") {
+        activeChapterReturnDock = control.dataset.returnDock === "quests" ? "quests" : null;
+        if (store.getState()?.app?.activeDockId !== "chapters") {
+          store.dispatch({ type: "hub/dock-selected", payload: { dockId: "chapters" } });
+        }
         activeChapterId = control.dataset.chapterId;
         resetChapterQuestion();
         activeChapterSession = chapterRuntimeService.createSession(activeChapterId);
@@ -1985,6 +2123,9 @@ export function createAcademyShell({
         activeChapterSession = null;
         activeChapterId = null;
         resetChapterQuestion();
+        const returnDock = activeChapterReturnDock;
+        activeChapterReturnDock = null;
+        if (returnDock) store.dispatch({ type: "hub/dock-selected", payload: { dockId: returnDock } });
         if (gymnasticsSession && gymnasticsSession.getSnapshot().stage !== "completed") {
           stopGymnasticsClock();
           gymnasticsSession = null;
@@ -2492,14 +2633,18 @@ export function createAcademyShell({
     panel.heroDescription.textContent = destination.heroDescription;
     panel.heroButton.textContent = destination.button;
     const chaptersMode = dockId === "chapters";
+    const questsMode = dockId === "quests";
     panel.chapterPathPanel.hidden = !chaptersMode;
+    panel.questBoardPanel.hidden = !questsMode;
     if (chaptersMode) renderChapters();
     else if (activeChapterSession) {
       const exitingSession = activeChapterSession;
       activeChapterSession = null;
       activeChapterId = null;
+      activeChapterReturnDock = null;
       exitingSession.exit();
     }
+    if (questsMode) renderQuestBoard();
     const petsMode = dockId === "pets";
     panel.petCollectionPanel.hidden = !petsMode;
     if (petsMode) renderPetCollection();
@@ -2520,8 +2665,8 @@ export function createAcademyShell({
     const wardrobeMode = dockId === "wardrobe";
     if (!wardrobeMode) coloringOpen = false;
     const coloringMode = wardrobeMode && coloringOpen;
-    panel.hero.hidden = wardrobeMode || petsMode || gymnasticsMode;
-    panel.quickPaths.hidden = wardrobeMode || petsMode || gymnasticsMode;
+    panel.hero.hidden = wardrobeMode || petsMode || gymnasticsMode || questsMode;
+    panel.quickPaths.hidden = wardrobeMode || petsMode || gymnasticsMode || questsMode;
     panel.wardrobePanel.hidden = !wardrobeMode || coloringMode;
     panel.coloringPanel.hidden = !coloringMode;
     if (coloringMode) renderColoring();

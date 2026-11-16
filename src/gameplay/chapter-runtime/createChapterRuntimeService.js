@@ -129,6 +129,7 @@ export function createChapterRuntimeService({
           payload: { chapterId, activityResults }
         });
       } else {
+        const previousBest = progress.personalBest;
         store.dispatch({
           type: "chapters/chapter-completed",
           payload: { chapterId, activityResults }
@@ -138,11 +139,16 @@ export function createChapterRuntimeService({
         }
         const rewardReceipts = chapter.majorRewardIds.map((rewardId) => economyService.claimReward(rewardId));
         const wardrobeReceipt = wardrobeService?.unlockSource(chapterId) ?? null;
+        const completedProgress = readProgress();
         completionReceipt = freezeSnapshot({
           chapterId,
           completed: true,
           completedActivityCount: activityResults.filter((entry) => entry.status === "completed").length,
           skippedActivityCount: activityResults.filter((entry) => entry.status === "skipped").length,
+          currentRun: completedProgress.lastRun,
+          personalBest: completedProgress.personalBest,
+          personalBestImproved: !previousBest
+            || completedProgress.personalBest.scorePercent > previousBest.scorePercent,
           rewards: rewardReceipts,
           wardrobe: wardrobeReceipt
         });

@@ -13,3 +13,8 @@ The UI layer owns semantic DOM screens, dialogs, menus, settings, accessible fee
 - The frame uses a 16:9 desktop composition and adapts to narrower layouts. Text controls and focus indicators use consistent minimum sizes and visible keyboard focus.
 
 UI components dispatch named actions or use injected services for browser file operations. They must not write directly to progression state or implement gameplay rules.
+
+
+## Quest board
+
+The Quests destination uses the chapter runtime snapshot and curriculum evidence to show all required chapters and optional side quests. It presents prerequisite status, saved run counts, personal-best star ratings, and per-skill mastery state. Replays use the normal chapter session flow and configured reward-claim policies; side-quest launches return to the board when the player exits.

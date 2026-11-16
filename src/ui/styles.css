@@ -1394,3 +1394,44 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   .chapter-optional-quests { padding: .8rem; }
   .chapter-optional-quests-grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+
+/* The quest board combines required chapters, optional quests, mastery, and lifetime bests. */
+.quest-board-panel { display: grid; gap: 1.2rem; margin-top: 24px; }
+.quest-board-panel[hidden] { display: none !important; }
+.quest-board-heading, .quest-board-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.quest-board-heading h2 { margin: 2px 0 5px; color: #4f3b64; font-family: Georgia, serif; font-size: 1.45rem; }
+.quest-board-heading p:not(.academy-overline) { max-width: 740px; margin: 0; color: #7d6e88; font-size: .78rem; line-height: 1.55; }
+.quest-board-heading > span { color: #a283c1; font-size: 2.5rem; }
+.quest-board-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; }
+.quest-board-summary-card { display: grid; gap: .25rem; padding: .85rem; border: 1px solid #e8deef; border-radius: 13px; background: #fff; }
+.quest-board-summary-label { color: #8a7995; font-size: .65rem; font-weight: 800; letter-spacing: .045em; text-transform: uppercase; }
+.quest-board-summary-value { color: #5a456e; font-family: Georgia, serif; font-size: 1.12rem; }
+.quest-board-section { display: grid; gap: .75rem; padding: 1rem; border: 1px solid #e6dced; border-radius: 17px; background: rgba(255, 255, 255, .68); }
+.quest-board-optional { border-color: #eadcc4; background: #fffaf1; }
+.quest-board-section-heading h3 { margin: 0; color: #5a456e; font: 800 1.05rem/1.35 Georgia, serif; }
+.quest-board-section-heading > span { color: #8a7995; font-size: .65rem; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+.quest-board-note { margin: -.35rem 0 .15rem; color: #84745f; font-size: .72rem; }
+.quest-board-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15.5rem), 1fr)); gap: .75rem; }
+.quest-board-card { display: grid; align-content: start; justify-items: start; gap: .5rem; min-width: 0; padding: .95rem; border: 1px solid #e8deef; border-radius: 14px; background: #fff; }
+.quest-board-card[data-board-state="completed"] { border-color: #c8b2dc; background: #fcf9ff; }
+.quest-board-card[data-board-state="in-progress"] { border-color: #d4bfdc; background: #fffafd; }
+.quest-board-card[data-board-state="locked"] { border-color: #e6e0e9; background: #f8f6f9; }
+.quest-board-number { color: #9a81ae; font-size: .61rem; font-weight: 900; letter-spacing: .1em; }
+.quest-board-card h4 { margin: 0; color: #5a456e; font: 800 .95rem/1.35 Georgia, serif; }
+.quest-board-card p { margin: 0; color: #786b83; font-size: .68rem; line-height: 1.5; }
+.quest-board-card .quest-board-status, .quest-board-card .quest-board-mastery { color: #766084; font-weight: 800; }
+.quest-board-card .quest-board-stars { color: #9b7540; font-size: .73rem; font-weight: 900; }
+.quest-board-card .quest-board-run-history { color: #987fa7; font-size: .62rem; }
+.quest-board-skill-details { color: #776b82; font-size: .66rem; }
+.quest-board-skill-details summary { cursor: pointer; font-weight: 800; }
+.quest-board-skill-details ul { margin: .35rem 0 0 1rem; padding: 0; }
+.quest-board-skill-details li + li { margin-top: .2rem; }
+.quest-board-card .wardrobe-primary-action { margin-top: .2rem; }
+.quest-board-card .wardrobe-primary-action:disabled { cursor: not-allowed; opacity: .65; }
+@media (max-width: 650px) {
+  .quest-board-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .quest-board-heading { align-items: flex-start; }
+  .quest-board-section { padding: .8rem; }
+}
+@media (max-width: 380px) { .quest-board-summary { grid-template-columns: minmax(0, 1fr); } }

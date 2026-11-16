@@ -17,15 +17,35 @@ function normalizeActivityResults(results, chapter, maximumLength = chapter.acti
   return normalized;
 }
 
+export function createChapterRunRecord(activityResults, chapter) {
+  const completedActivityCount = activityResults.filter((entry) => entry.status === "completed").length;
+  const skippedActivityCount = activityResults.filter((entry) => entry.status === "skipped").length;
+  const scorePercent = chapter.activities.length > 0
+    ? Math.round((completedActivityCount / chapter.activities.length) * 100)
+    : 0;
+  const starRating = gameConfig.chapterRuntime.starThresholds
+    .filter((threshold) => scorePercent >= threshold).length;
+  return Object.freeze({
+    completedActivityCount,
+    skippedActivityCount,
+    scorePercent,
+    starRating,
+    activityResults: Object.freeze(activityResults.map((entry) => Object.freeze({ ...entry })))
+  });
+}
+
+/** A personal best improves only when a replay completes a larger share of its activities. */
+export function compareChapterRunQuality(candidate, currentBest) {
+  if (!candidate) return currentBest ? -1 : 0;
+  if (!currentBest) return 1;
+  return candidate.scorePercent - currentBest.scorePercent;
+}
+
 function normalizeRun(run, chapter) {
   if (!run || typeof run !== "object") return null;
   const activityResults = normalizeActivityResults(run.activityResults, chapter);
   if (activityResults.length !== chapter.activities.length) return null;
-  return Object.freeze({
-    completedActivityCount: activityResults.filter((entry) => entry.status === "completed").length,
-    skippedActivityCount: activityResults.filter((entry) => entry.status === "skipped").length,
-    activityResults: Object.freeze(activityResults)
-  });
+  return createChapterRunRecord(activityResults, chapter);
 }
 
 export function createInitialChapterRuntimeState() {
@@ -48,6 +68,10 @@ export function selectChapterRuntimeProgress(state, chapterCatalog) {
       ? raw.recentRuns.map((run) => normalizeRun(run, chapter)).filter(Boolean).slice(-gameConfig.chapterRuntime.completedHistoryLimit)
       : [];
     const lastRun = normalizeRun(raw.lastRun, chapter);
+    const storedPersonalBest = normalizeRun(raw.personalBest, chapter);
+    const personalBest = [storedPersonalBest, ...recentRuns, lastRun]
+      .filter(Boolean)
+      .reduce((best, run) => !best || compareChapterRunQuality(run, best) > 0 ? run : best, null);
     const status = raw.status === "completed" && lastRun
       ? "completed"
       : raw.status === "in-progress" ? "in-progress" : "not-started";
@@ -57,6 +81,7 @@ export function selectChapterRuntimeProgress(state, chapterCatalog) {
       activityResults: Object.freeze(activityResults),
       completedRuns: validCount(raw.completedRuns),
       lastRun,
+      personalBest,
       recentRuns: Object.freeze(recentRuns),
       lastExitActivityIndex: Number.isInteger(raw.lastExitActivityIndex)
         ? Math.max(0, Math.min(chapter.activities.length, raw.lastExitActivityIndex))

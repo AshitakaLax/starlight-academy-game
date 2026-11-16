@@ -47,7 +47,7 @@ export const gameConfig = Object.freeze({
     starThresholds: Object.freeze([50, 70, 90]),
     completedHistoryLimit: 10
   }),
-  chapterRuntime: Object.freeze({ completedHistoryLimit: 10 }),
+  chapterRuntime: Object.freeze({ completedHistoryLimit: 10, starThresholds: Object.freeze([50, 70, 90]) }),
   persistence: Object.freeze({
     storageKey: "starlight-academy.save",
     schemaVersion: 1,
