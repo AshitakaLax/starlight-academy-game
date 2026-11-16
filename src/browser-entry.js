@@ -24,6 +24,7 @@ import { chapterTwoActivityDefinitions, chapterTwoHintDefinitions, chapterTwoRew
 import { chapterThreeActivityDefinitions, chapterThreeHintDefinitions, chapterThreeReward } from "./chapters/chapterThree.js";
 import { chapterFourActivityDefinitions, chapterFourHintDefinitions, chapterFourReward } from "./chapters/chapterFour.js";
 import { chapterFiveActivityDefinitions, chapterFiveHintDefinitions, chapterFiveReward } from "./chapters/chapterFive.js";
+import { chapterSixActivityDefinitions, chapterSixHintDefinitions, chapterSixReward } from "./chapters/chapterSix.js";
 import { createActivityRegistry } from "./systems/curriculum/activityDefinitions.js";
 import { createQuestionGeneratorRegistry } from "./systems/curriculum/questionGenerators.js";
 import { createHintRegistry } from "./systems/hints/createHintRegistry.js";
@@ -75,18 +76,19 @@ async function launch() {
   narrationStatus.setAttribute("aria-live", "polite");
   narrationStatus.textContent = "Narration is optional and turned off.";
 
-  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward, chapterFiveReward]);
+  const rewardRegistry = createRewardRegistry([chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward, chapterFiveReward, chapterSixReward]);
   const activityRegistry = createActivityRegistry([
     ...chapterOneActivityDefinitions,
     ...chapterTwoActivityDefinitions,
     ...chapterThreeActivityDefinitions,
     ...chapterFourActivityDefinitions,
-    ...chapterFiveActivityDefinitions
+    ...chapterFiveActivityDefinitions,
+    ...chapterSixActivityDefinitions
   ]);
   const questionGeneratorRegistry = createQuestionGeneratorRegistry();
   const hintRegistry = createHintRegistry({
     activityRegistry,
-    initialDefinitions: [...chapterOneHintDefinitions, ...chapterTwoHintDefinitions, ...chapterThreeHintDefinitions, ...chapterFourHintDefinitions, ...chapterFiveHintDefinitions]
+    initialDefinitions: [...chapterOneHintDefinitions, ...chapterTwoHintDefinitions, ...chapterThreeHintDefinitions, ...chapterFourHintDefinitions, ...chapterFiveHintDefinitions, ...chapterSixHintDefinitions]
   });
   const wardrobeCatalog = createWardrobeCatalog(defaultWardrobeItems);
   const garmentTemplateRegistry = createGarmentTemplateRegistry(defaultGarmentTemplates);

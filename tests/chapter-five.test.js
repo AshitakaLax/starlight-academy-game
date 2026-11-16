@@ -23,6 +23,7 @@ import {
   chapterFiveActivityDefinitions, chapterFiveDefinition, chapterFiveHintDefinitions, chapterFiveReward
 } from "../src/chapters/chapterFive.js";
 import { chapterDefinitions, getChapterDefinition } from "../src/chapters/registry.js";
+import { chapterSixReward } from "../src/chapters/chapterSix.js";
 import {
   habitatCreatureLexicon, habitatEcosystemConnections, getHabitatCreatures, getHabitatAdaptations
 } from "../src/data/habitatLexicon.js";
@@ -31,7 +32,7 @@ const tiers = ["foundation", "core", "stretch"];
 
 test("Chapter 5 is registered after Chapter 4 with habitat, adaptation, and ecosystem activities", () => {
   assert.deepEqual(chapterDefinitions.map((chapter) => chapter.id), [
-    "chapter-01", "chapter-02", "chapter-03", "chapter-04", "chapter-05"
+    "chapter-01", "chapter-02", "chapter-03", "chapter-04", "chapter-05", "chapter-06"
   ]);
   assert.equal(getChapterDefinition("chapter-05"), chapterFiveDefinition);
   assert.equal(validateChapterDefinition(chapterFiveDefinition), true);
@@ -166,7 +167,7 @@ test("Professor Hoot has three useful hint stages for each habitat activity", ()
 test("Chapter 5 waits for Chapter 4, resumes its checkpoint, and awards the Wildlife Compass only once", () => {
   const chapterCatalog = createChapterCatalog(chapterDefinitions);
   const rewardRegistry = createRewardRegistry([
-    chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward, chapterFiveReward
+    chapterOneReward, chapterTwoReward, chapterThreeReward, chapterFourReward, chapterFiveReward, chapterSixReward
   ]);
   const shopCatalog = createShopCatalog([]);
   const economyActions = createEconomyActionDefinitions({ rewardRegistry, shopCatalog });

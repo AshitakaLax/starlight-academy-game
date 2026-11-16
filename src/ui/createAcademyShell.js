@@ -949,6 +949,51 @@ export function createAcademyShell({
   }
 
 
+  function renderChapterPlantStimulus(parent, stimulus) {
+    if (!stimulus || !["plant-lifecycle", "plant-resource-scenario", "photosynthesis-inputs"].includes(stimulus.kind)) return;
+    const figure = documentRef.createElement("figure");
+    figure.className = "chapter-plant-visual";
+
+    if (stimulus.kind === "plant-lifecycle") {
+      appendChapterText(figure, "h5", "Growing plant cycle", "chapter-plant-title");
+      const stages = documentRef.createElement("ol");
+      stages.className = "chapter-plant-stages";
+      stages.setAttribute("aria-label", "Life-cycle stages already completed");
+      for (const [index, stage] of (stimulus.completedStages ?? []).entries()) {
+        const item = documentRef.createElement("li");
+        item.className = "chapter-plant-stage";
+        appendChapterText(item, "span", String(index + 1), "chapter-plant-stage-number");
+        appendChapterText(item, "strong", stage.label, "chapter-plant-stage-label");
+        if (stage.description) appendChapterText(item, "p", stage.description, "chapter-plant-stage-copy");
+        stages.append(item);
+      }
+      figure.append(stages);
+      appendChapterText(figure, "figcaption", "Follow the stages in order. Which one comes next?", "chapter-plant-caption");
+    } else if (stimulus.kind === "plant-resource-scenario") {
+      appendChapterText(figure, "span", "🌱", "chapter-plant-symbol");
+      appendChapterText(figure, "h5", stimulus.title ?? "Greenhouse observation", "chapter-plant-title");
+      appendChapterText(figure, "p", "What the plant is experiencing", "chapter-plant-kicker");
+      appendChapterText(figure, "p", stimulus.scenario, "chapter-plant-copy");
+      appendChapterText(figure, "p", "Think about what is missing before choosing a resource.", "chapter-plant-caption");
+    } else {
+      appendChapterText(figure, "span", "☀️", "chapter-plant-symbol");
+      appendChapterText(figure, "h5", stimulus.title ?? "Photosynthesis recipe", "chapter-plant-title");
+      appendChapterText(figure, "p", "Complete the three spaces", "chapter-plant-kicker");
+      const roles = documentRef.createElement("ul");
+      roles.className = "chapter-photosynthesis-roles";
+      for (const role of (stimulus.roles ?? [])) {
+        const item = documentRef.createElement("li");
+        item.textContent = role;
+        roles.append(item);
+      }
+      figure.append(roles);
+      appendChapterText(figure, "figcaption", "The plant uses these inputs to make sugars and releases oxygen.", "chapter-plant-caption");
+    }
+
+    parent.append(figure);
+  }
+
+
   function renderChapterHabitatStimulus(parent, stimulus) {
     if (!stimulus || !["habitat-creature", "adaptation-clue", "ecosystem-connection"].includes(stimulus.kind)) return;
     const figure = documentRef.createElement("figure");
@@ -1131,6 +1176,7 @@ export function createAcademyShell({
       renderChapterWordStimulus(card, question.stimulus);
       renderChapterGeometryStimulus(card, question.stimulus);
       renderChapterHabitatStimulus(card, question.stimulus);
+      renderChapterPlantStimulus(card, question.stimulus);
       appendChapterText(card, "p", "Choose with the mouse or press 1–4. Press H whenever you would like a hint.", "chapter-question-help");
       const choices = documentRef.createElement("div");
       choices.className = "chapter-answer-grid";

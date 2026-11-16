@@ -2,6 +2,7 @@ import { validateActivityDefinition } from "./activityDefinitions.js";
 import { gameConfig } from "../../config/gameConfig.js";
 import { getChapterThreeWords } from "../../data/wordBuildingLexicon.js";
 import { getHabitatCreatures, getHabitatAdaptations, getHabitatEcosystemConnections } from "../../data/habitatLexicon.js";
+import { getPlantLifecycleStages, getPlantLifecycleTransitions, getPlantResourceScenarios, photosynthesisChoiceBank, PHOTOSYNTHESIS_INPUTS_ANSWER } from "../../data/plantLexicon.js";
 
 function hashSeed(seed) {
   if (typeof seed === "number" && Number.isFinite(seed)) return seed >>> 0;
@@ -318,6 +319,56 @@ const BUILT_IN_GENERATORS = Object.freeze({
     createRectangleMeasurementQuestion({ random, constraints, focus: "perimeter" }),
   "geometry.area": ({ random, constraints }) =>
     createRectangleMeasurementQuestion({ random, constraints, focus: "area" }),
+  "botany.lifecycle-next": ({ random, constraints, tier }) => {
+    const transition = random.pick(getPlantLifecycleTransitions(tier));
+    const stages = getPlantLifecycleStages();
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "Which plant life-cycle stage comes next?",
+      correctAnswer: transition.nextStage.label,
+      choices: makeDistinctChoices(transition.nextStage.label, stages.map((stage) => stage.label), random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "plant-lifecycle",
+        completedStages: transition.currentStages.map((stage) => Object.freeze({
+          id: stage.id, label: stage.label, description: stage.description
+        }))
+      })
+    };
+  },
+  "botany.resource-choice": ({ random, constraints, tier }) => {
+    const scenarios = getPlantResourceScenarios(tier);
+    const scenario = random.pick(scenarios);
+    const resourceChoices = getPlantResourceScenarios("stretch").map((entry) => entry.resource);
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "Which resource would most directly help this plant?",
+      correctAnswer: scenario.resource,
+      choices: makeDistinctChoices(scenario.resource, resourceChoices, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "plant-resource-scenario",
+        scenarioId: scenario.id, title: scenario.title,
+        scenario: scenario.scenario, explanation: scenario.explanation
+      })
+    };
+  },
+  "botany.photosynthesis-inputs": ({ random, constraints }) => {
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "Which three inputs does a plant use in photosynthesis to make sugars?",
+      correctAnswer: PHOTOSYNTHESIS_INPUTS_ANSWER,
+      choices: makeDistinctChoices(
+        PHOTOSYNTHESIS_INPUTS_ANSWER,
+        photosynthesisChoiceBank.filter((choice) => choice !== PHOTOSYNTHESIS_INPUTS_ANSWER),
+        random,
+        choiceCount
+      ),
+      stimulus: Object.freeze({
+        kind: "photosynthesis-inputs",
+        title: "The greenhouse recipe card",
+        roles: ["Energy from light", "Taken in through roots", "Taken in from air"]
+      })
+    };
+  },
   "habitats.biome-match": ({ random, constraints, tier }) => {
     const creatures = getHabitatCreatures(tier);
     const creature = random.pick(creatures);

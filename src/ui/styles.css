@@ -793,3 +793,120 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   .chapter-habitat-visual { padding: 12px; }
   .chapter-habitat-symbol { width: 50px; height: 50px; font-size: 1.75rem; }
 }
+
+
+/* Plant life-cycle sequences and greenhouse resource cards for Chapter 6. */
+.chapter-plant-visual {
+  display: grid;
+  justify-items: center;
+  gap: 9px;
+  max-width: 39rem;
+  margin: 16px auto 18px;
+  padding: 15px 18px;
+  border: 1px solid #d1e2c8;
+  border-radius: 18px;
+  background: radial-gradient(circle at 90% 10%, #e6f5df 0, transparent 11rem), linear-gradient(135deg, #f7fff2, #fffaf1);
+  text-align: center;
+}
+.chapter-plant-title {
+  margin: 2px 0 0;
+  color: #4c6848;
+  font-size: .96rem;
+}
+.chapter-plant-symbol {
+  font-size: 2rem;
+  line-height: 1.1;
+}
+.chapter-plant-kicker {
+  margin: 4px 0 0;
+  color: #7a896f;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+.chapter-plant-copy {
+  max-width: 34rem;
+  margin: 0;
+  color: #586e55;
+  font-size: .82rem;
+  line-height: 1.5;
+}
+.chapter-plant-stages {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  gap: 8px;
+  width: 100%;
+  margin: 4px 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: plant-stage;
+}
+.chapter-plant-stage {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 5px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #dfebd7;
+  border-radius: 12px;
+  background: rgba(255,255,255,.8);
+}
+.chapter-plant-stage-number {
+  display: grid;
+  width: 23px;
+  height: 23px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e9f3df;
+  color: #4d6948;
+  font-size: .72rem;
+  font-weight: 800;
+}
+.chapter-plant-stage-label {
+  color: #4f674b;
+  font-size: .78rem;
+}
+.chapter-plant-stage-copy {
+  margin: 0;
+  color: #73816e;
+  font-size: .69rem;
+  line-height: 1.4;
+}
+.chapter-plant-caption {
+  max-width: 35rem;
+  margin: 0;
+  color: #71836a;
+  font-size: .74rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+.chapter-photosynthesis-roles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  margin: 3px 0;
+  padding: 0;
+  list-style: none;
+}
+.chapter-photosynthesis-roles li {
+  display: grid;
+  min-height: 54px;
+  place-items: center;
+  padding: 8px;
+  border: 1px dashed #b7cda9;
+  border-radius: 10px;
+  background: #fff;
+  color: #5d7256;
+  font-size: .72rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+@media (max-width: 720px) {
+  .chapter-plant-visual { padding: 12px; }
+  .chapter-plant-stages { grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); }
+  .chapter-photosynthesis-roles { grid-template-columns: 1fr; }
+  .chapter-photosynthesis-roles li { min-height: 40px; }
+}
