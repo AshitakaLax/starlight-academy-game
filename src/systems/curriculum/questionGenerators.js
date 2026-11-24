@@ -1,0 +1,1612 @@
+import { validateActivityDefinition } from "./activityDefinitions.js";
+import { gameConfig } from "../../config/gameConfig.js";
+import { getChapterThreeWords } from "../../data/wordBuildingLexicon.js";
+import { getHabitatCreatures, getHabitatAdaptations, getHabitatEcosystemConnections } from "../../data/habitatLexicon.js";
+import { getPlantLifecycleStages, getPlantLifecycleTransitions, getPlantResourceScenarios, getPlantPhotosynthesisRecipeScenarios, photosynthesisChoiceBank, PHOTOSYNTHESIS_INPUTS_ANSWER } from "../../data/plantLexicon.js";
+import { getGrammarExamples, getReadingPassages } from "../../data/languageArtsLexicon.js";
+import { getVolumeScale, getMassBalanceProblems, getUnitConversionProblems, getElapsedTimeOptions } from "../../data/measurementLexicon.js";
+import { getDivisionSettings, getMultiStepProblems } from "../../data/chimeraChallengeLexicon.js";
+import { grandStarlightSampler, grandStarlightSubjectOrder } from "../../data/championshipSampler.js";
+
+function hashSeed(seed) {
+  if (typeof seed === "number" && Number.isFinite(seed)) return seed >>> 0;
+  if (typeof seed !== "string" || seed.length === 0) {
+    throw new TypeError("A question seed must be a finite number or a non-empty string.");
+  }
+  let hash = 2166136261;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash ^= seed.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+/** Small deterministic PRNG so question generation is reproducible offline. */
+export function createSeededRandom(seed) {
+  let state = hashSeed(seed);
+  function next() {
+    state = (state + 0x6D2B79F5) >>> 0;
+    let value = state;
+    value = Math.imul(value ^ (value >>> 15), value | 1);
+    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+    return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+  }
+  return Object.freeze({
+    next,
+    integer(minimum, maximum) {
+      if (!Number.isInteger(minimum) || !Number.isInteger(maximum) || maximum < minimum) {
+        throw new RangeError("Random integer bounds must be an ordered pair of integers.");
+      }
+      return minimum + Math.floor(next() * (maximum - minimum + 1));
+    },
+    pick(items) {
+      if (!Array.isArray(items) || items.length === 0) throw new TypeError("pick() requires a non-empty array.");
+      return items[Math.floor(next() * items.length)];
+    },
+    shuffle(items) {
+      if (!Array.isArray(items)) throw new TypeError("shuffle() requires an array.");
+      const result = items.slice();
+      for (let index = result.length - 1; index > 0; index -= 1) {
+        const swap = Math.floor(next() * (index + 1));
+        [result[index], result[swap]] = [result[swap], result[index]];
+      }
+      return result;
+    }
+  });
+}
+
+function makeChoices(correctAnswer, random, count = 4) {
+  if (!Number.isInteger(count) || count < 2 || count > 6) {
+    throw new RangeError("choiceCount must be an integer from 2 to 6.");
+  }
+  const choices = new Set([correctAnswer]);
+  let guard = 0;
+  while (choices.size < count && guard < 100) {
+    guard += 1;
+    const offset = random.integer(1, Math.max(3, Math.ceil(Math.abs(correctAnswer) * 0.35) + 2));
+    const signed = random.next() < 0.5 ? -offset : offset;
+    const candidate = Math.max(0, correctAnswer + signed);
+    choices.add(candidate);
+  }
+  let fallback = 1;
+  while (choices.size < count) {
+    if (fallback !== correctAnswer) choices.add(fallback);
+    fallback += 1;
+  }
+  return random.shuffle([...choices]);
+}
+
+function readInteger(constraints, key, minimum) {
+  const value = constraints[key];
+  if (!Number.isInteger(value) || value < minimum) {
+    throw new TypeError("Generator constraint " + key + " must be an integer of at least " + minimum + ".");
+  }
+  return value;
+}
+
+
+const GEOMETRY_SHAPES = Object.freeze([
+  Object.freeze({ name: "triangle", label: "equilateral triangle", sideCount: 3, sideClue: "3 equal sides", angleClue: "3 corners", symmetryLines: 3 }),
+  Object.freeze({ name: "square", label: "square", sideCount: 4, sideClue: "4 equal sides", angleClue: "4 right angles", symmetryLines: 4 }),
+  Object.freeze({ name: "rectangle", label: "rectangle", sideCount: 4, sideClue: "4 sides with opposite sides equal", angleClue: "4 right angles", symmetryLines: 2 }),
+  Object.freeze({ name: "rhombus", label: "rhombus", sideCount: 4, sideClue: "4 equal sides", angleClue: "no right angles", symmetryLines: 2 }),
+  Object.freeze({ name: "pentagon", label: "regular pentagon", sideCount: 5, sideClue: "5 equal sides", angleClue: "5 corners", symmetryLines: 5 }),
+  Object.freeze({ name: "hexagon", label: "regular hexagon", sideCount: 6, sideClue: "6 equal sides", angleClue: "6 corners", symmetryLines: 6 })
+]);
+const GEOMETRY_SHAPE_TIERS = Object.freeze({
+  foundation: ["triangle", "square", "rectangle", "pentagon"],
+  core: ["triangle", "square", "rectangle", "rhombus", "pentagon", "hexagon"],
+  stretch: ["triangle", "square", "rectangle", "rhombus", "pentagon", "hexagon"]
+});
+const GEOMETRY_ANGLE_DEGREES = Object.freeze({
+  foundation: [35, 45, 60, 90, 120, 135],
+  core: [25, 55, 75, 90, 105, 125, 150],
+  stretch: [15, 40, 80, 90, 100, 130, 155, 180]
+});
+function makeDistinctChoices(correctAnswer, candidates, random, count = 4) {
+  if (!Number.isInteger(count) || count < 2 || count > 6) {
+    throw new RangeError("choiceCount must be an integer from 2 to 6.");
+  }
+  const choices = [correctAnswer];
+  for (const candidate of random.shuffle([...new Set(candidates)])) {
+    if (choices.length >= count) break;
+    if (candidate !== correctAnswer) choices.push(candidate);
+  }
+  if (choices.length !== count) {
+    throw new RangeError("The geometry question does not have enough distinct answer choices.");
+  }
+  return random.shuffle(choices);
+}
+function getGeometryShapes(tier) {
+  const allowed = GEOMETRY_SHAPE_TIERS[tier];
+  if (!allowed) throw new RangeError("Unknown geometry difficulty tier: " + tier);
+  return allowed.map((name) => GEOMETRY_SHAPES.find((shape) => shape.name === name));
+}
+function createRectangleMeasurementQuestion({ random, constraints, focus }) {
+  const widthMin = readInteger(constraints, "widthMin", 1);
+  const widthMax = readInteger(constraints, "widthMax", widthMin);
+  const heightMin = readInteger(constraints, "heightMin", 1);
+  const heightMax = readInteger(constraints, "heightMax", heightMin);
+  const choiceCount = readInteger(constraints, "choiceCount", 2);
+  if (widthMax < widthMin || heightMax < heightMin || widthMax > 20 || heightMax > 20) {
+    throw new RangeError("Rectangle measurement bounds must be ordered and no greater than 20.");
+  }
+  const width = random.integer(widthMin, widthMax);
+  const height = random.integer(heightMin, heightMax);
+  const correctAnswer = focus === "perimeter" ? 2 * (width + height) : width * height;
+  const likelyErrors = focus === "perimeter"
+    ? [width * height, width + height, 2 * width + height, width + 2 * height]
+    : [2 * (width + height), width + height, width * 2, height * 2];
+  const distractors = [
+    ...likelyErrors, correctAnswer - 2, correctAnswer - 1,
+    correctAnswer + 1, correctAnswer + 2, correctAnswer + 3
+  ].filter((value) => Number.isInteger(value) && value >= 0 && value !== correctAnswer);
+  return {
+    prompt: focus === "perimeter"
+      ? "What is the perimeter of this rectangle, in centimeters?"
+      : "What is the area of this rectangle, in square centimeters?",
+    correctAnswer,
+    choices: makeDistinctChoices(correctAnswer, distractors, random, choiceCount),
+    stimulus: Object.freeze({ kind: "geometry-rectangle", focus, width, height, unit: "cm" })
+  };
+}
+
+
+const BUILT_IN_GENERATORS = Object.freeze({
+  "arithmetic.multiplication": ({ random, constraints }) => {
+    const factorMin = readInteger(constraints, "factorMin", 1);
+    const factorMax = readInteger(constraints, "factorMax", factorMin);
+    const multiplierMin = readInteger(constraints, "multiplierMin", 1);
+    const multiplierMax = readInteger(constraints, "multiplierMax", multiplierMin);
+    if (factorMax < factorMin || multiplierMax < multiplierMin) {
+      throw new RangeError("Multiplication constraint ranges must be ordered.");
+    }
+    const left = random.integer(factorMin, factorMax);
+    const right = random.integer(multiplierMin, multiplierMax);
+    const correctAnswer = left * right;
+    return {
+      prompt: "What is " + left + " × " + right + "?",
+      correctAnswer,
+      choices: makeChoices(correctAnswer, random, constraints.choiceCount ?? 4),
+      stimulus: Object.freeze({ left, right, operation: "multiplication" })
+    };
+  },
+  "arithmetic.addition": ({ random, constraints }) => {
+    const minimum = readInteger(constraints, "operandMin", 0);
+    const maximum = readInteger(constraints, "operandMax", minimum);
+    if (maximum < minimum) throw new RangeError("Addition operand range must be ordered.");
+    const left = random.integer(minimum, maximum);
+    const right = random.integer(minimum, maximum);
+    const correctAnswer = left + right;
+    return {
+      prompt: "What is " + left + " + " + right + "?",
+      correctAnswer,
+      choices: makeChoices(correctAnswer, random, constraints.choiceCount ?? 4),
+      stimulus: Object.freeze({ left, right, operation: "addition" })
+    };
+  },
+  "number.skip-counting": ({ random, constraints }) => {
+    const startMin = readInteger(constraints, "startMin", 0);
+    const startMax = readInteger(constraints, "startMax", startMin);
+    const stepMin = readInteger(constraints, "stepMin", 1);
+    const stepMax = readInteger(constraints, "stepMax", stepMin);
+    const sequenceLength = readInteger(constraints, "sequenceLength", 3);
+    if (startMax < startMin || stepMax < stepMin || sequenceLength > 8) {
+      throw new RangeError("Skip-counting constraints contain an invalid range or sequence length.");
+    }
+    const start = random.integer(startMin, startMax);
+    const step = random.integer(stepMin, stepMax);
+    const sequence = Array.from({ length: sequenceLength }, (_, index) => start + step * index);
+    const correctAnswer = start + step * sequenceLength;
+    return {
+      prompt: "What number comes next? " + sequence.join(", ") + ", …",
+      correctAnswer,
+      choices: makeChoices(correctAnswer, random, constraints.choiceCount ?? 4),
+      stimulus: Object.freeze({ sequence, step })
+    };
+  }
+  ,
+  "quests.skip-counting-gap": ({ random, constraints }) => {
+    const startMin = readInteger(constraints, "startMin", 0);
+    const startMax = readInteger(constraints, "startMax", startMin);
+    const stepMin = readInteger(constraints, "stepMin", 1);
+    const stepMax = readInteger(constraints, "stepMax", stepMin);
+    const sequenceLength = readInteger(constraints, "sequenceLength", 4);
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    if (startMax < startMin || stepMax < stepMin || sequenceLength < 4 || sequenceLength > 8) {
+      throw new RangeError("Firefly gap constraints contain an invalid range or sequence length.");
+    }
+    const start = random.integer(startMin, startMax);
+    const step = random.integer(stepMin, stepMax);
+    const sequence = Array.from({ length: sequenceLength }, (_, index) => start + step * index);
+    const missingIndex = random.integer(1, sequenceLength - 2);
+    const correctAnswer = sequence[missingIndex];
+    const display = sequence.map((value, index) => index === missingIndex ? "□" : String(value)).join(", ");
+    return {
+      prompt: "The fireflies keep the same-sized jump. Which number belongs in the gap? " + display,
+      correctAnswer,
+      choices: makeChoices(correctAnswer, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "firefly-gap-sequence",
+        sequence: sequence.map((value, index) => index === missingIndex ? null : value),
+        missingIndex,
+        step
+      })
+    };
+  },
+  "quests.equal-groups-picnic": ({ random, constraints }) => {
+    const groupMin = readInteger(constraints, "groupMin", 2);
+    const groupMax = readInteger(constraints, "groupMax", groupMin);
+    const countMin = readInteger(constraints, "countMin", 2);
+    const countMax = readInteger(constraints, "countMax", countMin);
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    if (groupMax < groupMin || countMax < countMin || groupMax > 20 || countMax > 20) {
+      throw new RangeError("Picnic equal-group constraints contain an invalid range.");
+    }
+    const groups = random.integer(groupMin, groupMax);
+    const itemsEach = random.integer(countMin, countMax);
+    const scenarios = [
+      "At the moonberry picnic, " + groups + " baskets each hold " + itemsEach + " muffins. How many muffins are ready altogether?",
+      "The tiny sprites set " + itemsEach + " star cookies on each of " + groups + " picnic plates. How many cookies do they set out?",
+      "A friendly phoenix plants " + itemsEach + " glowing seeds in each of " + groups + " flower pots. How many seeds are planted?"
+    ];
+    const correctAnswer = groups * itemsEach;
+    return {
+      prompt: random.pick(scenarios),
+      correctAnswer,
+      choices: makeChoices(correctAnswer, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "equal-groups-picnic",
+        groups,
+        itemsEach,
+        total: correctAnswer
+      })
+    };
+  },
+  "quests.fraction-outlier": ({ random, constraints }) => {
+    const denominatorMin = readInteger(constraints, "denominatorMin", 2);
+    const denominatorMax = readInteger(constraints, "denominatorMax", denominatorMin);
+    if (denominatorMax < denominatorMin || denominatorMin < 2 || denominatorMax > 4) {
+      throw new RangeError("Fraction outlier denominator range must be ordered from two through four.");
+    }
+    const denominator = random.integer(denominatorMin, denominatorMax);
+    const numerator = random.integer(1, denominator - 1);
+    const equivalentOptions = [2, 3, 4].map((factor) => ({
+      numerator: numerator * factor,
+      denominator: denominator * factor
+    }));
+    const first = equivalentOptions[0];
+    const outlier = {
+      numerator: first.numerator + 1,
+      denominator: first.denominator
+    };
+    const optionValues = random.shuffle([
+      ...equivalentOptions.map((option) => option.numerator + "/" + option.denominator),
+      outlier.numerator + "/" + outlier.denominator
+    ]);
+    const bars = [
+      {
+        label: "Starting amount: " + numerator + "/" + denominator,
+        numerator,
+        denominator,
+        showValue: true
+      },
+      ...optionValues.map((value, index) => {
+        const [optionNumerator, optionDenominator] = value.split("/").map(Number);
+        return {
+          label: "Choice " + String.fromCharCode(65 + index) + ": " + value,
+          numerator: optionNumerator,
+          denominator: optionDenominator,
+          showValue: true
+        };
+      })
+    ];
+    return {
+      prompt: "Three fraction tiles name the same amount as "
+        + numerator + "/" + denominator
+        + ". Which choice is the outlier and does NOT name the same amount?",
+      correctAnswer: outlier.numerator + "/" + outlier.denominator,
+      choices: optionValues,
+      stimulus: Object.freeze({
+        kind: "fraction-bars",
+        base: Object.freeze({ numerator, denominator }),
+        outlier: Object.freeze({ ...outlier }),
+        bars: Object.freeze(bars.map((bar) => Object.freeze(bar)))
+      })
+    };
+  },
+  "quests.fraction-story": ({ random, constraints }) => {
+    const denominatorMin = readInteger(constraints, "denominatorMin", 4);
+    const denominatorMax = readInteger(constraints, "denominatorMax", denominatorMin);
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    if (denominatorMax < denominatorMin || denominatorMin < 4 || denominatorMax > 12
+        || choiceCount !== 4) {
+      throw new RangeError("Fraction story constraints need denominators from four through twelve and four choices.");
+    }
+    const denominator = random.integer(denominatorMin, denominatorMax);
+    const numerator = random.integer(1, denominator - 1);
+    const stories = [
+      {
+        kind: "music",
+        subject: "the music measure",
+        prompt: "A music measure has " + denominator + " equal beats. "
+          + numerator + " beats are played by the silver flute. What fraction of the measure does the flute play?"
+      },
+      {
+        kind: "ribbon",
+        subject: "the ribbon",
+        prompt: "A moonstone ribbon is split into " + denominator + " equal panels. "
+          + numerator + " panels glow silver. What fraction of the ribbon glows silver?"
+      },
+      {
+        kind: "tart",
+        subject: "the moonberry tart",
+        prompt: "A moonberry tart is divided into " + denominator + " equal slices. "
+          + numerator + " slices have star sprinkles. What fraction of the tart has star sprinkles?"
+      },
+      {
+        kind: "star-chart",
+        subject: "the star chart",
+        prompt: "A star chart is divided into " + denominator + " equal sections. "
+          + numerator + " sections show a bright constellation. What fraction of the chart shows constellations?"
+      }
+    ];
+    const story = random.pick(stories);
+    const correctAnswer = numerator + "/" + denominator;
+    const distractorNumerators = random.shuffle(
+      Array.from({ length: denominator }, (_, index) => index + 1)
+        .filter((value) => value !== numerator)
+    ).slice(0, choiceCount - 1);
+    const choices = random.shuffle([
+      correctAnswer,
+      ...distractorNumerators.map((value) => value + "/" + denominator)
+    ]);
+    return {
+      prompt: story.prompt,
+      correctAnswer,
+      choices,
+      stimulus: Object.freeze({
+        kind: "fraction-bars",
+        storyKind: story.kind,
+        storySubject: story.subject,
+        numerator,
+        denominator,
+        bars: Object.freeze([Object.freeze({
+          label: story.subject + ": " + numerator + " of " + denominator + " equal parts",
+          numerator,
+          denominator,
+          showValue: false
+        })])
+      })
+    };
+  },
+  "fractions.identify": ({ random, constraints }) => {
+    const denominatorMin = readInteger(constraints, "denominatorMin", 4);
+    const denominatorMax = readInteger(constraints, "denominatorMax", denominatorMin);
+    if (denominatorMax < denominatorMin || denominatorMax > 12) {
+      throw new RangeError("Fraction denominator bounds must be ordered and no greater than 12.");
+    }
+    const denominator = random.integer(denominatorMin, denominatorMax);
+    const numerator = random.integer(1, denominator - 1);
+    const correctAnswer = numerator + "/" + denominator;
+    const distractorNumerators = random.shuffle(
+      Array.from({ length: denominator }, (_, index) => index + 1)
+        .filter((value) => value !== numerator)
+    ).slice(0, Math.max(0, (constraints.choiceCount ?? 4) - 1));
+    const choices = random.shuffle([
+      correctAnswer,
+      ...distractorNumerators.map((value) => value + "/" + denominator)
+    ]);
+    return {
+      prompt: "What fraction of the whole is shaded?",
+      correctAnswer,
+      choices,
+      stimulus: Object.freeze({
+        kind: "fraction-bars",
+        bars: [Object.freeze({
+          label: "Shaded parts",
+          numerator,
+          denominator,
+          showValue: false
+        })]
+      })
+    };
+  },
+  "fractions.equivalent": ({ random, constraints }) => {
+    const denominatorMin = readInteger(constraints, "denominatorMin", 2);
+    const denominatorMax = readInteger(constraints, "denominatorMax", denominatorMin);
+    const multiplierMin = readInteger(constraints, "multiplierMin", 2);
+    const multiplierMax = readInteger(constraints, "multiplierMax", multiplierMin);
+    if (denominatorMax < denominatorMin || multiplierMax < multiplierMin) {
+      throw new RangeError("Equivalent-fraction ranges must be ordered.");
+    }
+    const denominator = random.integer(denominatorMin, denominatorMax);
+    const numerator = random.integer(1, denominator - 1);
+    const multiplier = random.integer(multiplierMin, multiplierMax);
+    const equivalentNumerator = numerator * multiplier;
+    const equivalentDenominator = denominator * multiplier;
+    const correctAnswer = equivalentNumerator + "/" + equivalentDenominator;
+    const distractors = random.shuffle(
+      Array.from({ length: equivalentDenominator }, (_, index) => index + 1)
+        .filter((value) => value !== equivalentNumerator)
+    ).slice(0, Math.max(0, (constraints.choiceCount ?? 4) - 1));
+    const choices = random.shuffle([
+      correctAnswer,
+      ...distractors.map((value) => value + "/" + equivalentDenominator)
+    ]);
+    return {
+      prompt: "Which fraction names the same amount as " + numerator + "/" + denominator + "?",
+      correctAnswer,
+      choices,
+      stimulus: Object.freeze({
+        kind: "fraction-bars",
+        bars: [Object.freeze({
+          label: "Starting fraction",
+          numerator,
+          denominator,
+          showValue: true
+        })]
+      })
+    };
+  },
+  "quests.geometry-shape-riddle": ({ random, constraints, tier }) => {
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    const shapes = getGeometryShapes(tier);
+    const shape = random.pick(shapes);
+    const properties = [
+      shape.sideCount + " sides",
+      shape.angleClue,
+      shape.symmetryLines + " lines of symmetry"
+    ].join(" · ");
+    return {
+      prompt: "Which shape matches all three clues: " + shape.sideCount + " sides, "
+        + shape.angleClue + ", and " + shape.symmetryLines + " lines of symmetry?",
+      correctAnswer: shape.label,
+      choices: makeDistinctChoices(shape.label, shapes.map((candidate) => candidate.label), random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "geometry-shape",
+        focus: "riddle",
+        shape: shape.name,
+        label: "mystery shape",
+        sideCount: shape.sideCount,
+        symmetryLines: shape.symmetryLines,
+        properties
+      })
+    };
+  },
+  "quests.geometry-measurement-stories": ({ random, constraints }) => {
+    const stories = [
+      {
+        focus: "perimeter",
+        title: "Ribbon around the moonstone stage",
+        setup: "A silver ribbon will trim the outside edge of a rectangular moonstone stage.",
+        question: "How many centimeters of ribbon are needed to go around all four sides?"
+      },
+      {
+        focus: "perimeter",
+        title: "A fence for the star garden",
+        setup: "A short fence will run around the outside edge of a rectangular star garden.",
+        question: "How many centimeters of fencing are needed to surround the garden?"
+      },
+      {
+        focus: "area",
+        title: "Tiles for the landing platform",
+        setup: "The rectangular landing platform will be covered completely with square tiles. Each tile covers one square centimeter.",
+        question: "How many square-centimeter tiles will cover the platform?"
+      },
+      {
+        focus: "area",
+        title: "Paint for the mosaic panel",
+        setup: "A rectangular mosaic panel will be painted across its entire flat surface.",
+        question: "How many square centimeters of surface will be painted?"
+      }
+    ];
+    const story = random.pick(stories);
+    const question = createRectangleMeasurementQuestion({
+      random, constraints, focus: story.focus
+    });
+    return {
+      ...question,
+      prompt: story.setup + " The rectangle is " + question.stimulus.width
+        + " cm wide and " + question.stimulus.height + " cm long. " + story.question,
+      stimulus: Object.freeze({
+        ...question.stimulus,
+        storyTitle: story.title,
+        storyText: story.setup
+      })
+    };
+  },
+  "geometry.shape-properties": ({ random, constraints, tier }) => {
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    const shapes = getGeometryShapes(tier);
+    const shape = random.pick(shapes);
+    return {
+      prompt: "Which shape has " + shape.sideClue + " and " + shape.angleClue + "?",
+      correctAnswer: shape.label,
+      choices: makeDistinctChoices(shape.label, shapes.map((candidate) => candidate.label), random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "geometry-shape", focus: "shape", shape: shape.name, label: shape.label,
+        sideCount: shape.sideCount, symmetryLines: shape.symmetryLines,
+        properties: shape.sideClue + " · " + shape.angleClue
+      })
+    };
+  },
+  "geometry.symmetry": ({ random, constraints, tier }) => {
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    const shapes = getGeometryShapes(tier);
+    const shape = random.pick(shapes);
+    return {
+      prompt: "How many lines of symmetry does a " + shape.label + " have?",
+      correctAnswer: shape.symmetryLines,
+      choices: makeDistinctChoices(shape.symmetryLines, shapes.map((candidate) => candidate.symmetryLines), random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "geometry-shape", focus: "symmetry", shape: shape.name, label: shape.label,
+        sideCount: shape.sideCount, symmetryLines: shape.symmetryLines,
+        properties: "Imagine folding the shape so both halves match exactly."
+      })
+    };
+  },
+  "geometry.angles": ({ random, constraints, tier }) => {
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    const degrees = random.pick(GEOMETRY_ANGLE_DEGREES[tier]);
+    const correctAnswer = degrees < 90 ? "acute"
+      : degrees === 90 ? "right"
+      : degrees < 180 ? "obtuse" : "straight";
+    const categories = ["acute", "right", "obtuse", "straight"];
+    return {
+      prompt: "What kind of angle measures " + degrees + "°?",
+      correctAnswer,
+      choices: makeDistinctChoices(correctAnswer, categories, random, choiceCount),
+      stimulus: Object.freeze({ kind: "geometry-angle", degrees, angleType: correctAnswer })
+    };
+  },
+  "geometry.perimeter": ({ random, constraints }) =>
+    createRectangleMeasurementQuestion({ random, constraints, focus: "perimeter" }),
+  "geometry.area": ({ random, constraints }) =>
+    createRectangleMeasurementQuestion({ random, constraints, focus: "area" }),
+  "botany.lifecycle-next": ({ random, constraints, tier }) => {
+    const transition = random.pick(getPlantLifecycleTransitions(tier));
+    const stages = getPlantLifecycleStages();
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "Which plant life-cycle stage comes next?",
+      correctAnswer: transition.nextStage.label,
+      choices: makeDistinctChoices(transition.nextStage.label, stages.map((stage) => stage.label), random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "plant-lifecycle",
+        completedStages: transition.currentStages.map((stage) => Object.freeze({
+          id: stage.id, label: stage.label, description: stage.description
+        }))
+      })
+    };
+  },
+  "botany.resource-choice": ({ random, constraints, tier }) => {
+    const scenarios = getPlantResourceScenarios(tier);
+    const scenario = random.pick(scenarios);
+    const resourceChoices = getPlantResourceScenarios("stretch").map((entry) => entry.resource);
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "Which resource would most directly help this plant?",
+      correctAnswer: scenario.resource,
+      choices: makeDistinctChoices(scenario.resource, resourceChoices, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "plant-resource-scenario",
+        scenarioId: scenario.id, title: scenario.title,
+        scenario: scenario.scenario, explanation: scenario.explanation
+      })
+    };
+  },
+  "botany.photosynthesis-inputs": ({ random, constraints }) => {
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "Which three inputs does a plant use in photosynthesis to make sugars?",
+      correctAnswer: PHOTOSYNTHESIS_INPUTS_ANSWER,
+      choices: makeDistinctChoices(
+        PHOTOSYNTHESIS_INPUTS_ANSWER,
+        photosynthesisChoiceBank.filter((choice) => choice !== PHOTOSYNTHESIS_INPUTS_ANSWER),
+        random,
+        choiceCount
+      ),
+      stimulus: Object.freeze({
+        kind: "photosynthesis-inputs",
+        title: "The greenhouse recipe card",
+        roles: ["Energy from light", "Taken in through roots", "Taken in from air"]
+      })
+    };
+  },
+  "quests.plant-lifecycle-backtrack": ({ random, constraints, tier }) => {
+    const transition = random.pick(getPlantLifecycleTransitions(tier));
+    const precedingStage = transition.currentStages.at(-1);
+    const laterStage = transition.nextStage;
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    return {
+      prompt: "Which plant life-cycle stage came immediately before " + laterStage.label + "?",
+      correctAnswer: precedingStage.label,
+      choices: makeDistinctChoices(
+        precedingStage.label,
+        getPlantLifecycleStages().map((stage) => stage.label),
+        random,
+        choiceCount
+      ),
+      stimulus: Object.freeze({
+        kind: "plant-lifecycle",
+        title: "Work backward from this stage",
+        listLabel: "Plant life-cycle stage clue",
+        caption: "The shown stage is the clue. Move one step earlier in the cycle.",
+        completedStages: [Object.freeze({
+          id: laterStage.id, label: laterStage.label, description: laterStage.description
+        })]
+      })
+    };
+  },
+  "quests.plant-recipe-restorer": ({ random, constraints, tier }) => {
+    const scenario = random.pick(getPlantPhotosynthesisRecipeScenarios(tier));
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    const resources = ["Sunlight", "Water", "Carbon dioxide", "Oxygen", "Mineral nutrients"];
+    return {
+      prompt: "Two photosynthesis inputs are already on the recipe card. Which input is missing?",
+      correctAnswer: scenario.missingInput,
+      choices: makeDistinctChoices(scenario.missingInput, resources, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "photosynthesis-inputs",
+        title: scenario.title,
+        kicker: "Already present in the recipe",
+        roles: Object.freeze([...scenario.availableInputs]),
+        scenario: scenario.scenario,
+        caption: "Choose the photosynthesis input that is not yet listed."
+      })
+    };
+  },
+  "quests.habitat-adaptation-pair": ({ random, constraints, tier }) => {
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    const creatures = getHabitatCreatures(tier).filter((creature) => creature.adaptations.length >= 2);
+    const creature = random.pick(creatures);
+    const pair = random.shuffle(creature.adaptations).slice(0, 2);
+    return {
+      prompt: "Two field observations describe the same mystery animal. Which animal matches BOTH adaptations?",
+      correctAnswer: creature.animal,
+      choices: makeDistinctChoices(creature.animal, creatures.map((candidate) => candidate.animal), random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "adaptation-clue",
+        animal: "Mystery animal",
+        symbol: "🐾",
+        feature: pair.map((adaptation, index) => (index + 1) + ". " + adaptation.feature).join(" · "),
+        description: pair.map((adaptation, index) => (index + 1) + ". " + adaptation.description).join(" "),
+        adaptationIds: Object.freeze(pair.map((adaptation) => adaptation.id))
+      })
+    };
+  },
+  "quests.ecosystem-cause-tracker": ({ random, constraints, tier }) => {
+    const connections = getHabitatEcosystemConnections(tier);
+    const connection = random.pick(connections);
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    return {
+      prompt: "A sanctuary ranger recorded this habitat change. Which animal action could have caused the observed effect?",
+      correctAnswer: connection.action,
+      choices: makeDistinctChoices(connection.action, connections.map((entry) => entry.action), random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "ecosystem-effect-clue",
+        symbol: "🌿",
+        title: "Sanctuary habitat monitor",
+        context: connection.context,
+        effect: connection.effect
+      })
+    };
+  },
+  "habitats.biome-match": ({ random, constraints, tier }) => {
+    const creatures = getHabitatCreatures(tier);
+    const creature = random.pick(creatures);
+    const choices = creatures.map((entry) => entry.habitatLabel);
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "Read the animal's climate, food, and shelter clues. Which habitat is the best match?",
+      correctAnswer: creature.habitatLabel,
+      choices: makeDistinctChoices(creature.habitatLabel, choices, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "habitat-creature", animal: creature.animal, symbol: creature.symbol,
+        climateClue: creature.climateClue, needsClue: creature.needsClue
+      })
+    };
+  },
+  "habitats.adaptation-type": ({ random, constraints, tier }) => {
+    const adaptations = getHabitatAdaptations(tier);
+    const adaptation = random.pick(adaptations);
+    const categories = ["structural", "behavioral"];
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "Is this a structural body feature or a behavioral action?",
+      correctAnswer: adaptation.type,
+      choices: makeDistinctChoices(adaptation.type, categories, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "adaptation-clue", animal: adaptation.animal, symbol: adaptation.symbol,
+        feature: adaptation.feature, description: adaptation.description, focus: "type"
+      })
+    };
+  },
+  "habitats.adaptation-purpose": ({ random, constraints, tier }) => {
+    const adaptations = getHabitatAdaptations(tier);
+    const adaptation = random.pick(adaptations);
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "How does this adaptation help the animal survive?",
+      correctAnswer: adaptation.purpose,
+      choices: makeDistinctChoices(adaptation.purpose, adaptations.map((entry) => entry.purpose), random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "adaptation-clue", animal: adaptation.animal, symbol: adaptation.symbol,
+        feature: adaptation.feature, description: adaptation.description, focus: "purpose"
+      })
+    };
+  },
+  "habitats.ecosystem-connection": ({ random, constraints, tier }) => {
+    const connections = getHabitatEcosystemConnections(tier);
+    const connection = random.pick(connections);
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "How can this action affect the ecosystem?",
+      correctAnswer: connection.effect,
+      choices: makeDistinctChoices(connection.effect, connections.map((entry) => entry.effect), random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "ecosystem-connection", organism: connection.organism, symbol: connection.symbol,
+        action: connection.action, context: connection.context
+      })
+    };
+  },
+  "language.word-building": ({ random, constraints, tier }) => {
+    const focus = constraints.focus;
+    if (!["prefix", "suffix"].includes(focus)) {
+      throw new TypeError("Word-building focus must be prefix or suffix.");
+    }
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    if (choiceCount > 6) throw new RangeError("Word-building choiceCount cannot exceed 6.");
+    const candidates = getChapterThreeWords(tier).filter((entry) =>
+      focus === "prefix" ? entry.prefixes.length > 0 : entry.suffixes.length > 0
+    );
+    if (candidates.length === 0) {
+      throw new RangeError("No curated words are available for " + focus + " practice at tier " + tier + ".");
+    }
+    const entry = random.pick(candidates);
+    const componentOptions = [
+      ...entry.prefixes.map((part) => ({
+        label: "Prefix",
+        text: part.display,
+        meaning: part.meaning
+      })),
+      { label: "Root",
+        text: entry.root.text,
+        meaning: entry.root.meaning
+      },
+      ...entry.suffixes.map((part) => ({
+        label: "Suffix",
+        text: part.display,
+        meaning: part.meaning
+      }))
+    ];
+    const distractors = random.shuffle(
+      getChapterThreeWords(tier).filter((candidate) => candidate.word !== entry.word)
+    ).slice(0, choiceCount - 1);
+    const choices = random.shuffle([entry.word, ...distractors.map((candidate) => candidate.word)]);
+    return {
+      prompt: "Choose the correctly spelled word formed by the parts shown.",
+      correctAnswer: entry.word,
+      choices,
+      stimulus: Object.freeze({
+        kind: "word-parts",
+        title: focus === "prefix" ? "Add a beginning" : "Add an ending",
+        instruction: "Read each word part from left to right, then blend the parts together.",
+        components: componentOptions,
+        meaning: entry.meaning,
+        ...(entry.spellingNote ? { spellingNote: entry.spellingNote } : {})
+      })
+    };
+  },
+  "language.context-potion": ({ random, constraints, tier }) => {
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    if (choiceCount > 6) throw new RangeError("Context-potion choiceCount cannot exceed 6.");
+    const entries = getChapterThreeWords(tier);
+    if (entries.length < choiceCount) {
+      throw new RangeError("The curated word bank does not have enough distinct choices for tier " + tier + ".");
+    }
+    const entry = random.pick(entries);
+    const distractors = random.shuffle(entries.filter((candidate) => candidate.word !== entry.word))
+      .slice(0, choiceCount - 1);
+    const choices = random.shuffle([entry.meaning, ...distractors.map((candidate) => candidate.meaning)]);
+    return {
+      prompt: "Read the potion note. Which meaning of “" + entry.word + "” best fits the sentence?",
+      correctAnswer: entry.meaning,
+      choices,
+      stimulus: Object.freeze({
+        kind: "context-potion",
+        title: "A clue from the cauldron",
+        word: entry.word,
+        sentence: entry.sentence,
+        root: Object.freeze({
+          text: entry.root.text,
+          meaning: entry.root.meaning
+        }),
+        components: [
+          ...entry.prefixes.map((part) => Object.freeze({
+            label: "Prefix",
+            text: part.display,
+            meaning: part.meaning
+          })),
+          ...entry.suffixes.map((part) => Object.freeze({
+            label: "Suffix",
+            text: part.display,
+            meaning: part.meaning
+          }))
+        ]
+      })
+    };
+  },
+  "quests.word-morphology": ({ random, constraints, tier }) => {
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    if (choiceCount !== 4) throw new RangeError("Word morphology questions require exactly four choices.");
+    const entries = getChapterThreeWords(tier);
+    if (entries.length < choiceCount) throw new RangeError("The curated word bank does not have enough entries for tier " + tier + ".");
+    const entry = random.pick(entries);
+    const describeParts = (candidate) => [
+      ...candidate.prefixes.map((part) => part.display),
+      candidate.root.text,
+      ...candidate.suffixes.map((part) => part.display)
+    ].join(" + ");
+    const correctAnswer = describeParts(entry);
+    const distractors = random.shuffle(entries.filter((candidate) => candidate.word !== entry.word))
+      .slice(0, choiceCount - 1);
+    const choices = random.shuffle([correctAnswer, ...distractors.map(describeParts)]);
+    return {
+      prompt: "The word “" + entry.word + "” means “" + entry.meaning
+        + ".” Which sequence shows its prefix, root, and suffix parts in the correct order?",
+      correctAnswer,
+      choices,
+      stimulus: Object.freeze({
+        kind: "context-potion",
+        title: "A word under the looking glass",
+        word: entry.word,
+        sentence: entry.sentence,
+        ...(entry.spellingNote ? { spellingNote: entry.spellingNote } : {})
+      })
+    };
+  },
+  "quests.context-word-rescue": ({ random, constraints, tier }) => {
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    if (choiceCount !== 4) throw new RangeError("Context word-rescue questions require exactly four choices.");
+    const entries = getChapterThreeWords(tier);
+    if (entries.length < choiceCount) throw new RangeError("The curated word bank does not have enough entries for tier " + tier + ".");
+    const entry = random.pick(entries);
+    const matchIndex = entry.sentence.toLocaleLowerCase().indexOf(entry.word.toLocaleLowerCase());
+    if (matchIndex < 0) throw new Error("Curated context sentence is missing its target word: " + entry.word);
+    const maskedSentence = entry.sentence.slice(0, matchIndex)
+      + "________"
+      + entry.sentence.slice(matchIndex + entry.word.length);
+    const distractors = random.shuffle(entries.filter((candidate) => candidate.word !== entry.word))
+      .slice(0, choiceCount - 1);
+    const choices = random.shuffle([entry.word, ...distractors.map((candidate) => candidate.word)]);
+    return {
+      prompt: "A word meaning “" + entry.meaning
+        + "” is missing from this sentence. Which word restores the sentence?",
+      correctAnswer: entry.word,
+      choices,
+      stimulus: Object.freeze({
+        kind: "context-potion",
+        title: "Restore the missing word",
+        word: "Missing word",
+        sentence: maskedSentence
+      })
+    };
+  },
+  "quests.grammar-pair-detective": ({ random, constraints, tier }) => {
+    const examples = getGrammarExamples(tier);
+    const categories = ["noun", "verb", "adjective", "adverb"];
+    const category = random.pick(categories.filter((partOfSpeech) =>
+      examples.filter((example) => example.partOfSpeech === partOfSpeech).length >= 2
+    ));
+    const pair = random.shuffle(examples.filter((example) =>
+      example.partOfSpeech === category
+    )).slice(0, 2);
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    return {
+      prompt: "Both highlighted words share a part of speech. Which category do they both show?",
+      correctAnswer: category,
+      choices: makeDistinctChoices(category, categories, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "grammar-pair",
+        title: "Two word clues",
+        examples: Object.freeze(pair.map((example) => Object.freeze({
+          sentence: example.sentence,
+          targetWord: example.targetWord
+        })))
+      })
+    };
+  },
+  "quests.reading-evidence-match": ({ random, constraints, tier }) => {
+    const passages = getReadingPassages(tier).filter((passage) =>
+      typeof passage.inferenceEvidence === "string"
+      && Array.isArray(passage.inferenceEvidenceChoices)
+      && passage.inferenceEvidenceChoices.length >= 4
+    );
+    const passage = random.pick(passages);
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    return {
+      prompt: "Which detail from the passage best supports this conclusion?",
+      correctAnswer: passage.inferenceEvidence,
+      choices: makeDistinctChoices(
+        passage.inferenceEvidence,
+        passage.inferenceEvidenceChoices,
+        random,
+        choiceCount
+      ),
+      stimulus: Object.freeze({
+        kind: "reading-passage",
+        passageId: passage.id,
+        title: passage.title,
+        passage: passage.passage,
+        focus: "evidence",
+        claim: passage.evidenceClaim
+      })
+    };
+  },
+  "quests.metric-mislabel-audit": ({ random, constraints, tier }) => {
+    const problems = random.shuffle(getUnitConversionProblems(tier)).slice(0, 4);
+    const incorrectIndex = random.integer(0, problems.length - 1);
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    const formatNumber = (value) => Number.isInteger(value)
+      ? value.toLocaleString("en-US")
+      : String(value);
+    const cards = random.shuffle(problems.map((problem, index) => {
+      const incorrect = index === incorrectIndex;
+      const reportedValue = incorrect
+        ? problem.resultValue + (problem.resultValue >= 10 ? 10 : problem.resultValue >= 1 ? 1 : 0.1)
+        : problem.resultValue;
+      return Object.freeze({
+        problemId: problem.id,
+        sourceValue: formatNumber(problem.sourceValue),
+        fromUnit: problem.fromUnit,
+        reportedValue: formatNumber(reportedValue),
+        toUnit: problem.toUnit,
+        isIncorrect: incorrect
+      });
+    })).map((card, index) => Object.freeze({
+      ...card,
+      label: "Card " + (index + 1)
+    }));
+    const incorrectCard = cards.find((card) => card.isIncorrect);
+    return {
+      prompt: "The harbor log contains one incorrect metric conversion. Which card needs fixing?",
+      correctAnswer: incorrectCard.label,
+      choices: makeDistinctChoices(incorrectCard.label, cards.map((card) => card.label), random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "measurement-audit",
+        title: "Harbor conversion audit",
+        cards: Object.freeze(cards)
+      })
+    };
+  },
+  "quests.harbor-cargo-total": ({ random, constraints, tier }) => {
+    const problems = getMassBalanceProblems(tier);
+    const pairs = [];
+    for (let first = 0; first < problems.length; first += 1) {
+      for (let second = first + 1; second < problems.length; second += 1) {
+        pairs.push([problems[first], problems[second]]);
+      }
+    }
+    const pair = random.pick(pairs);
+    const totalGrams = pair[0].massGrams + pair[1].massGrams;
+    const formatGrams = (value) => value.toLocaleString("en-US") + " g";
+    const candidateTotals = pairs.map(([first, second]) =>
+      formatGrams(first.massGrams + second.massGrams)
+    );
+    const correctAnswer = formatGrams(totalGrams);
+    const choiceCount = readInteger(constraints, "choiceCount", 4);
+    return {
+      prompt: "The harbor crew is packing both objects together. What is their combined mass?",
+      correctAnswer,
+      choices: makeDistinctChoices(correctAnswer, candidateTotals, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "measurement-combined-load",
+        title: "Harbor cargo manifest",
+        items: Object.freeze(pair.map((problem) => Object.freeze({
+          problemId: problem.id,
+          object: problem.object,
+          mass: formatGrams(problem.massGrams)
+        })))
+      })
+    };
+  },
+  "language.parts-of-speech": ({ random, constraints, tier }) => {
+    const examples = getGrammarExamples(tier);
+    const example = random.pick(examples);
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    const categories = ["noun", "verb", "adjective", "adverb"];
+    return {
+      prompt: "What part of speech is the highlighted word?",
+      correctAnswer: example.partOfSpeech,
+      choices: makeDistinctChoices(example.partOfSpeech, categories, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "grammar-target",
+        exampleId: example.id,
+        sentence: example.sentence,
+        targetWord: example.targetWord
+      })
+    };
+  },
+  "language.reading-main-idea": ({ random, constraints, tier }) => {
+    const passage = random.pick(getReadingPassages(tier));
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "Which statement best expresses the main idea of this passage?",
+      correctAnswer: passage.mainIdea,
+      choices: makeDistinctChoices(passage.mainIdea, passage.mainIdeaChoices, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "reading-passage",
+        passageId: passage.id,
+        title: passage.title,
+        passage: passage.passage,
+        focus: "main-idea"
+      })
+    };
+  },
+  "language.reading-inference": ({ random, constraints, tier }) => {
+    const passage = random.pick(getReadingPassages(tier));
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "Which conclusion can you reasonably infer from the passage?",
+      correctAnswer: passage.inference,
+      choices: makeDistinctChoices(passage.inference, passage.inferenceChoices, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "reading-passage",
+        passageId: passage.id,
+        title: passage.title,
+        passage: passage.passage,
+        focus: "inference"
+      })
+    };
+  }
+  ,
+  "measurement.volume-reading": ({ random, constraints, tier }) => {
+    const scale = getVolumeScale(tier);
+    const reading = random.pick(scale.availableReadings);
+    const correctAnswer = reading.toLocaleString("en-US") + " mL";
+    const choices = scale.graduations.map((entry) => entry.value.toLocaleString("en-US") + " mL");
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "How much liquid is in the beaker?",
+      correctAnswer,
+      choices: makeDistinctChoices(correctAnswer, choices, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "measurement-beaker",
+        capacityMl: scale.capacityMl,
+        graduationMl: scale.graduationMl,
+        fillValueMl: reading,
+        graduations: scale.graduations.map((entry) => Object.freeze(entry))
+      })
+    };
+  },
+  "measurement.mass-balance": ({ random, constraints, tier }) => {
+    const problems = getMassBalanceProblems(tier);
+    const problem = random.pick(problems);
+    const step = tier === "foundation" ? 100 : tier === "core" ? 50 : 25;
+    const correctAnswer = problem.massGrams.toLocaleString("en-US") + " g";
+    const candidates = Array.from({ length: 10 }, (_, index) => problem.massGrams + (index + 1) * step)
+      .concat(Array.from({ length: 8 }, (_, index) => Math.max(step, problem.massGrams - (index + 1) * step)))
+      .map((value) => value.toLocaleString("en-US") + " g");
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "The balance is level. What is the mass of the object?",
+      correctAnswer,
+      choices: makeDistinctChoices(correctAnswer, candidates, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "measurement-balance",
+        problemId: problem.id,
+        object: problem.object,
+        weights: problem.weights.map((value) => value.toLocaleString("en-US") + " g"),
+        unit: "g"
+      })
+    };
+  },
+  "measurement.unit-conversion": ({ random, constraints, tier }) => {
+    const problem = random.pick(getUnitConversionProblems(tier));
+    const answerValue = Number.isInteger(problem.resultValue)
+      ? problem.resultValue.toLocaleString("en-US")
+      : String(problem.resultValue);
+    const correctAnswer = answerValue + " " + problem.toUnit;
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "Convert the measurement to the requested unit.",
+      correctAnswer,
+      choices: makeDistinctChoices(correctAnswer, problem.choices, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "measurement-conversion",
+        problemId: problem.id,
+        sourceValue: problem.sourceValue.toLocaleString("en-US"),
+        fromUnit: problem.fromUnit,
+        toUnit: problem.toUnit
+      })
+    };
+  },
+  "measurement.elapsed-time": ({ random, constraints, tier }) => {
+    const options = getElapsedTimeOptions(tier);
+    const startSlots = Math.floor((options.maximumStart - options.minimumStart) / options.startStep);
+    const startMinutes = options.minimumStart + random.integer(0, startSlots) * options.startStep;
+    const elapsedMinutes = random.pick(options.durationChoices);
+    const finishMinutes = startMinutes + elapsedMinutes;
+    const formatClockTime = (value) => {
+      const hour24 = Math.floor(value / 60);
+      const minute = value % 60;
+      const hour12 = hour24 % 12 || 12;
+      return hour12 + ":" + String(minute).padStart(2, "0") + (hour24 < 12 ? " AM" : " PM");
+    };
+    const formatDuration = (value) => {
+      const hours = Math.floor(value / 60);
+      const minutes = value % 60;
+      if (hours === 0) return minutes + " minutes";
+      if (minutes === 0) return hours + (hours === 1 ? " hour" : " hours");
+      return hours + (hours === 1 ? " hour " : " hours ") + minutes + " minutes";
+    };
+    const correctAnswer = formatDuration(elapsedMinutes);
+    const candidates = options.durationChoices.map(formatDuration);
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "How much time passes between the start and finish?",
+      correctAnswer,
+      choices: makeDistinctChoices(correctAnswer, candidates, random, choiceCount),
+      stimulus: Object.freeze({
+        kind: "measurement-elapsed-time",
+        startTime: formatClockTime(startMinutes),
+        finishTime: formatClockTime(finishMinutes),
+        elapsedMinutes
+      })
+    };
+  }
+  ,
+  "reasoning.division": ({ random, constraints, tier }) => {
+    const settings = getDivisionSettings(tier);
+    const divisor = random.integer(settings.divisorMin, settings.divisorMax);
+    const quotient = random.integer(settings.quotientMin, settings.quotientMax);
+    const total = divisor * quotient;
+    const items = ["pearls", "shells", "star tokens", "glass beads"];
+    const groups = ["baskets", "boxes", "teams", "trays"];
+    const itemLabel = random.pick(items);
+    const groupLabel = random.pick(groups);
+    const correctAnswer = String(quotient);
+    const candidates = Array.from({ length: 12 }, (_, index) => Math.max(1, quotient + index - 5));
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "Share the collection equally. How many go in each group?",
+      correctAnswer,
+      choices: makeDistinctChoices(quotient, candidates, random, choiceCount).map(String),
+      stimulus: Object.freeze({
+        kind: "chimera-division",
+        total,
+        divisor,
+        itemLabel,
+        groupLabel
+      })
+    };
+  },
+  "reasoning.multi-digit-arithmetic": ({ random, constraints, tier }) => {
+    let left;
+    let right;
+    let operation;
+    if (tier === "foundation") {
+      operation = random.pick(["addition", "subtraction"]);
+      if (operation === "addition") {
+        const leftTens = random.integer(2, 4);
+        const rightTens = random.integer(1, 4);
+        const leftOnes = random.integer(0, 4);
+        const rightOnes = random.integer(0, 9 - leftOnes);
+        left = leftTens * 10 + leftOnes;
+        right = rightTens * 10 + rightOnes;
+      } else {
+        const leftTens = random.integer(4, 9);
+        const rightTens = random.integer(1, leftTens - 1);
+        const leftOnes = random.integer(1, 9);
+        const rightOnes = random.integer(0, leftOnes);
+        left = leftTens * 10 + leftOnes;
+        right = rightTens * 10 + rightOnes;
+      }
+    } else if (tier === "core") {
+      operation = random.pick(["addition", "subtraction", "multiplication"]);
+      if (operation === "addition") {
+        left = random.integer(125, 499);
+        right = random.integer(125, 399);
+      } else if (operation === "subtraction") {
+        left = random.integer(600, 899);
+        right = random.integer(150, 399);
+      } else {
+        left = random.integer(12, 49);
+        right = random.integer(2, 9);
+      }
+    } else {
+      operation = random.pick(["addition", "subtraction", "multiplication"]);
+      if (operation === "addition") {
+        left = random.integer(1200, 4800);
+        right = random.integer(1100, 3900);
+      } else if (operation === "subtraction") {
+        left = random.integer(3500, 8999);
+        right = random.integer(1000, 2999);
+      } else {
+        left = random.integer(24, 99);
+        right = random.integer(12, 39);
+      }
+    }
+    const symbols = { addition: "+", subtraction: "−", multiplication: "×" };
+    const correctValue = operation === "addition" ? left + right
+      : operation === "subtraction" ? left - right : left * right;
+    const candidates = [
+      correctValue + 1, correctValue - 1, correctValue + 10, correctValue - 10,
+      correctValue + 100, correctValue - 100, correctValue + 1000, correctValue - 1000,
+      left + right, Math.abs(left - right), left * right
+    ].filter((value) => Number.isInteger(value) && value >= 0 && value !== correctValue);
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: "Solve the multi-digit calculation.",
+      correctAnswer: correctValue.toLocaleString("en-US"),
+      choices: makeDistinctChoices(correctValue, candidates, random, choiceCount).map((value) => value.toLocaleString("en-US")),
+      stimulus: Object.freeze({
+        kind: "chimera-arithmetic",
+        left: left.toLocaleString("en-US"),
+        right: right.toLocaleString("en-US"),
+        leftValue: left,
+        rightValue: right,
+        operation,
+        symbol: symbols[operation]
+      })
+    };
+  },
+  "quests.championship-skill-match": ({ random, constraints, tier }) => {
+    const target = random.pick(grandStarlightSampler);
+    const sameSubject = grandStarlightSampler.filter((event) =>
+      event.subject === target.subject && event.id !== target.id
+    );
+    const otherSubjects = grandStarlightSampler.filter((event) =>
+      event.subject !== target.subject
+    );
+    let distractors;
+    if (tier === "foundation") {
+      distractors = random.shuffle(otherSubjects).slice(0, 3);
+    } else if (tier === "core") {
+      distractors = [
+        random.pick(sameSubject),
+        ...random.shuffle(otherSubjects).slice(0, 2)
+      ];
+    } else if (tier === "stretch") {
+      distractors = random.shuffle(sameSubject).slice(0, 3);
+    } else {
+      throw new RangeError("Unknown championship skill-match difficulty tier: " + tier);
+    }
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    if (choiceCount !== 4 || distractors.length !== 3) {
+      throw new RangeError("The championship skill match requires four distinct star choices.");
+    }
+    const choices = random.shuffle([target, ...distractors]);
+    return {
+      prompt: "Read the challenge clue. Which championship star represents the skill it describes?",
+      correctAnswer: target.title,
+      choices: choices.map((event) => event.title),
+      stimulus: Object.freeze({
+        kind: "championship-skill-match",
+        eventId: target.id,
+        subject: target.subject,
+        subjectLabel: target.lessonLabel.split("·")[0].trim(),
+        eventDescription: target.description
+      })
+    };
+  },
+  "quests.championship-constellation-plan": ({ random, constraints, tier }) => {
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    if (choiceCount !== 4) throw new RangeError("The constellation planner requires four answer choices.");
+    const subjectLabels = {
+      mathematics: "Mathematics",
+      science: "Science",
+      "language-arts": "Language arts"
+    };
+    const targetCounts = grandStarlightSubjectOrder.map((subject) => ({
+      subject,
+      label: subjectLabels[subject],
+      target: grandStarlightSampler.filter((event) => event.subject === subject).length
+    }));
+    let mode;
+    let counts;
+    let correctAnswer;
+    if (tier === "foundation") {
+      mode = "one-subject";
+      const target = random.pick(targetCounts);
+      const current = random.integer(0, target.target - 1);
+      counts = [{ ...target, current }];
+      correctAnswer = target.target - current;
+    } else if (tier === "core") {
+      mode = "all-subjects";
+      counts = targetCounts.map((target) => ({
+        ...target,
+        current: random.integer(1, target.target)
+      }));
+      if (counts.every((entry) => entry.current === entry.target)) {
+        counts[0].current -= 1;
+      }
+      correctAnswer = counts.reduce((total, entry) => total + entry.target - entry.current, 0);
+    } else if (tier === "stretch") {
+      mode = "replace-overfilled";
+      let overfilled;
+      let science;
+      let languageArts;
+      do {
+        overfilled = random.integer(5, 8);
+        science = random.integer(0, Math.min(8, 12 - overfilled));
+        languageArts = 12 - overfilled - science;
+      } while (languageArts > 8);
+      const values = random.shuffle([overfilled, science, languageArts]);
+      counts = targetCounts.map((target, index) => ({
+        ...target,
+        current: values[index]
+      }));
+      correctAnswer = counts.reduce((total, entry) =>
+        total + Math.max(0, entry.current - entry.target), 0
+      );
+    } else {
+      throw new RangeError("Unknown constellation-planner difficulty tier: " + tier);
+    }
+    const choices = makeChoices(correctAnswer, random, choiceCount).map(String);
+    const totalSelected = counts.reduce((total, entry) => total + entry.current, 0);
+    return {
+      prompt: mode === "one-subject"
+        ? "Each subject needs four stars. How many more " + counts[0].label.toLowerCase() + " stars are needed?"
+        : mode === "all-subjects"
+          ? "Each subject needs four stars. How many more stars are needed in total to finish the balanced constellation?"
+          : "The board already has 12 stars. How many selected stars must be replaced to reach exactly four in each subject?",
+      correctAnswer: String(correctAnswer),
+      choices,
+      stimulus: Object.freeze({
+        kind: "championship-constellation-plan",
+        mode,
+        tier,
+        totalSelected,
+        targetPerSubject: 4,
+        counts: Object.freeze(counts.map((entry) => Object.freeze({ ...entry })))
+      })
+    };
+  },
+  "quests.chimera-operation-blueprint": ({ random, constraints, tier }) => {
+    const problem = random.pick(getMultiStepProblems(tier));
+    const sourceSteps = problem.steps.map((step) => ({
+      operation: step.operation,
+      operand: step.operand
+    }));
+    const operations = ["add", "subtract", "multiply", "divide"];
+    const signature = (steps) => JSON.stringify(steps);
+    const correctSignature = signature(sourceSteps);
+    const candidatePlans = [
+      sourceSteps.slice().reverse(),
+      sourceSteps.map((step, index) => index === 0
+        ? { ...step, operation: operations.find((operation) => operation !== step.operation) }
+        : { ...step }),
+      sourceSteps.map((step, index) => index === sourceSteps.length - 1
+        ? { ...step, operation: operations.find((operation) => operation !== step.operation) }
+        : { ...step })
+    ];
+    const uniqueDistractors = [];
+    const seen = new Set([correctSignature]);
+    for (const candidate of candidatePlans) {
+      const key = signature(candidate);
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueDistractors.push(candidate);
+      }
+    }
+    if (uniqueDistractors.length < 3) {
+      for (const operation of operations) {
+        const candidate = sourceSteps.map((step, index) => index === 0
+          ? { ...step, operand: step.operand + 1 }
+          : { ...step });
+        candidate[0].operation = operation;
+        const key = signature(candidate);
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniqueDistractors.push(candidate);
+        }
+        if (uniqueDistractors.length === 3) break;
+      }
+    }
+    if (uniqueDistractors.length !== 3) {
+      throw new Error("The Chimera operation blueprint could not create three distinct distractor plans.");
+    }
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    if (choiceCount !== 4) throw new RangeError("The Chimera operation blueprint requires exactly four plans.");
+    const plans = random.shuffle([sourceSteps, ...uniqueDistractors]).map((steps, index) => ({
+      label: String.fromCharCode(65 + index),
+      steps: steps.map((step) => Object.freeze({ ...step }))
+    }));
+    const correctPlan = plans.find((plan) => signature(plan.steps) === correctSignature);
+    return {
+      prompt: "Read the story and choose the operation plan that follows the events in the correct order.",
+      correctAnswer: correctPlan.label,
+      choices: plans.map((plan) => plan.label),
+      stimulus: Object.freeze({
+        kind: "chimera-operation-blueprint",
+        problemId: problem.id,
+        title: problem.title,
+        story: problem.story,
+        question: problem.question,
+        startingValue: problem.startValue,
+        plans: Object.freeze(plans.map((plan) => Object.freeze({
+          label: plan.label,
+          steps: Object.freeze(plan.steps)
+        })))
+      })
+    };
+  },
+  "quests.chimera-supply-workshop": ({ random, constraints, tier }) => {
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    let correctValue;
+    let story;
+    let question;
+    let clues;
+    let quantities;
+    if (tier === "foundation") {
+      const startingBundles = random.integer(18, 36);
+      const deliveredBundles = random.integer(6, 18);
+      const reservedBundles = random.integer(3, 12);
+      correctValue = startingBundles + deliveredBundles - reservedBundles;
+      story = "The Chimera workshop starts with " + startingBundles
+        + " supply bundles. A delivery brings " + deliveredBundles
+        + " more bundles, and " + reservedBundles
+        + " are set aside for the demonstration table.";
+      question = "How many bundles remain for the workshop stations?";
+      clues = [
+        "Combine the starting bundles and the delivery.",
+        "Subtract the bundles set aside for the demonstration."
+      ];
+      quantities = { startingBundles, deliveredBundles, reservedBundles };
+    } else if (tier === "core") {
+      const crateCount = random.integer(3, 8);
+      const bundlesPerCrate = random.integer(14, 32);
+      const totalBundles = crateCount * bundlesPerCrate;
+      const reservedBundles = random.integer(8, Math.min(70, totalBundles - 20));
+      correctValue = totalBundles - reservedBundles;
+      story = "The workshop receives " + crateCount + " crates with "
+        + bundlesPerCrate + " supply bundles in each crate. The crew reserves "
+        + reservedBundles + " bundles for a special display.";
+      question = "How many bundles remain for the workshop stations?";
+      clues = [
+        "Multiply the bundles in each crate by the number of crates.",
+        "Subtract the bundles reserved for the special display."
+      ];
+      quantities = { crateCount, bundlesPerCrate, reservedBundles };
+    } else if (tier === "stretch") {
+      const crateCount = random.integer(12, 28);
+      const bundlesPerCrate = random.integer(18, 42);
+      const totalBundles = crateCount * bundlesPerCrate;
+      const teamCount = random.integer(3, 7);
+      const maximumShare = Math.floor((totalBundles - 1) / teamCount);
+      const bundlesPerTeam = random.integer(Math.max(20, Math.floor(maximumShare * 0.35)), maximumShare);
+      const reservedBundles = totalBundles - bundlesPerTeam * teamCount;
+      correctValue = bundlesPerTeam;
+      story = "The workshop receives " + crateCount + " crates with "
+        + bundlesPerCrate + " supply bundles in each crate. "
+        + reservedBundles + " bundles are reserved for the grand demonstration. "
+        + "The rest are shared equally among " + teamCount + " build teams.";
+      question = "How many bundles does each team receive?";
+      clues = [
+        "Find the total number of bundles in all the crates.",
+        "Subtract the bundles reserved for the grand demonstration.",
+        "Share the remaining bundles equally among the build teams."
+      ];
+      quantities = { crateCount, bundlesPerCrate, reservedBundles, teamCount };
+    } else {
+      throw new RangeError("Unknown workshop-supply difficulty tier: " + tier);
+    }
+    const distractorChoices = makeChoices(correctValue, random, choiceCount);
+    return {
+      prompt: question,
+      correctAnswer: correctValue.toLocaleString("en-US"),
+      choices: distractorChoices.map((value) => value.toLocaleString("en-US")),
+      stimulus: Object.freeze({
+        kind: "chimera-supply-plan",
+        tier,
+        title: "Workshop supply order",
+        story,
+        question,
+        clues: Object.freeze(clues),
+        quantities: Object.freeze(quantities)
+      })
+    };
+  },
+  "reasoning.multi-step": ({ random, constraints, tier }) => {
+    const problem = random.pick(getMultiStepProblems(tier));
+    const correctAnswer = String(problem.answer);
+    const candidates = [
+      problem.answer + 1, problem.answer - 1, problem.answer + 2, problem.answer - 2,
+      problem.answer + 5, problem.answer - 5, problem.answer + 10, problem.answer - 10,
+      problem.answer + 20, problem.answer - 20, problem.answer + 25
+    ].filter((value) => Number.isInteger(value) && value >= 0 && value !== problem.answer);
+    const choiceCount = readInteger(constraints, "choiceCount", 2);
+    return {
+      prompt: problem.question,
+      correctAnswer,
+      choices: makeDistinctChoices(problem.answer, candidates, random, choiceCount).map(String),
+      stimulus: Object.freeze({
+        kind: "chimera-multi-step",
+        problemId: problem.id,
+        title: problem.title,
+        story: problem.story,
+        question: problem.question,
+        stepPrompts: problem.stepPrompts.slice()
+      })
+    };
+  }
+});
+
+function freezeRecursively(value) {
+  if (!value || typeof value !== "object") return value;
+  for (const child of Object.values(value)) freezeRecursively(child);
+  if (!Object.isFrozen(value)) Object.freeze(value);
+  return value;
+}
+
+export function createQuestionGeneratorRegistry(customGenerators = {}) {
+  if (!customGenerators || typeof customGenerators !== "object" || Array.isArray(customGenerators)) {
+    throw new TypeError("customGenerators must be an object keyed by generator ID.");
+  }
+  const generators = new Map(Object.entries(BUILT_IN_GENERATORS));
+  for (const [id, generator] of Object.entries(customGenerators)) {
+    if (!/^[a-z][a-z0-9-]*(?:[.-][a-z][a-z0-9-]*)+$/.test(id)) throw new TypeError("Generator ID must be namespaced.");
+    if (typeof generator !== "function") throw new TypeError("Generator " + id + " must be a function.");
+    if (generators.has(id)) throw new Error("Cannot replace built-in generator: " + id);
+    generators.set(id, generator);
+  }
+
+  function register(id, generator) {
+    if (typeof id !== "string" || !/^[a-z][a-z0-9-]*(?:[.-][a-z][a-z0-9-]*)+$/.test(id)) {
+      throw new TypeError("Generator ID must be namespaced.");
+    }
+    if (typeof generator !== "function") throw new TypeError("A question generator must be a function.");
+    if (generators.has(id)) throw new Error("Question generator already registered: " + id);
+    generators.set(id, generator);
+    return () => generators.delete(id);
+  }
+
+  function generate(activity, { seed, tier = gameConfig.curriculum.defaultTier } = {}) {
+    const validation = validateActivityDefinition(activity);
+    if (validation !== true) throw new TypeError(validation);
+    if (!activity.supportedTiers.includes(tier)) {
+      throw new RangeError("Activity " + activity.id + " does not support the " + tier + " tier.");
+    }
+    const generator = generators.get(activity.generatorId);
+    if (!generator) throw new Error("Unknown question generator: " + activity.generatorId);
+    const random = createSeededRandom(seed);
+    const constraints = activity.generatorConstraints[tier];
+    const generated = generator({ random, constraints, activity, seed, tier });
+    if (!generated || typeof generated !== "object"
+        || typeof generated.prompt !== "string" || !generated.prompt.trim()
+        || !Object.hasOwn(generated, "correctAnswer")
+        || generated.correctAnswer === null || generated.correctAnswer === undefined) {
+      throw new TypeError("Generator " + activity.generatorId + " must return a prompt and correctAnswer.");
+    }
+    const question = {
+      id: activity.id + ":" + tier + ":" + hashSeed(seed).toString(16),
+      activityId: activity.id,
+      tier,
+      skillIds: activity.skillIds.slice(),
+      objectives: activity.objectives.slice(),
+      seed: typeof seed === "string" ? seed : String(seed),
+      prompt: generated.prompt.trim(),
+      correctAnswer: generated.correctAnswer,
+      answerRules: activity.answerRules,
+      ...(Array.isArray(generated.choices) ? { choices: generated.choices.slice() } : {}),
+      ...(generated.stimulus ? { stimulus: generated.stimulus } : {})
+    };
+    return freezeRecursively(question);
+  }
+
+  return Object.freeze({
+    register,
+    has(id) { return generators.has(id); },
+    generate,
+    list() { return [...generators.keys()].sort(); }
+  });
+}
+
+const defaultGeneratorRegistry = createQuestionGeneratorRegistry();
+
+export function generateQuestion(activity, options) {
+  return defaultGeneratorRegistry.generate(activity, options);
+}
